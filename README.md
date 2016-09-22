@@ -8,8 +8,8 @@
 > that allow them to build products with an emphasis on quality assurance and
 > efficient integration.
 
-For more information about ISARA's quantum resistant solutions, please visit
-our website: [www.isara.com](www.isara.com).
+For more information about ISARA's quantum resistant solutions, visit
+our website: [www.isara.com](https://www.isara.com).
 
 You can also contact us directly at [info@isara.com](mailto:info@isara.com).
 
@@ -18,11 +18,11 @@ Copyright &copy; 2016 ISARA Corporation, All Rights Reserved.
 ## ISARA Quantum Resistant Toolkit 1.0 Samples
 
 These samples all require version 1.0 of our Toolkit; for more information,
-check our website or contact our [sales team](mailto:sales@isara.com).
+visit [www.isara.com](https://www.isara.com) or contact our
+[sales team](mailto:sales@isara.com).
 
-Each sample demonstrates one part of the Toolkit. Many of them can be used to
-do useful work. We use the LMS samples to produce digital signatures of the
-Toolkit's installation packages, for example.
+Each sample demonstrates one part of the Toolkit. We use the LMS samples to
+produce digital signatures of the Toolkit's installation packages, for example.
 
 ### System Requirements
 
