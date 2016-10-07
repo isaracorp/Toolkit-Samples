@@ -139,19 +139,19 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --key <filename> **
+[--key <filename>]
 Read the key from file <filename>. Must contain exactly 32 bytes.
 
-:star: ** --nonce <filename> **
+[--nonce <filename>]
 Read the nonce from file <filename>. Must contain exactly 12 bytes.
 
-:star: ** --initial_counter counter **
+[--initial_counter counter]
 The value which the ChaCha20 initial block counter will be initialized to.
 
-:star: ** --plaintext <filename> **
+[--plaintext <filename>]
 The data which will be encrypted.
 
-:star: ** --ciphertext <filename> **
+[--ciphertext <filename>]
 Where the resulting ciphertext will be saved.
 ```
 
@@ -178,19 +178,19 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --key <filename> **
+[--key <filename>]
 Read the key from file <filename>. Must contain exactly 32 bytes.
 
-:star: ** --nonce <filename> **
+[--nonce <filename>]
 Read the nonce from file <filename>. Must contain exactly 12 bytes.
 
-:star: ** --initial_counter counter **
+[--initial_counter counter]
 The value which the ChaCha20 initial block counter will be initialized to.
 
-:star: ** --ciphertext <filename> **
+[--ciphertext <filename>]
 The data which will be decrypted.
 
-:star: ** --plaintext <filename> **
+[--plaintext <filename>]
 Where the resulting plaintext will be saved.
 ```
 

@@ -70,14 +70,14 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --hash sha2-256|sha2-512|sha3-256|sha3-512 **
+[--hash sha2-256|sha2-512|sha3-256|sha3-512]
 Which hashing algorithm to use. One of SHA2-256, SHA2-512, SHA3-256 or
 SHA3-512.
 
-:star: ** --salt <filename> **
+[--salt <filename>]
 <filename> contains the random salt to apply to the hash.
 
-:star: ** --message <filename> **
+[--message <filename>]
 <filename> contains the message to be hashed.
 ```
 

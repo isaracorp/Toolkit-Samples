@@ -75,27 +75,27 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --hash sha2-256|sha2-512|sha3-256|sha3-512 **
+[--hash sha2-256|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
-:star: ** --secret string <secret> **
+[--secret string <secret>]
 Read the shared secret from the command line.
 
-:star: ** --secret file <filename> **
+[--secret file <filename>]
 Read the shared secret from file <filename>. The entire contents of the file
 will be read.
 
-:star: ** --info string <salt> **
+[--info string <salt>]
 Read the application specific information from the command line.
 
-:star: ** --info file <filename> **
+[--info file <filename>]
 Read the application specific information from file <filename>. The entire
 contents of the file will be read.
 
-:star: ** --info none **
+[--info none]
 Don't use any application specific information.
 
-:star: ** --keysize <size> **
+[--keysize <size>]
 The size of the requested key in bytes.
 
 [--keyfile <output_filename>

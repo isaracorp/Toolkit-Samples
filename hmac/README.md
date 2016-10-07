@@ -109,21 +109,21 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --hash sha2-256|sha2-512|sha3-256|sha3-512 **
+[--hash sha2-256|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
-:star: ** --key string <key> **
+[--key string <key>]
 Read the key from the command line.
 
-:star: ** --key file <filename> **
+[--key file <filename>]
 Read the key from file <filename>. The entire contents of the file
 will be read.
 
-:star: ** --key none **
+[--key none]
 Don't use a key. This is not recommended, without a key this is basically
 just a hashing function.
 
-:star: ** --tag <filename> **
+[--tag <filename>]
 <filename> is the name of the file where the computed tag will be saved.
 
 msg1 [msg2 ...]

@@ -154,13 +154,13 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --security <level> **
+[--security <level>]
 Do not specify both security level and key size.
 Valid security level are:
     * 128
     * 256
 
-:star: ** --keysize <bits> **
+[--keysize <bits>]
 Do not specify both security level and key size.
 Valid key size values are:
     * 9857
@@ -170,10 +170,10 @@ Valid key size values are:
     * 45062
     * 61449
 
-:star: ** --pub <filename> **
+[--pub <filename>]
 <filename> is the name of the file where the public key is to be saved.
 
-:star: ** --priv <filename> **
+[--priv <filename>]
 <filename> is the name of the file where the private key is to be saved.
 ```
 
@@ -200,19 +200,19 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --security <level> **
+[--security <level>]
 This must be the same value as was passed into mceliece_generate_keys.
 
-:star: ** --keysize <bits> **
+[--keysize <bits>]
 This must be the same value as was passed into mceliece_generate_keys.
 
-:star: ** --pub <filename> **
+[--pub <filename>]
 <filename> is the name of the file where the public key is stored.
 
-:star: ** --plaintext <filename> **
+[--plaintext <filename>]
 <filename> is the name of the file where the plain text is stored.
 
-:star: ** --ciphertext <filename> **
+[--ciphertext <filename>]
 <filename> is the name of the file where the ciphertext is to be saved.
 ```
 
@@ -239,19 +239,19 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --security <level> **
+[--security <level>]
 This must be the same value as was passed into mceliece_generate_keys.
 
-:star: ** --keysize <bits> **
+[--keysize <bits>]
 This must be the same value as was passed into mceliece_generate_keys.
 
-:star: ** --priv <filename> **
+[--priv <filename>]
 <filename> is the name of the file where the private key is stored.
 
-:star: ** --ciphertext <filename> **
+[--ciphertext <filename>]
 <filename> is the name of the file where the ciphertext is stored.
 
-:star: ** --plaintext <filename> **
+[--plaintext <filename>]
 <filename> is the name of the file where the plain text is to be saved.
 ```
 

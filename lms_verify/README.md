@@ -170,26 +170,26 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --security <identifier> **
+[--security <identifier>]
 The security identifier for the private key. This value must be distinct from
 all other identifiers and should be chosen via a pseudo-random function.
 However, for the convenience of the end user, in this sample we use a printable
 string and initialize it to a simple default. The security identified must be
 31 bytes long.
 
-:star: ** --pub <filename> **
+[--pub <filename>]
 <filename> is the name of the file where the public key is to be saved.
 
-:star: ** --priv <filename> **
+[--priv <filename>]
 <filename> is the name of the file where the private key is to be saved.
 
-:star: ** --hash 16|32 **
+[--hash 16|32]
 The size of the hashes to be used by the LMS algorithm.
 
-:star: ** --winternitz 1|2|4|8 **
+[--winternitz 1|2|4|8]
 The Winternitz value.
 
-:star: ** --height 5|10|20 **
+[--height 5|10|20]
 The height of the Merkle Tree in the LMS algorithm.
 ```
 
@@ -221,25 +221,25 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --q <number> **
+[--q <number>]
 This must be provided by the user. DO NOT REUSE q!
 
-:star: ** --security <identifier> **
+[--security <identifier>]
 This must be the same value as was passed into lms_generate_keys.
 
-:star: ** --sig <filename> **
+[--sig <filename>]
 <filename> is the name of the file where the signature is to be saved.
 
-:star: ** --priv <filename> **
+[--priv <filename>]
 <filename> is the name of the file where the private key is stored.
 
-:star: ** --winternitz 1|2|4|8 **
+[--winternitz 1|2|4|8]
 This must be the same value as was passed into lms_generate_keys.
 
-:star: ** --height 5|10|20 **
+[--height 5|10|20]
 This must be the same value as was passed into lms_generate_keys.
 
-:star: ** --message <filename> **
+[--message <filename>]
 <filename> is the name of the file where the message is stored.
 ```
 
@@ -269,22 +269,22 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --security <identifier> **
+[--security <identifier>]
 This must be the same value as was passed into lms_generate_keys.
 
-:star: ** --sig <filename> **
+[--sig <filename>]
 <filename> is the name of the file where the signature is stored.
 
-:star: ** --pub <filename> **
+[--pub <filename>]
 <filename> is the name of the file where the public key is stored.
 
-:star: ** --winternitz 1|2|4|8 **
+[--winternitz 1|2|4|8]
 This must be the same value as was passed into lms_generate_keys.
 
-:star: ** --height 5|10|20 **
+[--height 5|10|20]
 This must be the same value as was passed into lms_generate_keys.
 
-:star: ** --message <filename> **
+[--message <filename>]
 <filename> is the name of the file where the message is stored.
 ```
 

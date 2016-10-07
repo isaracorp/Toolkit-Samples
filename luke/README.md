@@ -93,7 +93,7 @@ Command line defaults: None.
 Command line parameter descriptions:
 
 ```
-:star: ** --dump **
+[--dump]
 A switch telling luke to dump the public information and secrets to file. The
 filenames are:
     initiator_info.dat - Alice's public information.

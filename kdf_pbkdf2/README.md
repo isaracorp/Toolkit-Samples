@@ -80,33 +80,33 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --hash sha2-256|sha2-512|sha3-256|sha3-512 **
+[--hash sha2-256|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
-:star: ** --pass string <password> **
+[--pass string <password>]
 Read the <password> from the command line.
 
-:star: ** --pass file <filename> **
+[--pass file <filename>]
 Read the password from file <filename>. The entire contents of the file will
 be read.
 
-:star: ** --pass none  **
+[--pass none ]
 Don't use a password.
 
-:star: ** --salt string <salt> **
+[--salt string <salt>]
 Read the <salt> from the command line.
 
-:star: ** --salt file <filename> **
+[--salt file <filename>]
 Read the salt from file <filename>. The entire contents of the file will
 be read.
 
-:star: ** --salt none **
+[--salt none]
 Don't use a salt.
 
-:star: ** --iter <iterations> **
+[--iter <iterations>]
 Number of times to iterate the underlying function used in the key derivation.
 
-:star: ** --keysize <size> **
+[--keysize <size>]
 The size of the requested key in bytes.
 
 [--keyfile <output_filename>

@@ -124,21 +124,21 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --hash sha2-256|sha2-512|sha3-256|sha3-512 **
+[--hash sha2-256|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use in the HMAC-DRBG.
 
-:star: ** --seed <filename> **
+[--seed <filename>]
 Data with which the RNG will be seeded. The entire contents of the file
 will be read.
 
-:star: ** --reseed <filename> **
+[--reseed <filename>]
 Data with which the RNG will be reseeded. The entire contents of the file
 will be read.
 
-:star: ** --output <filename> **
+[--output <filename>]
 <filename> is the name of the file where the random numbers are to be saved.
 
-:star: ** --count <bytes> **
+[--count <bytes>]
 The number of bytes to read from the random number generator.
 ```
 

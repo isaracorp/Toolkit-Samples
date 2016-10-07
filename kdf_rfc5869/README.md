@@ -79,40 +79,40 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --hash sha2-256|sha2-512|sha3-256|sha3-512 **
+[--hash sha2-256|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
-:star: ** --salt string <salt> **
+[--salt string <salt>]
 Read the <salt> from the command line.
 
-:star: ** --salt file <filename> **
+[--salt file <filename>]
 Read the salt from file <filename>. The entire contents of the file will
 be read.
 
-:star: ** --salt none **
+[--salt none]
 Don't use a salt.
 
-:star: ** --ikm string <ikm> **
+[--ikm string <ikm>]
 Read the initial keying material from the command line.
 
-:star: ** --ikm file <filename> **
+[--ikm file <filename>]
 Read the initial keying material from file <filename>. The entire contents of
 the file will be read.
 
-:star: ** --info string <info> **
+[--info string <info>]
 Read the application specific information from the command line.
 
-:star: ** --info file <filename> **
+[--info file <filename>]
 Read the application specific information from file <filename>. The entire
 contents of the file will be read.
 
-:star: ** --info none **
+[--info none]
 Don't use any application specific information.
 
-:star: ** --keysize <size> **
+[--keysize <size>]
 The size of the requested key in bytes.
 
-:star: ** --keyfile <output_filename> **
+[--keyfile <output_filename>]
 <output_filename> is the name of the file where the derived key is to be saved.
 ```
 

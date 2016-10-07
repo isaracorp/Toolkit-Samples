@@ -98,7 +98,7 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --dump **
+[--dump]
 A switch telling newhope to dump the public information and secrets to file. The
 filenames are:
     initiator_info.dat - Alice's public information.
@@ -106,7 +106,7 @@ filenames are:
     alice_secret.dat - Secret derived by Alice.
     bob_secret.dat - Secret derived by Bob.a
 
-:star: ** --variant reference|boringSSL **
+[--variant reference|boringSSL]
 The variant of NewHope to use.
 ```
 

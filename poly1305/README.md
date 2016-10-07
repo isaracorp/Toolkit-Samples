@@ -103,18 +103,18 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-:star: ** --key string <key> **
+[--key string <key>]
 Read the key from the command line.
 
-:star: ** --key file <filename> **
+[--key file <filename>]
 Read the key from file <filename>. The entire contents of the file
 will be read.
 
-:star: ** --key none **
+[--key none]
 Don't use a key. This is not recommended, without a key this is basically
 just a hashing function.
 
-:star: ** --tag <filename> **
+[--tag <filename>]
 Where the resulting tag will be saved.
 
 msg1 [msg2 ...]
