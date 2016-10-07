@@ -30,7 +30,7 @@ an unlimited number of times.
 6.  A verifier reproduces the digest of the message and verifies it
     against the signature.
 
-:star: ** IMPORTANT **
+:star: **IMPORTANT**
 In step 3, the OTS index value `q + 1` must be saved due to its
 dynamic nature.  If the signer does not save it before signing the digest,
 the signer risks using the one time signature data multiple times which
@@ -299,13 +299,13 @@ This must be the same value as was passed into lms_generate_keys.
 See the `LICENSE` file for details:
 
 > Copyright 2016 ISARA Corporation
-> 
+>
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
 > You may obtain a copy of the License at
-> 
+>
 > http://www.apache.org/licenses/LICENSE-2.0
-> 
+>
 > Unless required by applicable law or agreed to in writing, software
 > distributed under the License is distributed on an "AS IS" BASIS,
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
