@@ -35,7 +35,7 @@
  * facilitate the pseudo-separate process paradigm.
  */
 static iqr_LUKEParams *params;
-static iqr_LUKEInitiator *initiator_private_key;
+static iqr_LUKEPrivateKey *private_key;
 
 iqr_retval init_alice(const iqr_Context *ctx)
 {
@@ -65,14 +65,14 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
         return IQR_ENOMEM;
     }
 
-    iqr_retval ret = iqr_LUKECreateInitiatorPrivateKey(params, &initiator_private_key);
+    iqr_retval ret = iqr_LUKECreatePrivateKey(params, &private_key);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LUKECreateInitiatorPrivateKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_LUKECreatePrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
     }
-    ret = iqr_LUKECreateInitiatorPublicKey(params, rng, initiator_private_key, initiator_public_key, initiator_size);
+    ret = iqr_LUKEGetInitiatorPublicKey(private_key, rng, initiator_public_key, initiator_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LUKECreateInitiatorPublicKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_LUKEGetInitiatorPublicKey(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -87,7 +87,7 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
 
 end:
     if (ret != IQR_OK) {
-        iqr_LUKEDestroyInitiatorPrivateKey(&initiator_private_key);
+        iqr_LUKEDestroyPrivateKey(&private_key);
     }
     free(initiator_public_key);
     return ret;
@@ -113,17 +113,16 @@ iqr_retval alice_get_secret(uint8_t *secret, size_t secret_size)
         goto end;
     }
 
-    ret = iqr_LUKEGetInitiatorSecret(params, responder_public_key, responder_size, initiator_private_key, secret,
-        secret_size);
+    ret = iqr_LUKEGetInitiatorSecret(private_key, responder_public_key, responder_size, secret, secret_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_LUKEGetInitiatorSecret(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
 end:
-    ret = iqr_LUKEDestroyInitiatorPrivateKey(&initiator_private_key);
+    ret = iqr_LUKEDestroyPrivateKey(&private_key);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LUKEDestroyInitiatorPrivateKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_LUKEDestroyPrivateKey(): %s\n", iqr_StrError(ret));
     }
 
     free(responder_public_key);

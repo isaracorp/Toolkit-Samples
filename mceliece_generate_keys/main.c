@@ -1,4 +1,5 @@
-/** @file main.c Demonstrate the use of IQR's McEliece QC-MDPC cryptosystem implementation.
+/** @file main.c Demonstrate the use of IQR's McEliece QC-MDPC cryptosystem
+ * implementation.
  *
  * @copyright Copyright 2016 ISARA Corporation
  *
@@ -120,7 +121,9 @@ static iqr_retval showcase_mceliece_key_gen(const iqr_McElieceParams *params, co
 
 end:
     if (priv_raw != NULL) {
-        /* (Private) Keys are private, sensitive data, be sure to clear memory containing them when you're done */
+        /* (Private) Keys are private, sensitive data, be sure to clear memory
+         * containing them when you're done.
+         */
         secure_memset(priv_raw, 0, priv_raw_size);
     }
 
@@ -210,7 +213,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -385,11 +388,13 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_McElieceKey
 
 static void *secure_memset(void *b, int c, size_t len)
 {
-    /** This memset() is NOT secure. It could and probably will be optimized out by the compiler. There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows also provides SecureZeroMemory().
+    /** This memset() is NOT secure. It could and probably will be optimized
+     * out by the compiler. There isn't a secure, portable memset() available
+     * before C11 which provides memset_s(). Windows also provides
+     * SecureZeroMemory().
      *
-     * This is just for sample purposes, do your own due diligence when choosing a secure memset() so you can securely
-     * clear sensitive data.
+     * This is just for sample purposes, do your own due diligence when
+     * choosing a secure memset() so you can securely clear sensitive data.
      */
     return memset(b, c, len);
 }
@@ -411,7 +416,9 @@ int main(int argc, const char **argv)
     const char *public_key_file = "pub.key";
     const char *private_key_file = "priv.key";
 
-    /* If the command line arguments were not sane, this function will exit the process. */
+    /* If the command line arguments were not sane, this function will return
+     * an error.
+     */
     iqr_retval ret = parse_commandline(argc, argv, &public_key_size, &public_key_file, &private_key_file);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;

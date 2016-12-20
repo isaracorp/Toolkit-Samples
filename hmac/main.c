@@ -22,7 +22,7 @@
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
-#include "iqr_hmac.h"
+#include "iqr_mac.h"
 #include "iqr_retval.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -49,10 +49,10 @@ static void *secure_memset(void *b, int c, size_t len);
 static iqr_retval showcase_hmac(const iqr_Context *ctx, iqr_HashAlgorithmType hash, const uint8_t *key, size_t key_size,
     const struct file_list *files, const char *tag_file)
 {
-    iqr_HMAC *hmac = NULL;
-    iqr_retval ret = iqr_HMACCreate(ctx, hash, &hmac);
+    iqr_MAC *hmac = NULL;
+    iqr_retval ret = iqr_MACCreateHMAC(ctx, hash, &hmac);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_HMACCreate(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACCreateHMAC(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
@@ -60,9 +60,9 @@ static iqr_retval showcase_hmac(const iqr_Context *ctx, iqr_HashAlgorithmType ha
     uint8_t *data = NULL;
 
     size_t tag_size = 0;
-    ret = iqr_HMACGetTagSize(hmac, &tag_size);
+    ret = iqr_MACGetTagSize(hmac, &tag_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_HMACGetTagSize(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACGetTagSize(): %s\n", iqr_StrError(ret));
         goto end;
     }
     tag = calloc(1, tag_size);
@@ -82,18 +82,18 @@ static iqr_retval showcase_hmac(const iqr_Context *ctx, iqr_HashAlgorithmType ha
             goto end;
         }
 
-        ret = iqr_HMACMessage(hmac, key, key_size, data, data_size, tag, tag_size);
+        ret = iqr_MACMessage(hmac, key, key_size, data, data_size, tag, tag_size);
         if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_HMACMessage(): %s\n", iqr_StrError(ret));
+            fprintf(stderr, "Failed on iqr_MACMessage(): %s\n", iqr_StrError(ret));
             goto end;
         }
 
         fprintf(stdout, "HMAC has been created from %s\n", files->filename);
     } else {
         // Multiple files, use the updating HMAC functions
-        ret = iqr_HMACBegin(hmac, key, key_size);
+        ret = iqr_MACBegin(hmac, key, key_size);
         if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_HMACBegin(): %s\n", iqr_StrError(ret));
+            fprintf(stderr, "Failed on iqr_MACBegin(): %s\n", iqr_StrError(ret));
             goto end;
         }
 
@@ -103,9 +103,9 @@ static iqr_retval showcase_hmac(const iqr_Context *ctx, iqr_HashAlgorithmType ha
                 goto end;
             }
 
-            ret = iqr_HMACUpdate(hmac, data, data_size);
+            ret = iqr_MACUpdate(hmac, data, data_size);
             if (ret != IQR_OK) {
-                fprintf(stderr, "Failed on iqr_HMACUpdate(): %s\n", iqr_StrError(ret));
+                fprintf(stderr, "Failed on iqr_MACUpdate(): %s\n", iqr_StrError(ret));
                 goto end;
             }
 
@@ -117,9 +117,9 @@ static iqr_retval showcase_hmac(const iqr_Context *ctx, iqr_HashAlgorithmType ha
             files = files->next;
         }
 
-        ret = iqr_HMACEnd(hmac, tag, tag_size);
+        ret = iqr_MACEnd(hmac, tag, tag_size);
         if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_HMACEnd(): %s\n", iqr_StrError(ret));
+            fprintf(stderr, "Failed on iqr_MACEnd(): %s\n", iqr_StrError(ret));
             goto end;
         }
     }
@@ -136,7 +136,7 @@ static iqr_retval showcase_hmac(const iqr_Context *ctx, iqr_HashAlgorithmType ha
 end:
     free(data);
     data = NULL;
-    iqr_HMACDestroy(&hmac);
+    iqr_MACDestroy(&hmac);
     free(tag);
     tag = NULL;
     return ret;
@@ -173,7 +173,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash, co
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -436,8 +436,8 @@ int main(int argc, const char **argv)
     struct file_list *files = NULL;
     const char *tag_file = "tag.dat";
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &hash, &cb, &key, &key_file, &files, &tag_file);
     if (ret != IQR_OK) {

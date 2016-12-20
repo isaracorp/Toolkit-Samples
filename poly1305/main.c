@@ -21,8 +21,14 @@
 #include <string.h>
 
 #include "iqr_context.h"
-#include "iqr_poly1305.h"
+#include "iqr_mac.h"
 #include "iqr_retval.h"
+
+/* Poly1305 keys must be 32 bytes. */
+#define POLY1305_KEY_SIZE 32
+
+/* Poly1305 tags are 16 bytes. */
+#define POLY1305_TAG_SIZE 16
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Structure Declarations.
@@ -48,23 +54,23 @@ static void *secure_memset(void *b, int c, size_t len);
 static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_data, size_t key_size,
     const struct file_list *files, const char *tag_file)
 {
-    if (key_size < IQR_POLY1305_KEY_SIZE) {
+    if (key_size < POLY1305_KEY_SIZE) {
         fprintf(stderr, "Key is %zu bytes, it must be at least %d bytes (only first %d bytes will be used)\n",
-            key_size, IQR_POLY1305_KEY_SIZE, IQR_POLY1305_KEY_SIZE);
+            key_size, POLY1305_KEY_SIZE, POLY1305_KEY_SIZE);
         return IQR_EINVBUFSIZE;
     }
 
     uint8_t *message = NULL;
-    iqr_Poly1305 *poly1305_obj = NULL;
-    iqr_retval ret = iqr_Poly1305Create(ctx, &poly1305_obj);
+    iqr_MAC *poly1305_obj = NULL;
+    iqr_retval ret = iqr_MACCreatePoly1305(ctx, &poly1305_obj);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305Create(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACCreatePoly1305(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
     fprintf(stdout, "Poly1305 object has been created.\n");
 
-    uint8_t poly1305_tag[IQR_POLY1305_TAG_SIZE];
+    uint8_t poly1305_tag[POLY1305_TAG_SIZE];
     size_t poly1305_tag_size = sizeof(poly1305_tag);
 
     size_t message_size = 0;
@@ -75,18 +81,18 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
             goto end;
         }
 
-        ret = iqr_Poly1305Message(poly1305_obj, key_data, key_size, message, message_size, poly1305_tag, poly1305_tag_size);
+        ret = iqr_MACMessage(poly1305_obj, key_data, key_size, message, message_size, poly1305_tag, poly1305_tag_size);
         if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_Poly1305Message(): %s\n", iqr_StrError(ret));
+            fprintf(stderr, "Failed on iqr_MACMessage(): %s\n", iqr_StrError(ret));
             goto end;
         }
 
         fprintf(stdout, "Poly1305 tag has been created from %s\n", files->filename);
     } else {
         // Multiple files, use the updating Poly1305 functions
-        ret = iqr_Poly1305Begin(poly1305_obj, key_data, key_size);
+        ret = iqr_MACBegin(poly1305_obj, key_data, key_size);
         if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_Poly1305Begin(): %s\n", iqr_StrError(ret));
+            fprintf(stderr, "Failed on iqr_MACBegin(): %s\n", iqr_StrError(ret));
             goto end;
         }
 
@@ -96,9 +102,9 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
                 goto end;
             }
 
-            ret = iqr_Poly1305Update(poly1305_obj, message, message_size);
+            ret = iqr_MACUpdate(poly1305_obj, message, message_size);
             if (ret != IQR_OK) {
-                fprintf(stderr, "Failed on iqr_Poly1305Update(): %s\n", iqr_StrError(ret));
+                fprintf(stderr, "Failed on iqr_MACUpdate(): %s\n", iqr_StrError(ret));
                 goto end;
             }
 
@@ -110,9 +116,9 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
             files = files->next;
         }
 
-        ret = iqr_Poly1305End(poly1305_obj, poly1305_tag, poly1305_tag_size);
+        ret = iqr_MACEnd(poly1305_obj, poly1305_tag, poly1305_tag_size);
         if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_Poly1305End(): %s\n", iqr_StrError(ret));
+            fprintf(stderr, "Failed on iqr_MACEnd(): %s\n", iqr_StrError(ret));
             goto end;
         }
     }
@@ -129,7 +135,7 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
 end:
     free(message);
     message = NULL;
-    iqr_Poly1305Destroy(&poly1305_obj);
+    iqr_MACDestroy(&poly1305_obj);
     return ret;
 }
 
@@ -152,7 +158,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -382,8 +388,8 @@ int main(int argc, const char **argv)
     struct file_list *files = NULL;
     const char *tag_file = "tag.dat";
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &key, &key_file, &files, &tag_file);
     if (ret != IQR_OK) {

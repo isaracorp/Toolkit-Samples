@@ -39,8 +39,7 @@ iqr_retval cleanup_alice(void);
 
 /* Bob related */
 iqr_retval init_bob(const iqr_Context *ctx, const iqr_NewHopeVariant *variant);
-iqr_retval bob_start(const iqr_RNG *rng, bool dump);
-iqr_retval bob_get_secret(uint8_t *secret, size_t secret_size);
+iqr_retval bob_get_secret(const iqr_RNG *rng, bool dump, uint8_t *secret, size_t secret_size);
 iqr_retval cleanup_bob(void);
 
 /* Comms related. */

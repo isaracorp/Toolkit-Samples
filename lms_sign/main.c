@@ -41,7 +41,7 @@ static void *secure_memset(void *b, int c, size_t len);
 
 static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, const uint8_t *security,
     const size_t security_size, const iqr_LMSWinternitz w, const iqr_LMSHeight height, const uint8_t *digest, const char *priv_file,
-    uint32_t q, const char *sig_file)
+    uint32_t index, const char *sig_file)
 {
     iqr_LMSParams *params = NULL;
     iqr_LMSPrivateKey *priv = NULL;
@@ -49,8 +49,10 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
     size_t priv_raw_size = 0;
     uint8_t *priv_raw = NULL;
 
-    size_t sig_size = 0;
-    uint8_t *sig = NULL;
+    size_t C_size = 0;
+    size_t y_size = 0;
+    size_t path_size = 0;
+    uint8_t *sig_buf = NULL;
 
     uint32_t remaining = 0;
     uint32_t max_sigs = 0;
@@ -69,8 +71,8 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
     fprintf(stdout, "Number of signatures for this private key: %d.\n", max_sigs);
 
-    if (q > max_sigs) {
-        fprintf(stderr, "The private key cannot sign any more messages. q = %d.\n", q);
+    if (index > max_sigs) {
+        fprintf(stderr, "The private key cannot sign any more messages. index = %d.\n", index);
         ret = IQR_EKEYDEPLETED;
         goto end;
     }
@@ -90,14 +92,16 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
     fprintf(stdout, "Private key has been imported.\n");
 
     /* Determine the size of the resulting signature and allocate memory. */
-    ret = iqr_LMSGetSignatureSize(params, &sig_size);
+    ret = iqr_LMSGetSignatureComponentSizes(params, &C_size, &y_size, &path_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LMSGetSignatureSize(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_LMSGetSignatureComponentSizes(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    sig = calloc(1, sig_size);
-    if (sig == NULL) {
+    const size_t sig_size = C_size + y_size + path_size + sizeof(index);
+
+    sig_buf = calloc(1, sig_size);
+    if (sig_buf == NULL) {
         fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
         ret = IQR_ENOMEM;
         goto end;
@@ -105,19 +109,30 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
     /************************* CRITICALLY IMPORTANT STEP *************************
      *
-     * Before signing, the value of q+1 must be written to non-volatile memory.
+     * Before signing, the value of index+1 must be written to non-volatile memory.
      * Failure to do so could result in a SECURITY BREACH as it could lead to the
      * re-use of a one-time signature.
      *
-     * This step has been omitted for brevity. Next time you sign, use q+1.
+     * This step has been omitted for brevity. Next time you sign, use index+1.
      *
      * For more information about this property of the LMS private key, please
      * refer to the LMS specification.
      *
      *****************************************************************************/
 
+    /* Calculate where each signature component will be written to. */
+    uint8_t *C = sig_buf;
+    uint8_t *y = C + C_size;
+    uint8_t *path = y + y_size;
+    uint32_t *index_buf = (uint32_t *)(path + path_size);
+
+    /* Save index using system endian form. This serialization should be replaced
+     * with a standardized form, such as PKCS1 or XDR encoding.
+     */
+    *index_buf = index;
+
     /* Create the signature. */
-    ret = iqr_LMSSign(priv, rng, q, digest, IQR_SHA2_256_DIGEST_SIZE, sig, sig_size);
+    ret = iqr_LMSSign(priv, rng, index, digest, IQR_SHA2_256_DIGEST_SIZE, C, C_size, y, y_size, path, path_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_LMSSign(): %s\n", iqr_StrError(ret));
         goto end;
@@ -125,17 +140,17 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
     fprintf(stdout, "Signature has been created.\n");
 
-    ret = iqr_LMSGetRemainingSignatureCount(params, q + 1, &remaining);
+    ret = iqr_LMSGetRemainingSignatureCount(params, index + 1, &remaining);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_LMSGetRemainingSignatureCount(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
     fprintf(stdout, "The private key can sign %d more messages.\n", remaining);
-    fprintf(stdout, "IMPORTANT: Next time you sign, use q+1 (%d).\n", q + 1);
+    fprintf(stdout, "IMPORTANT: Next time you sign, use index+1 (%d).\n", index + 1);
 
     /* And finally, write the signature to disk. */
-    ret = save_data(sig_file, sig, sig_size);
+    ret = save_data(sig_file, sig_buf, sig_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -147,7 +162,7 @@ end:
         /* (Private) Keys are private, sensitive data, be sure to clear memory containing them when you're done */
         secure_memset(priv_raw, 0, priv_raw_size);
     }
-    free(sig);
+    free(sig_buf);
     free(priv_raw);
 
     iqr_LMSDestroyPrivateKey(&priv);
@@ -257,7 +272,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -339,7 +354,7 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "lms_sign --q <number> [--security <identifier>] \n"
+    fprintf(stdout, "lms_sign --index <number> [--security <identifier>] \n"
         "  [--sig filename] [--priv <filename>]\n"
         "  [--winternitz 1|2|4|8] [--height 5|10|20]\n"
         "  [--message <filename>]\n");
@@ -357,7 +372,7 @@ static void usage(void)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static void preamble(const char *cmd, const char *security, const char *sig, const char *priv, const iqr_LMSWinternitz w,
-    const iqr_LMSHeight height, uint32_t q, const char *message)
+    const iqr_LMSHeight height, uint32_t index, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    security string: %s\n", security);
@@ -385,7 +400,7 @@ static void preamble(const char *cmd, const char *security, const char *sig, con
     } else {
         fprintf(stdout, "    height: INVALID\n");
     }
-    fprintf(stdout, "    q: %d\n", q);
+    fprintf(stdout, "    index: %d\n", index);
     fprintf(stdout, "    message data file: %s\n", message);
     fprintf(stdout, "\n");
 }
@@ -405,10 +420,10 @@ static int paramcmp(const char *p1 , const char *p2) {
 }
 
 static iqr_retval parse_commandline(int argc, const char **argv,  const char **security, const char **sig, const char **priv,
-    uint32_t *q, iqr_LMSWinternitz *w, iqr_LMSHeight *height, const char **message)
+    uint32_t *index, iqr_LMSWinternitz *w, iqr_LMSHeight *height, const char **message)
 {
     // Set to an improbable value so we can check if it was provided by user.
-    *q = UINT32_MAX;
+    *index = UINT32_MAX;
 
     int i = 1;
     while (i != argc) {
@@ -457,8 +472,8 @@ static iqr_retval parse_commandline(int argc, const char **argv,  const char **s
                 usage();
                 return IQR_EBADVALUE;
             }
-        } else if (paramcmp(argv[i], "--q") == 0) {
-            /* [--q <number>] */
+        } else if (paramcmp(argv[i], "--index") == 0) {
+            /* [--index <number>] */
             i++;
 
             char *end = NULL;
@@ -471,7 +486,7 @@ static iqr_retval parse_commandline(int argc, const char **argv,  const char **s
                 return IQR_EOUTOFRANGE;
             }
 
-            *q = (uint32_t)tmp;
+            *index = (uint32_t)tmp;
         } else if (paramcmp(argv[i], "--message") == 0) {
            /* [--message <filename>] */
            i++;
@@ -480,8 +495,8 @@ static iqr_retval parse_commandline(int argc, const char **argv,  const char **s
         i++;
     }
 
-    if (*q == UINT32_MAX) {
-        fprintf(stderr, "Please provide a q parameter: --q <number>.\n");
+    if (*index == UINT32_MAX) {
+        fprintf(stderr, "Please provide an index parameter: --index <number>.\n");
         return IQR_EOUTOFRANGE;
     }
 
@@ -524,22 +539,22 @@ int main(int argc, const char **argv)
     const char *message = "message.dat";
     iqr_LMSWinternitz w = IQR_LMS_WINTERNITZ_4;
     iqr_LMSHeight height =  IQR_LMS_HEIGHT_5;
-    uint32_t q = 0;
+    uint32_t index = 0;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
     uint8_t *digest = NULL;
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &security, &sig, &priv, &q, &w, &height, &message);
+    iqr_retval ret = parse_commandline(argc, argv, &security, &sig, &priv, &index, &w, &height, &message);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], security, sig, priv, w, height, q, message);
+    preamble(argv[0], security, sig, priv, w, height, index, message);
 
     /* IQR initialization that is not specific to LMS. */
     ret = init_toolkit(&ctx, &rng, message, &digest);
@@ -549,7 +564,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of LMS signing.
      */
-    ret = showcase_lms_sign(ctx, rng, (const uint8_t *)security, strlen(security), w, height, digest, priv, q, sig);
+    ret = showcase_lms_sign(ctx, rng, (const uint8_t *)security, strlen(security), w, height, digest, priv, index, sig);
 
 cleanup:
     iqr_RNGDestroy(&rng);

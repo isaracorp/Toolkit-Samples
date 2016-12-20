@@ -1,4 +1,5 @@
-/** @file main.c Demonstrate the use of IQR's McEliece QC-MDPC cryptosystem implementation.
+/** @file main.c Demonstrate the use of IQR's McEliece QC-MDPC cryptosystem
+ * implementation.
  *
  * @copyright Copyright 2016 ISARA Corporation
  *
@@ -68,7 +69,9 @@ static iqr_retval showcase_mceliece_encryption(const iqr_RNG *rng, const iqr_McE
         goto end;
     }
 
-    /* Get the ciphertext size, so that we can allocate a buffer big enough to hold the ciphertext. */
+    /* Get the ciphertext size, so that we can allocate a buffer big enough to
+     * hold the ciphertext.
+     */
     ret = iqr_McElieceGetCiphertextSize(params, plaintext_size, &ciphertext_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_McElieceGetCiphertextSize(): %s\n", iqr_StrError(ret));
@@ -181,7 +184,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -224,10 +227,12 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
     iqr_retval ret = IQR_OK;
     uint8_t *tmp = NULL;
     if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on implementation,
-         * so skip all this when the size is 0 so we consistently return NULL with a size of 0.
-         * In some samples it's useful to take empty files as input so users can pass NULL or 0
-         * for optional parameters.
+        /* calloc() with a param of 0 could return a pointer or NULL depending
+         * on implementation, so skip all this when the size is 0 so we
+         * consistently return NULL with a size of 0.
+         *
+         * In some samples it's useful to take empty files as input so users
+         * can pass NULL or 0 for optional parameters.
          */
         tmp = calloc(1, tmp_size);
         if (tmp == NULL) {
@@ -414,14 +419,17 @@ int main(int argc, const char **argv)
     iqr_RNG *rng = NULL;
     iqr_McElieceParams *parameters = NULL;
 
-    /* Default values.  Please adjust the usage() message if you make changes here.
+    /* Default values.  Please adjust the usage() message if you make changes
+     * here.
      */
     iqr_McElieceKeySize public_key_size = IQR_MCELIECE_PUBKEY9857;
     const char *public_key_file = "pub.key";
     const char *plaintext_file = "message.dat";
     const char *ciphertext_file = "ciphertext.dat";
 
-    /* If the command line arguments were not sane, this function will exit the process. */
+    /* If the command line arguments were not sane, this function will return
+     * an error.
+     */
     iqr_retval ret = parse_commandline(argc, argv, &public_key_size, &public_key_file, &plaintext_file, &ciphertext_file);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;

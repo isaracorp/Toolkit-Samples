@@ -34,7 +34,7 @@
  * facilitate the pseudo-separate process paradigm.
  */
 static iqr_NewHopeParams *params;
-static iqr_NewHopeInitiator *initiator_private_key;
+static iqr_NewHopePrivateKey *private_key;
 
 iqr_retval init_alice(const iqr_Context *ctx, const iqr_NewHopeVariant *variant)
 {
@@ -64,14 +64,14 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
         return IQR_ENOMEM;
     }
 
-    iqr_retval ret = iqr_NewHopeCreateInitiatorPrivateKey(params, &initiator_private_key);
+    iqr_retval ret = iqr_NewHopeCreatePrivateKey(params, &private_key);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeCreateInitiatorPrivateKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_NewHopeCreatePrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
     }
-    ret = iqr_NewHopeCreateInitiatorPublicKey(params, rng, initiator_private_key, initiator_public_key, initiator_size);
+    ret = iqr_NewHopeGetInitiatorPublicKey(private_key, rng, initiator_public_key, initiator_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeCreateInitiatorPublicKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_NewHopeGetInitiatorPublicKey(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -86,7 +86,7 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
 
 end:
     if (ret != IQR_OK) {
-        iqr_NewHopeDestroyInitiatorPrivateKey(&initiator_private_key);
+        iqr_NewHopeDestroyPrivateKey(&private_key);
     }
     free(initiator_public_key);
     return ret;
@@ -112,17 +112,16 @@ iqr_retval alice_get_secret(uint8_t *secret, size_t secret_size)
         goto end;
     }
 
-    ret = iqr_NewHopeGetInitiatorSecret(params, responder_public_key, responder_size, initiator_private_key, secret,
-        secret_size);
+    ret = iqr_NewHopeGetInitiatorSecret(private_key, responder_public_key, responder_size, secret, secret_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_NewHopeGetInitiatorSecret(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
 end:
-    ret = iqr_NewHopeDestroyInitiatorPrivateKey(&initiator_private_key);
+    ret = iqr_NewHopeDestroyPrivateKey(&private_key);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeDestroyInitiatorPrivateKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_NewHopeDestroyPrivateKey(): %s\n", iqr_StrError(ret));
     }
 
     free(responder_public_key);

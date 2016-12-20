@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.0 LMS Samples
+# ISARA Toolkit 1.1 LMS Samples
 ISARA Corporation <info@isara.com>
-v1.0, September 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 
@@ -23,8 +23,8 @@ an unlimited number of times.
 
 1.  The signer generates a public and private key pair.
 2.  The signer publishes the public key but keeps the private key secret.
-3.  The signer uses the private key and q to sign the digest of a message.
-    **The signer must then save the index q + 1 since q cannot be reused.**
+3.  **The signer must save the index q + 1 since q must not be reused.**
+    The signer then uses the private key and q to sign the digest of a message.
 4.  The signer publishes the message and signature.
 5.  A verifier obtains the public key, the message and the signature.
 6.  A verifier reproduces the digest of the message and verifies it
@@ -299,13 +299,13 @@ This must be the same value as was passed into lms_generate_keys.
 See the `LICENSE` file for details:
 
 > Copyright 2016 ISARA Corporation
->
+> 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
 > You may obtain a copy of the License at
->
+> 
 > http://www.apache.org/licenses/LICENSE-2.0
->
+> 
 > Unless required by applicable law or agreed to in writing, software
 > distributed under the License is distributed on an "AS IS" BASIS,
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.

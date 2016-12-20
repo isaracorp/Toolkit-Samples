@@ -155,7 +155,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash_alg
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
@@ -321,8 +321,8 @@ int main(int argc, const char **argv)
 
     iqr_Context *ctx = NULL;
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &hash_alg, &cb, &salt_file, &message_file);
     if (ret != IQR_OK) {

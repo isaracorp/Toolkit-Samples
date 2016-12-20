@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.0 HMAC Sample
+# ISARA Toolkit 1.1 HMAC Sample
 ISARA Corporation <info@isara.com>
-v1.0, September 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Message Authentication Codes
 

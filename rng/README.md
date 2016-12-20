@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.0 Poly1305 MAC Sample
+# ISARA Toolkit 1.1 Poly1305 MAC Sample
 ISARA Corporation <info@isara.com>
-v1.0, September 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Random Number Generation
 
@@ -145,7 +145,8 @@ The number of bytes to read from the random number generator.
 ## Further Reading
 
 * See `iqr_rng.h` in the IQR Toolkit's `include` directory.
-* [NIST Special Publication 800-90A Revision 1](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf)
+* http://dx.doi.org/10.6028/NIST.SP.800-90Ar1[NIST Special Publication 800-90A
+Revision 1]
 
 ## License
 

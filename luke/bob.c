@@ -35,7 +35,6 @@
  * facilitate the pseudo-separate process paradigm.
  */
 static iqr_LUKEParams *params;
-static iqr_LUKEResponder *responder_private_key;
 
 iqr_retval init_bob(const iqr_Context *ctx)
 {
@@ -51,11 +50,19 @@ iqr_retval init_bob(const iqr_Context *ctx)
     return ret;
 }
 
-iqr_retval bob_start(const iqr_RNG *rng, bool dump)
+iqr_retval bob_get_secret(const iqr_RNG *rng, bool dump, uint8_t *secret, size_t secret_size)
 {
     if (rng == NULL) {
         fprintf(stderr, "The RNG was null and we really need that RNG\n");
         return IQR_ENULLPTR;
+    }
+
+    if (secret == NULL) {
+        return IQR_ENULLPTR;
+    }
+    if (secret_size != IQR_LUKE_SECRET_SIZE) {
+        fprintf(stderr, "The input parameters were bad.\n");
+        return IQR_EBADVALUE;
     }
 
     uint8_t *responder_public_key = NULL;
@@ -80,15 +87,10 @@ iqr_retval bob_start(const iqr_RNG *rng, bool dump)
         goto end;
     }
 
-    ret = iqr_LUKECreateResponderPrivateKey(params, &responder_private_key);
+    ret = iqr_LUKEGetResponderPublicKeyandSecret(params, rng, initiator_public_key, initiator_size, responder_public_key,
+            responder_size, secret, secret_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LUKECreateResponderPrivateKey(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-    ret = iqr_LUKECreateResponderPublicKey(params, rng, initiator_public_key, initiator_size,
-        responder_private_key, responder_public_key, responder_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LUKECreateResponderPublicKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_LUKEGetResponderPublicKeyandSecret(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -104,31 +106,6 @@ iqr_retval bob_start(const iqr_RNG *rng, bool dump)
 end:
     free(responder_public_key);
     free(initiator_public_key);
-    if (ret != IQR_OK) {
-        iqr_LUKEDestroyResponderPrivateKey(&responder_private_key);
-    }
-    return ret;
-}
-
-iqr_retval bob_get_secret(uint8_t *secret, size_t secret_size)
-{
-    if (secret == NULL) {
-        return IQR_ENULLPTR;
-    }
-    if (secret_size != IQR_LUKE_SECRET_SIZE) {
-        fprintf(stderr, "The input parameters were bad.\n");
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = iqr_LUKEGetResponderSecret(params, responder_private_key, secret, secret_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LUKEGetResponderSecret(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-    ret = iqr_LUKEDestroyResponderPrivateKey(&responder_private_key);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LUKEDestroyResponderPrivateKey(): %s\n", iqr_StrError(ret));
-    }
     return ret;
 }
 

@@ -74,16 +74,12 @@ static iqr_retval showcase_newhope(const iqr_Context *ctx, const iqr_RNG *rng, b
     if (ret != IQR_OK) {
         goto end;
     }
-    ret = bob_start(rng, dump);
+    ret = bob_get_secret(rng, dump, bob_secret, sizeof(bob_secret));
     if (ret != IQR_OK) {
         goto end;
     }
 
     ret = alice_get_secret(alice_secret, sizeof(alice_secret));
-    if (ret != IQR_OK) {
-        goto end;
-    }
-    ret = bob_get_secret(bob_secret, sizeof(bob_secret));
     if (ret != IQR_OK) {
         goto end;
     }
@@ -184,7 +180,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const iqr_NewHo
 //---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -326,8 +322,8 @@ int main(int argc, const char **argv)
     bool dump = false;
     const iqr_NewHopeVariant *variant = &IQR_NEWHOPE_REFERENCE;
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &dump, &variant);
     if (ret != IQR_OK) {

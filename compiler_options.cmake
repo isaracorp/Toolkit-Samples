@@ -22,7 +22,11 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     add_compile_options (-Wno-vla)
     add_compile_options (-Wno-packed)
     add_compile_options (-Wno-padded)
-    add_compile_options (-Wno-reserved-id-macro)
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.7)
+        # Not sure of the exact version when this was added; clang 3.4 on
+        # FreeBSD 10.3 doesn't have it.
+        add_compile_options (-Wno-reserved-id-macro)
+    endif ()
     add_compile_options (-Wno-disabled-macro-expansion)
     add_compile_options (-Wno-documentation-unknown-command)
     ## Will rely on gcc figuring this error out if it is applicable.
@@ -30,7 +34,6 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     ## If clang learns about the C99 spec we can remove this.
     add_compile_options (-Wno-missing-field-initializers)
     add_compile_options (-fvisibility=hidden)
-    add_compile_options (-fPIC)
     add_compile_options (-std=c99)
 
     ## Release
@@ -58,6 +61,12 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     ## Platform specific stuff
     if (("${CMAKE_SYSTEM_NAME_LOWER}" MATCHES "linux|windows|cygwin"))
         add_compile_options (-D_GNU_SOURCE=1)
+    endif ()
+
+    if (NOT ("${CMAKE_SYSTEM_NAME_LOWER}" MATCHES "cygwin"))
+        # Cygwin warns you that -fPIC isn't necessary. That doesn't mix well
+        # with -Werror unfortunately.
+        add_compile_options (-fPIC)
     endif ()
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
@@ -93,7 +102,6 @@ elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options (-fstack-check)
     add_compile_options (-fstack-protector-all)
     add_compile_options (-fvisibility=hidden)
-    add_compile_options (-fPIC)
     add_compile_options (-pedantic)
     add_compile_options (-pipe)
     add_compile_options (-std=c99)
@@ -129,6 +137,12 @@ elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
     ## Platform specific stuff
     if (("${CMAKE_SYSTEM_NAME_LOWER}" MATCHES "linux|windows|cygwin"))
         add_compile_options (-D_GNU_SOURCE=1)
+    endif ()
+
+    if (NOT ("${CMAKE_SYSTEM_NAME_LOWER}" MATCHES "cygwin"))
+        # Cygwin warns you that -fPIC isn't necessary. That doesn't mix well
+        # with -Werror unfortunately.
+        add_compile_options (-fPIC)
     endif ()
 
     if (NOT BUILD_SERVER)

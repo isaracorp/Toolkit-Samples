@@ -140,7 +140,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash, co
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -406,8 +406,8 @@ int main(int argc, const char **argv)
     size_t count = default_count;
     uint8_t *validate = NULL;
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &hash, &cb, &seed, &reseed, &output, &count);
     if (ret != IQR_OK) {

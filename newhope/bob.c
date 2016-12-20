@@ -34,7 +34,6 @@
  * facilitate the pseudo-separate process paradigm.
  */
 static iqr_NewHopeParams *params;
-static iqr_NewHopeResponder *responder_private_key;
 
 iqr_retval init_bob(const iqr_Context *ctx, const iqr_NewHopeVariant *variant)
 {
@@ -50,11 +49,19 @@ iqr_retval init_bob(const iqr_Context *ctx, const iqr_NewHopeVariant *variant)
     return ret;
 }
 
-iqr_retval bob_start(const iqr_RNG *rng, bool dump)
+iqr_retval bob_get_secret(const iqr_RNG *rng, bool dump, uint8_t *secret, size_t secret_size)
 {
     if (rng == NULL) {
         fprintf(stderr, "The RNG was null and we really need that RNG\n");
         return IQR_ENULLPTR;
+    }
+
+    if (secret == NULL) {
+        return IQR_ENULLPTR;
+    }
+    if (secret_size != IQR_NEWHOPE_SECRET_SIZE) {
+        fprintf(stderr, "The input parameters were bad.\n");
+        return IQR_EBADVALUE;
     }
 
     uint8_t *responder_public_key = NULL;
@@ -79,15 +86,10 @@ iqr_retval bob_start(const iqr_RNG *rng, bool dump)
         goto end;
     }
 
-    ret = iqr_NewHopeCreateResponderPrivateKey(params, &responder_private_key);
+    ret = iqr_NewHopeGetResponderPublicKeyandSecret(params, rng, initiator_public_key, initiator_size, responder_public_key,
+            responder_size, secret, secret_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeCreateResponderPrivateKey(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-    ret = iqr_NewHopeCreateResponderPublicKey(params, rng, initiator_public_key, initiator_size,
-        responder_private_key, responder_public_key, responder_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeCreateResponderPublicKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_LUKEGetResponderPublicKeyandSecret(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -103,31 +105,6 @@ iqr_retval bob_start(const iqr_RNG *rng, bool dump)
 end:
     free(responder_public_key);
     free(initiator_public_key);
-    if (ret != IQR_OK) {
-        iqr_NewHopeDestroyResponderPrivateKey(&responder_private_key);
-    }
-    return ret;
-}
-
-iqr_retval bob_get_secret(uint8_t *secret, size_t secret_size)
-{
-    if (secret == NULL) {
-        return IQR_ENULLPTR;
-    }
-    if (secret_size != IQR_NEWHOPE_SECRET_SIZE) {
-        fprintf(stderr, "The input parameters were bad.\n");
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = iqr_NewHopeGetResponderSecret(params, responder_private_key, secret, secret_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeGetResponderSecret(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-    ret = iqr_NewHopeDestroyResponderPrivateKey(&responder_private_key);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeDestroyResponderPrivateKey(): %s\n", iqr_StrError(ret));
-    }
     return ret;
 }
 

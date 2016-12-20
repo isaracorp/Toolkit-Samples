@@ -76,7 +76,7 @@ end:
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -298,8 +298,8 @@ int main(int argc, const char **argv)
     uint8_t *nonce_data = NULL;
     uint8_t *plaintext_data = NULL;
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &key, &nonce, &counter, &plaintext, &ciphertext);
     if (ret != IQR_OK) {

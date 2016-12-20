@@ -23,7 +23,7 @@
 
 #include "iqr_chacha20.h"
 #include "iqr_context.h"
-#include "iqr_poly1305.h"
+#include "iqr_mac.h"
 #include "iqr_retval.h"
 
 /* RFC 7539 specifies that data is padded with zero-bytes so the length is a
@@ -32,6 +32,12 @@
 /* RFC 7539 specifies that lengths are written out at 8 bytes. */
 #define LENGTH_BYTES 8
 
+/* Poly1305 keys must be 32 bytes. */
+#define POLY1305_KEY_SIZE 32
+
+/* Poly1305 tags are 16 bytes. */
+#define POLY1305_TAG_SIZE 16
+
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Function Declarations.
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -39,8 +45,8 @@
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
 static void *secure_memset(void *b, int c, size_t len);
-static iqr_retval append_data_and_pad(iqr_Poly1305 *poly1305_obj, const uint8_t *data, size_t size);
-static iqr_retval append_length(iqr_Poly1305 *poly1305_obj, size_t length);
+static iqr_retval append_data_and_pad(iqr_MAC *poly1305_obj, const uint8_t *data, size_t size);
+static iqr_retval append_length(iqr_MAC *poly1305_obj, size_t length);
 static iqr_retval verify_tag(const uint8_t *poly1305_tag, size_t poly1305_tag_size, const uint8_t *tag_data, size_t tag_size);
 static iqr_retval decrypt_ciphertext(const uint8_t *key_data, size_t key_size, const uint8_t *nonce_data, size_t nonce_size,
     const uint8_t *ciphertext_data, size_t ciphertext_size, const char *plaintext_file);
@@ -54,12 +60,12 @@ static iqr_retval showcase_AEAD_chacha20_poly1305_decrypt(const iqr_Context *ctx
     const uint8_t *nonce_data, size_t nonce_size, const uint8_t *ciphertext_data, size_t ciphertext_size,
     const uint8_t *aad_data, size_t aad_size, const uint8_t *tag_data, size_t tag_size, const char *plaintext_file)
 {
-    iqr_Poly1305 *poly1305_obj = NULL;
+    iqr_MAC *poly1305_obj = NULL;
 
     /* Generate the Poly1305 key using ChaCha20 with key and nonce.
      * Counter is set to 0 per RFC 7539.
      */
-    uint8_t poly1305_key[IQR_POLY1305_KEY_SIZE] = { 0 };
+    uint8_t poly1305_key[POLY1305_KEY_SIZE] = { 0 };
     iqr_retval ret = iqr_ChaCha20Encrypt(key_data, key_size, nonce_data, nonce_size, 0, poly1305_key, sizeof(poly1305_key),
         poly1305_key, sizeof(poly1305_key));
     if (ret != IQR_OK) {
@@ -77,15 +83,15 @@ static iqr_retval showcase_AEAD_chacha20_poly1305_decrypt(const iqr_Context *ctx
      * - AAD length in octets, as a 64-bit little endian integer.
      * - Ciphertext length in octets, as a 64-bit little endian integer.
      */
-    ret = iqr_Poly1305Create(ctx, &poly1305_obj);
+    ret = iqr_MACCreatePoly1305(ctx, &poly1305_obj);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305Create(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACCreatePoly1305(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    ret = iqr_Poly1305Begin(poly1305_obj, poly1305_key, sizeof(poly1305_key));
+    ret = iqr_MACBegin(poly1305_obj, poly1305_key, sizeof(poly1305_key));
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305Begin(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACBegin(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -109,11 +115,11 @@ static iqr_retval showcase_AEAD_chacha20_poly1305_decrypt(const iqr_Context *ctx
         goto end;
     }
 
-    uint8_t poly1305_tag[IQR_POLY1305_TAG_SIZE];
+    uint8_t poly1305_tag[POLY1305_TAG_SIZE];
     size_t poly1305_tag_size = sizeof(poly1305_tag);
-    ret = iqr_Poly1305End(poly1305_obj, poly1305_tag, poly1305_tag_size);
+    ret = iqr_MACEnd(poly1305_obj, poly1305_tag, poly1305_tag_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305End(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACEnd(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -140,7 +146,7 @@ end:
     /* Keys are private, sensitive data, be sure to clear memory containing them when you're done */
     secure_memset(poly1305_key, 0, sizeof(poly1305_key));
 
-    iqr_Poly1305Destroy(&poly1305_obj);
+    iqr_MACDestroy(&poly1305_obj);
     return ret;
 }
 
@@ -149,20 +155,20 @@ end:
 // out with zeros if the length isn't a multiple of 16.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval append_data_and_pad(iqr_Poly1305 *poly1305_obj, const uint8_t *data, size_t size)
+static iqr_retval append_data_and_pad(iqr_MAC *poly1305_obj, const uint8_t *data, size_t size)
 {
-    iqr_retval ret = iqr_Poly1305Update(poly1305_obj, data, size);
+    iqr_retval ret = iqr_MACUpdate(poly1305_obj, data, size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305Update(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACUpdate(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
     const uint8_t zeros[PAD_TO_LENGTH] = { 0 };
     const size_t partial_length = size % PAD_TO_LENGTH;
     if (partial_length != 0) {
-        ret = iqr_Poly1305Update(poly1305_obj, zeros, PAD_TO_LENGTH - partial_length);
+        ret = iqr_MACUpdate(poly1305_obj, zeros, PAD_TO_LENGTH - partial_length);
         if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_Poly1305Update(): %s\n", iqr_StrError(ret));
+            fprintf(stderr, "Failed on iqr_MACUpdate(): %s\n", iqr_StrError(ret));
             return ret;
         }
     }
@@ -175,7 +181,7 @@ static iqr_retval append_data_and_pad(iqr_Poly1305 *poly1305_obj, const uint8_t 
 // 8 little-endian bytes and adding it to the MAC.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval append_length(iqr_Poly1305 *poly1305_obj, size_t length)
+static iqr_retval append_length(iqr_MAC *poly1305_obj, size_t length)
 {
     uint8_t length_bytes[LENGTH_BYTES];
     for (int i = 0; i < LENGTH_BYTES; i++) {
@@ -183,9 +189,9 @@ static iqr_retval append_length(iqr_Poly1305 *poly1305_obj, size_t length)
         length >>= CHAR_BIT;
     }
 
-    iqr_retval ret = iqr_Poly1305Update(poly1305_obj, length_bytes, LENGTH_BYTES);
+    iqr_retval ret = iqr_MACUpdate(poly1305_obj, length_bytes, LENGTH_BYTES);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305Update(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACUpdate(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
@@ -259,7 +265,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -466,8 +472,8 @@ int main(int argc, const char **argv)
 
     iqr_Context *ctx = NULL;
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &key, &nonce, &ciphertext, &aad, &tag, &ciphertext);
     if (ret != IQR_OK) {

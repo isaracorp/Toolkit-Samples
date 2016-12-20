@@ -1,4 +1,5 @@
-/** @file main.c Demonstrate the use of IQR's McEliece QC-MDPC cryptosystem implementation.
+/** @file main.c Demonstrate the use of IQR's McEliece QC-MDPC cryptosystem
+ * implementation.
  *
  * @copyright Copyright 2016 ISARA Corporation
  *
@@ -68,7 +69,9 @@ static iqr_retval showcase_mceliece_decryption(const iqr_McElieceParams *params,
         goto end;
     }
 
-    /* Get the plaintext size, so that we can allocate a buffer big enough to hold the plaintext. */
+    /* Get the plaintext size, so that we can allocate a buffer big enough to
+     * hold the plaintext.
+     */
     ret = iqr_McElieceGetPlaintextSize(params, ciphertext_size, &plaintext_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_McElieceGetPlaintextSize(): %s\n", iqr_StrError(ret));
@@ -98,7 +101,9 @@ static iqr_retval showcase_mceliece_decryption(const iqr_McElieceParams *params,
 
 end:
     if (privkey_dat!= NULL) {
-        /* (Private) Keys are private, sensitive data, be sure to clear memory containing them when you're done */
+        /* (Private) Keys are private, sensitive data, be sure to clear memory
+         * containing them when you're done.
+         */
         secure_memset(privkey_dat, 0, privkey_dat_size);
     }
     free(ciphertext);
@@ -167,7 +172,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
@@ -210,10 +215,12 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
     iqr_retval ret = IQR_OK;
     uint8_t *tmp = NULL;
     if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on implementation,
-         * so skip all this when the size is 0 so we consistently return NULL with a size of 0.
-         * In some samples it's useful to take empty files as input so users can pass NULL or 0
-         * for optional parameters.
+        /* calloc() with a param of 0 could return a pointer or NULL depending
+         * on implementation, so skip all this when the size is 0 so we
+         * consistently return NULL with a size of 0.
+         *
+         * In some samples it's useful to take empty files as input so users
+         * can pass NULL or 0 for optional parameters.
          */
         tmp = calloc(1, tmp_size);
         if (tmp == NULL) {
@@ -392,11 +399,13 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_McElieceKey
 
 static void *secure_memset(void *b, int c, size_t len)
 {
-    /** This memset() is NOT secure. It could and probably will be optimized out by the compiler. There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows also provides SecureZeroMemory().
+    /** This memset() is NOT secure. It could and probably will be optimized
+     * out by the compiler. There isn't a secure, portable memset() available
+     * before C11 which provides memset_s(). Windows also provides
+     * SecureZeroMemory().
      *
-     * This is just for sample purposes, do your own due diligence when choosing a secure memset() so you can securely
-     * clear sensitive data.
+     * This is just for sample purposes, do your own due diligence when
+     * choosing a secure memset() so you can securely clear sensitive data.
      */
     return memset(b, c, len);
 }
@@ -418,7 +427,9 @@ int main(int argc, const char **argv)
     const char *ciphertext_file = "ciphertext.dat";
     const char *plaintext_file = "decrypted_message.dat";
 
-    /* If the command line arguments were not sane, this function will exit the process. */
+    /* If the command line arguments were not sane, this function will return
+     * an error.
+     */
     iqr_retval ret = parse_commandline(argc, argv, &public_key_size, &private_key_file, &ciphertext_file, &plaintext_file);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;

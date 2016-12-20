@@ -47,7 +47,7 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
     uint8_t *pub_raw = NULL;
 
     size_t sig_size = 0;
-    uint8_t *sig = NULL;
+    uint8_t *sig_buf = NULL;
 
     iqr_retval ret = iqr_LMSCreateParams(ctx, w, height, security, security_size, &params);
     if (ret != IQR_OK) {
@@ -61,7 +61,7 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
         goto end;
     }
 
-    ret = load_data(sig_file, &sig, &sig_size);
+    ret = load_data(sig_file, &sig_buf, &sig_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -75,7 +75,24 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
 
     fprintf(stdout, "Public key has been loaded successfully!\n");
 
-    ret = iqr_LMSVerify(pub, digest, IQR_SHA2_256_DIGEST_SIZE, sig, sig_size);
+    size_t C_size = 0;
+    size_t y_size = 0;
+    size_t path_size = 0;
+
+    /* Determine the size of the resulting signature and allocate memory. */
+    ret = iqr_LMSGetSignatureComponentSizes(params, &C_size, &y_size, &path_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_LMSGetSignatureComponentSizes(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    /* Calculate where each signature component will be written to. */
+    const uint8_t *C = sig_buf;
+    const uint8_t *y = C + C_size;
+    const uint8_t *path = y + y_size;
+    const uint32_t *index_buf = (const uint32_t *)(path + path_size);
+
+    ret = iqr_LMSVerify(pub, *index_buf, digest, IQR_SHA2_256_DIGEST_SIZE, C, C_size, y, y_size, path, path_size);
     if (ret == IQR_OK) {
         fprintf(stdout, "LMS verified the signature successfully!\n");
     } else {
@@ -86,7 +103,7 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
 
 end:
     free(pub_raw);
-    free(sig);
+    free(sig_buf);
 
     iqr_LMSDestroyParams(&params);
 
@@ -177,7 +194,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic Posix file stream I/O operations.
+// Generic POSIX file stream I/O operations.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
@@ -301,7 +318,6 @@ static int paramcmp(const char *p1 , const char *p2) {
 static iqr_retval parse_commandline(int argc, const char **argv, const char **security, const char **sig, const char **pub,
     iqr_LMSWinternitz *w, iqr_LMSHeight *height, const char **message)
 {
-
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
@@ -383,8 +399,8 @@ int main(int argc, const char **argv)
     iqr_Context *ctx = NULL;
     uint8_t *digest = NULL;
 
-    /* If the command line arguments were not sane, this function will exit
-     * the process.
+    /* If the command line arguments were not sane, this function will return
+     * an error.
      */
     iqr_retval ret = parse_commandline(argc, argv, &security, &sig, &pub, &w, &height, &message);
     if (ret != IQR_OK) {
