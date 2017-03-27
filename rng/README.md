@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 Poly1305 MAC Sample
+# ISARA Radiate Security Solution Suite 1.2 Poly1305 MAC Sample
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Random Number Generation
 
@@ -32,13 +32,13 @@ From NIST SP 800-90A Rev. 1:
 > applications.
 
 HMAC-DRBG is built around the use of a SHA2-256, SHA2-512, SHA3-256 or SHA3-512
-hash function using the HMAC construction. The IQR Toolkit's HMAC-DRBG RNG
+hash function using the HMAC construction. The toolkit's HMAC-DRBG RNG
 implementation can be initiated using any of these hash functions.
 
 ## Getting Started
 
-We have created a sample application that demonstrates how to use the IQR
-Toolkit's HMAC-DRBG RNG implementation.
+We have created a sample application that demonstrates how to use the
+toolkit's HMAC-DRBG RNG implementation.
 
 If the seed and reseed input parameters aren't provided, the sample will use
 NIST test vectors to seed and reseed the RNG. To follow the NIST test
@@ -109,8 +109,9 @@ Random data has been saved to disk.
 Command line format:
 
 ```
-rng [--hash sha2-256|sha2-512|sha3-256|sha3-512] [--seed <filename>]
-    [--reseed <filename>] [--output <filename>] [--count <bytes>]
+rng [--hash sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256]
+    [--seed <filename>] [--reseed <filename>] [--output <filename>]
+    [--count <bytes>]
 ```
 
 Command line defaults:
@@ -124,8 +125,9 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--hash sha2-256|sha2-512|sha3-256|sha3-512]
-The hash algorithm to use in the HMAC-DRBG.
+[--hash sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256]
+The hash algorithm to use in the HMAC-DRBG. Uses SHAKE instead of HMAC-DRBG if
+shake-128 or shake-256 is specified.
 
 [--seed <filename>]
 Data with which the RNG will be seeded. The entire contents of the file
@@ -144,15 +146,17 @@ The number of bytes to read from the random number generator.
 
 ## Further Reading
 
-* See `iqr_rng.h` in the IQR Toolkit's `include` directory.
+* See `iqr_rng.h` in the toolkit's `include` directory.
 * http://dx.doi.org/10.6028/NIST.SP.800-90Ar1[NIST Special Publication 800-90A
-Revision 1]
+  Revision 1]
+* http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf[SHA-3 Standard:
+  Permutation-Based Hash and Extendable-Output Functions]
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

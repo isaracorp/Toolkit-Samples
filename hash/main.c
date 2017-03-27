@@ -1,6 +1,6 @@
-/** @file main.c Create a Hash using the IQR Toolkit.
+/** @file main.c Create a Hash using the toolkit.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,7 +160,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash_alg
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -218,6 +218,7 @@ static void usage(void)
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --hash sha2-512\n");
     fprintf(stdout, "        --message message.dat\n");
+    fprintf(stdout, "    The salt must have at least 16 bytes, if specified.\n");
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------

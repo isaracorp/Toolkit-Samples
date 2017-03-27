@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 Poly1305 MAC Sample
+# ISARA Radiate Security Solution Suite 1.2 Poly1305 MAC Sample
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Message Authentication Codes
 
@@ -15,8 +15,8 @@ Poly1305 is a MAC algorithm specified by the Internet Engineering Taskforce's
 
 ## Getting Started
 
-We have created a sample application that demonstrates how to use the IQR
-Toolkit's Poly1305 implementation.
+We have created a sample application that demonstrates how to use the
+toolkit's Poly1305 implementation.
 
 Here is the simplest way to use the samples:
 
@@ -41,7 +41,7 @@ Execution and expected outputs:
 ```
 $ ./poly1305 message.dat
 Running ./poly1305 with the following parameters...
-    key: ****** ISARA-POLY1305-KEY *******
+    key: ****** ISARA-POLY1305-KEY ******
     data file(s):
       message.dat
     tag file: tag.dat
@@ -65,7 +65,7 @@ Execution and expected outputs:
 ```
 $ ./poly1305 message.dat message2.dat message3.dat
 Running ./poly1305 with the following parameters...
-    key: ****** ISARA-POLY1305-KEY *******
+    key: ****** ISARA-POLY1305-KEY ******
     data file(s):
       message.dat
       message2.dat
@@ -89,14 +89,14 @@ Poly1305 tag has been saved to disk.
 Command line format:
 
 ```
-poly1305 [--key { string <key> | file <filename> | none }]
+poly1305 [--key { string <key> | file <filename> }]
   [--tag <filename>]  msg1 [msg2 ...]
 ```
 
 Command line defaults:
 
 ```
---key string "****** ISARA-POLY1305-KEY *******"
+--key string "****** ISARA-POLY1305-KEY ******"
 --tag tag.dat
 ```
 
@@ -104,15 +104,11 @@ Command line parameter descriptions:
 
 ```
 [--key string <key>]
-Read the key from the command line.
+Read the key from the command line. It must be at least 32 bytes.
 
 [--key file <filename>]
 Read the key from file <filename>. The entire contents of the file
-will be read.
-
-[--key none]
-Don't use a key. This is not recommended, without a key this is basically
-just a hashing function.
+will be read. It must be at least 32 bytes.
 
 [--tag <filename>]
 Where the resulting tag will be saved.
@@ -124,14 +120,14 @@ which to calculate the MAC.
 
 ## Further Reading
 
-* See `iqr_poly1305.h` in the IQR Toolkit's `include` directory.
+* See `iqr_poly1305.h` in the toolkit's `include` directory.
 * [RFC 7539](https://tools.ietf.org/html/rfc7539)
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

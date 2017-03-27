@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 LMS Samples
+# ISARA Radiate Security Solution Suite 1.2 LMS Samples
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 
@@ -23,15 +23,16 @@ an unlimited number of times.
 
 1.  The signer generates a public and private key pair.
 2.  The signer publishes the public key but keeps the private key secret.
-3.  **The signer must save the index q + 1 since q must not be reused.**
-    The signer then uses the private key and q to sign the digest of a message.
+3.  **The signer must save the index index + 1 since index must not be reused.**
+    The signer then uses the private key and index to sign the digest of a
+    message.
 4.  The signer publishes the message and signature.
 5.  A verifier obtains the public key, the message and the signature.
 6.  A verifier reproduces the digest of the message and verifies it
     against the signature.
 
 :star: **IMPORTANT**
-In step 3, the OTS index value `q + 1` must be saved due to its
+In step 3, the OTS index value `index + 1` must be saved due to its
 dynamic nature.  If the signer does not save it before signing the digest,
 the signer risks using the one time signature data multiple times which
 would destroy the security of the scheme.
@@ -47,8 +48,8 @@ specification that is referred to in `iqr_lms.h`.
 
 ## Sample Applications
 
-We have created 3 small sample applications that demonstrate how to use the IQR
-Toolkit's LMS implementation:
+We have created 3 small sample applications that demonstrate how to use the
+toolkit's LMS implementation:
 
 * `lms_generate_keys` takes care of step 1.
 * `lms_sign` takes care of step 3.
@@ -81,7 +82,8 @@ Execution and expected outputs:
 ```
 $ ./lms_generate_keys
 Running ./lms_generate_keys with the following parameters...
-    security string: ** ISARA LMS KEY IDENTIFIER ***
+    security string:
+        ** ISARA Corp - LMS Key Identifier must be 64 bytes in length **
     public key file: pub.key
     private key file: priv.key
     winternitz value: IQR_LMS_WINTERNITZ_4
@@ -100,14 +102,15 @@ Execute `lms_sign` using default parameters.
 Execution and expected output:
 
 ```
-$ ./lms_sign --q 6
+$ ./lms_sign --index 6
 Running ./lms_sign with the following parameters...
-    security string: ** ISARA LMS KEY IDENTIFIER ***
+    security string:
+        ** ISARA Corp - LMS Key Identifier must be 64 bytes in length **
     signature file: sig.dat
     private key file: priv.key
     winternitz value: IQR_LMS_WINTERNITZ_4
     height: IQR_LMS_HEIGHT_5
-    q: 6
+    index: 6
     message data file: message.dat
 
 Successfully loaded message.dat (167518 bytes)
@@ -116,7 +119,7 @@ Successfully loaded priv.key (68736 bytes)
 Private key has been imported.
 Signature has been created.
 The private key can sign 25 more messages.
-IMPORTANT: Next time you sign, use q+1 (7).
+IMPORTANT: Next time you sign, use index+1 (7).
 Successfully saved sig.dat (2348 bytes)
 Signature has been saved to disk.
 ```
@@ -128,7 +131,8 @@ Execution and expected output:
 ```
 $ ./lms_verify
 Running ./lms_verify with the following parameters...
-    security string: ** ISARA LMS KEY IDENTIFIER ***
+    security string:
+        ** ISARA Corp - LMS Key Identifier must be 64 bytes in length **
     signature file: sig.dat
     public key file: pub.key
     winternitz value: IQR_LMS_WINTERNITZ_4
@@ -154,13 +158,13 @@ Command line format:
 ```
 lms_generate_keys [--security <identifier>] [--pub <filename>]
     [--priv <filename>] [--winternitz 1|2|4|8]
-    [--height 5|10|20]
+    [--height 5|10|15|20]
 ```
 
 Command line defaults:
 
 ```
---security "** ISARA LMS KEY IDENTIFIER ***"
+--security "** ISARA Corp - LMS Key Identifier must be 64 bytes in length **"
 --pub pub.key
 --priv priv.key
 --winternitz 4
@@ -175,7 +179,7 @@ The security identifier for the private key. This value must be distinct from
 all other identifiers and should be chosen via a pseudo-random function.
 However, for the convenience of the end user, in this sample we use a printable
 string and initialize it to a simple default. The security identified must be
-31 bytes long.
+64 bytes long.
 
 [--pub <filename>]
 <filename> is the name of the file where the public key is to be saved.
@@ -189,7 +193,7 @@ The size of the hashes to be used by the LMS algorithm.
 [--winternitz 1|2|4|8]
 The Winternitz value.
 
-[--height 5|10|20]
+[--height 5|10|15|20]
 The height of the Merkle Tree in the LMS algorithm.
 ```
 
@@ -201,16 +205,16 @@ signature to separate files.
 Command line format:
 
 ```
-lms_sign --q <number> [--security <identifier>]
+lms_sign --index <number> [--security <identifier>]
     [--sig filename] [--priv <filename>]
-    [--winternitz 1|2|4|8] [--height 5|10|20]
+    [--winternitz 1|2|4|8] [--height 5|10|15|20]
     [--message <filename>]
 ```
 
 Command line defaults:
 
 ```
---security "** ISARA LMS KEY IDENTIFIER ***"
+--security "** ISARA Corp - LMS Key Identifier must be 64 bytes in length **"
 --sig sig.dat
 --priv priv.key
 --winternitz 4
@@ -221,8 +225,8 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--q <number>]
-This must be provided by the user. DO NOT REUSE q!
+[--index <number>]
+This must be provided by the user. DO NOT REUSE index!
 
 [--security <identifier>]
 This must be the same value as was passed into lms_generate_keys.
@@ -236,7 +240,7 @@ This must be the same value as was passed into lms_generate_keys.
 [--winternitz 1|2|4|8]
 This must be the same value as was passed into lms_generate_keys.
 
-[--height 5|10|20]
+[--height 5|10|15|20]
 This must be the same value as was passed into lms_generate_keys.
 
 [--message <filename>]
@@ -251,14 +255,14 @@ Command line format:
 
 ```
 lms_verify [--security <identifier>] [--sig <filename>] [--pub <filename>]
-    [--winternitz 1|2|4|8] [--height 5|10|20]
+    [--winternitz 1|2|4|8] [--height 5|10|15|20]
     [--message <filename>]
 ```
 
 Command line defaults:
 
 ```
---security "** ISARA LMS KEY IDENTIFIER ***"
+--security "** ISARA Corp - LMS Key Identifier must be 64 bytes in length **"
 --sig sig.dat
 --pub pub.key
 --winternitz 4
@@ -281,7 +285,7 @@ This must be the same value as was passed into lms_generate_keys.
 [--winternitz 1|2|4|8]
 This must be the same value as was passed into lms_generate_keys.
 
-[--height 5|10|20]
+[--height 5|10|15|20]
 This must be the same value as was passed into lms_generate_keys.
 
 [--message <filename>]
@@ -290,15 +294,15 @@ This must be the same value as was passed into lms_generate_keys.
 
 ## Further Reading
 
-* See `iqr_lms.h` in the IQR Toolkit's `include` directory.
-* [Hash-Based Signatures](https://tools.ietf.org/html/draft-mcgrew-hash-sigs-04)
+* See `iqr_lms.h` in the toolkit's `include` directory.
+* [Hash-Based Signatures](https://tools.ietf.org/html/draft-mcgrew-hash-sigs-05)
   IETF Draft
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

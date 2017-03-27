@@ -1,6 +1,6 @@
-/** @file main.c Perform ChaCha20-Poly1305-AEAD encryption using the Toolkit.
+/** @file main.c Perform ChaCha20-Poly1305-AEAD encryption using the toolkit.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,6 @@
 
 /* Poly1305 keys must be 32 bytes. */
 #define POLY1305_KEY_SIZE 32
-
-/* Poly1305 tags are 16 bytes. */
-#define POLY1305_TAG_SIZE 16
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Structure Declarations.
@@ -61,6 +58,7 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
     }
 
     uint8_t *message = NULL;
+    uint8_t *poly1305_tag = NULL;
     iqr_MAC *poly1305_obj = NULL;
     iqr_retval ret = iqr_MACCreatePoly1305(ctx, &poly1305_obj);
     if (ret != IQR_OK) {
@@ -70,8 +68,17 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
 
     fprintf(stdout, "Poly1305 object has been created.\n");
 
-    uint8_t poly1305_tag[POLY1305_TAG_SIZE];
-    size_t poly1305_tag_size = sizeof(poly1305_tag);
+    size_t poly1305_tag_size = 0;
+    ret = iqr_MACGetTagSize(poly1305_obj, &poly1305_tag_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_MACGetTagSize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+    poly1305_tag = calloc(1, poly1305_tag_size);
+    if (poly1305_tag == NULL) {
+        fprintf(stderr, "Unable to allocate tag buffer.\n");
+        goto end;
+    }
 
     size_t message_size = 0;
     if (files->next == NULL) {
@@ -135,6 +142,8 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
 end:
     free(message);
     message = NULL;
+    free(poly1305_tag);
+    poly1305_tag = NULL;
     iqr_MACDestroy(&poly1305_obj);
     return ret;
 }
@@ -163,7 +172,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -187,7 +196,7 @@ end:
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -240,11 +249,12 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "poly1305 [--key { string <key> | file <filename> | none }]\n");
+    fprintf(stdout, "poly1305 [--key { string <key> | file <filename> }]\n");
     fprintf(stdout, "  [--tag <filename>]  msg1 [msg2 ...]\n");
     fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --key string \"****** ISARA-POLY1305-KEY *******\"\n");
+    fprintf(stdout, "        --key string \"****** ISARA-POLY1305-KEY ******\"\n");
     fprintf(stdout, "        --tag tag.dat\n");
+    fprintf(stdout, "  The key must be %d or more bytes.\n", POLY1305_KEY_SIZE);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -322,29 +332,27 @@ static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t *
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--key") == 0) {
-            /* [--key { string <key> | file <filename> | none }] */
+            /* [--key { string <key> | file <filename> }] */
             i++;
-            if (paramcmp(argv[i], "none") == 0) {
-                *key = NULL;
-                *key_file = NULL;
-            } else {
-                if (i + 2 > argc) {
-                    usage();
-                    return IQR_EBADVALUE;
-                }
+            if (i + 2 > argc) {
+                usage();
+                return IQR_EBADVALUE;
+            }
 
-                const char *param2 = argv[i];
-                i++;
-                if (paramcmp(param2, "string") == 0) {
-                    *key = (const uint8_t *)argv[i];
-                    *key_file = NULL;
-                } else if (paramcmp(param2, "file") == 0) {
-                    *key = NULL;
-                    *key_file = argv[i];
-                } else {
-                    usage();
+            const char *param2 = argv[i];
+            i++;
+            if (paramcmp(param2, "string") == 0) {
+                *key = (const uint8_t *)argv[i];
+                *key_file = NULL;
+                if (strnlen((const char *)*key, _POSIX_ARG_MAX) < POLY1305_KEY_SIZE) {
                     return IQR_EBADVALUE;
                 }
+            } else if (paramcmp(param2, "file") == 0) {
+                *key = NULL;
+                *key_file = argv[i];
+            } else {
+                usage();
+                return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--tag") == 0) {
             /* [--tag <filename>] */
@@ -382,7 +390,7 @@ int main(int argc, const char **argv)
     /* Default values.  Please adjust the usage() message if you make changes
      * here.
      */
-    const uint8_t *key = (const uint8_t *)"****** ISARA-POLY1305-KEY *******";
+    const uint8_t *key = (const uint8_t *)"****** ISARA-POLY1305-KEY ******";
     const char *key_file = NULL;
     uint8_t *loaded_key = NULL;
     struct file_list *files = NULL;
@@ -414,6 +422,11 @@ int main(int argc, const char **argv)
     } else if (key_file != NULL) {
         ret = load_data(key_file, &loaded_key, &key_size);
         if (ret != IQR_OK) {
+            goto cleanup;
+        }
+        if (key_size < POLY1305_KEY_SIZE) {
+            fprintf(stderr, "Key file must have at least %d bytes.\n", POLY1305_KEY_SIZE);
+            ret = IQR_EINVBUFSIZE;
             goto cleanup;
         }
         key = loaded_key;

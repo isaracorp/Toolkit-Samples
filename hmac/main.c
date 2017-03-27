@@ -1,6 +1,6 @@
-/** @file main.c Produce a MAC tag using the Toolkit's HMAC scheme.
+/** @file main.c Produce a MAC tag using the toolkit's HMAC scheme.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,7 +178,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash, co
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -202,7 +202,7 @@ end:
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -256,7 +256,7 @@ end:
 static void usage(void)
 {
     fprintf(stdout, "hmac [--hash sha2-256|sha2-512|sha3-256|sha3-512]\n"
-        "  [--key { string <key> | file <filename> | none }]\n"
+        "  [--key { string <key> | file <filename> }]\n"
         "  [--tag <filename>] msg1 [msg2 ...]\n");
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --hash sha2-256\n");
@@ -369,29 +369,24 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--key") == 0) {
-            /* [--key { string <key> | file <filename> | none }] */
+            /* [--key { string <key> | file <filename> }] */
             i++;
-            if (paramcmp(argv[i], "none") == 0) {
-                *key = NULL;
-                *key_file = NULL;
-            } else {
-                if (i + 2 > argc) {
-                    usage();
-                    return IQR_EBADVALUE;
-                }
+            if (i + 2 > argc) {
+                usage();
+                return IQR_EBADVALUE;
+            }
 
-                const char *param2 = argv[i];
-                i++;
-                if (paramcmp(param2, "string") == 0) {
-                    *key = (const uint8_t *)argv[i];
-                    *key_file = NULL;
-                } else if (paramcmp(param2, "file") == 0) {
-                    *key = NULL;
-                    *key_file = argv[i];
-                } else {
-                    usage();
-                    return IQR_EBADVALUE;
-                }
+            const char *param2 = argv[i];
+            i++;
+            if (paramcmp(param2, "string") == 0) {
+                *key = (const uint8_t *)argv[i];
+                *key_file = NULL;
+            } else if (paramcmp(param2, "file") == 0) {
+                *key = NULL;
+                *key_file = argv[i];
+            } else {
+                usage();
+                return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--tag") == 0) {
             /* [--tag <output tag file>] */

@@ -7,7 +7,7 @@
  * understand the data flow of LUKE. Again, don't read this file! You're
  * going to read it anyway aren't you...
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

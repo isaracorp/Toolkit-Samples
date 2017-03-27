@@ -1,6 +1,6 @@
-/** @file main.c Perform decryption using the Toolkit's ChaCha20 scheme.
+/** @file main.c Perform decryption using the toolkit's ChaCha20 scheme.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ end:
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -105,7 +105,7 @@ end:
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -237,8 +237,8 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **ke
             /* [--nonce <filename>] */
             i++;
             *nonce = argv[i];
-        } else if (paramcmp(argv[i], "--counter") == 0) {
-            /* [--counter <counter>] */
+        } else if (paramcmp(argv[i], "--initial_counter") == 0) {
+            /* [--initial_counter <counter>] */
             i++;
             int32_t c = get_positive_int_param(argv[i]);
             if (c < 0) {

@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 McEliece QC-MDPC Samples
+# ISARA Radiate Security Solution Suite 1.2 McEliece QC-MDPC Samples
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Public Key Cryptography
 
@@ -21,8 +21,8 @@ The McEliece cryptosystem follows this pattern.
 
 ## Getting Started
 
-We have created 3 small sample applications that demonstrate how to use the IQR
-Toolkit's McEliece QC-MDPC implementation:
+We have created 3 small sample applications that demonstrate how to use the
+toolkit's McEliece QC-MDPC implementation:
 
 * `mceliece_generate_keys` takes care of step 1.
 * `mceliece_encrypt` takes care of step 4.
@@ -257,7 +257,7 @@ This must be the same value as was passed into mceliece_generate_keys.
 
 ## Further Reading
 
-* See `iqr_mceliece.h` in the IQR Toolkit's `include` directory.
+* See `iqr_mceliece.h` in the toolkit's `include` directory.
 * [MDPC-McEliece:](https://eprint.iacr.org/2012/409.pdf)New McEliece Variants
   from Moderate Density Parity-Check Codes
 
@@ -265,7 +265,7 @@ This must be the same value as was passed into mceliece_generate_keys.
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

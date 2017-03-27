@@ -1,6 +1,6 @@
-/** @file main.c Verify a signature using the Toolkit's LMS signature scheme.
+/** @file main.c Verify a signature using the toolkit's LMS signature scheme.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
     uint8_t *pub_raw = NULL;
 
     size_t sig_size = 0;
-    uint8_t *sig_buf = NULL;
+    uint8_t *sig = NULL;
 
     iqr_retval ret = iqr_LMSCreateParams(ctx, w, height, security, security_size, &params);
     if (ret != IQR_OK) {
@@ -61,7 +61,7 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
         goto end;
     }
 
-    ret = load_data(sig_file, &sig_buf, &sig_size);
+    ret = load_data(sig_file, &sig, &sig_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -75,24 +75,7 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
 
     fprintf(stdout, "Public key has been loaded successfully!\n");
 
-    size_t C_size = 0;
-    size_t y_size = 0;
-    size_t path_size = 0;
-
-    /* Determine the size of the resulting signature and allocate memory. */
-    ret = iqr_LMSGetSignatureComponentSizes(params, &C_size, &y_size, &path_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LMSGetSignatureComponentSizes(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-
-    /* Calculate where each signature component will be written to. */
-    const uint8_t *C = sig_buf;
-    const uint8_t *y = C + C_size;
-    const uint8_t *path = y + y_size;
-    const uint32_t *index_buf = (const uint32_t *)(path + path_size);
-
-    ret = iqr_LMSVerify(pub, *index_buf, digest, IQR_SHA2_256_DIGEST_SIZE, C, C_size, y, y_size, path, path_size);
+    ret = iqr_LMSVerify(pub, digest, IQR_SHA2_256_DIGEST_SIZE, sig, sig_size);
     if (ret == IQR_OK) {
         fprintf(stdout, "LMS verified the signature successfully!\n");
     } else {
@@ -103,7 +86,7 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const uint8_t *sec
 
 end:
     free(pub_raw);
-    free(sig_buf);
+    free(sig);
 
     iqr_LMSDestroyParams(&params);
 
@@ -199,7 +182,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -253,10 +236,10 @@ end:
 static void usage(void)
 {
     fprintf(stdout, "lms_verify [--security <identifier>] [--sig <filename>] [--pub <filename>]\n"
-        "  [--winternitz 1|2|4|8] [--height 5|10|20]\n"
+        "  [--winternitz 1|2|4|8] [--height 5|10|15|20]\n"
         "  [--message <filename>]\n");
     fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --security \"** ISARA LMS KEY IDENTIFIER ***\" (must be 31 bytes)\n");
+    fprintf(stdout, "        --security \"** ISARA Corp - LMS Key Identifier must be 64 bytes in length **\"\n");
     fprintf(stdout, "        --sig sig.dat\n");
     fprintf(stdout, "        --pub pub.key\n");
     fprintf(stdout, "        --winternitz 4\n");
@@ -272,7 +255,8 @@ static void preamble(const char *cmd, const char *security, const char *sig, con
     const iqr_LMSHeight height,const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    fprintf(stdout, "    security string: %s\n", security);
+    fprintf(stdout, "    security string:\n");
+    fprintf(stdout, "        %s\n", security);
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
 
@@ -292,6 +276,8 @@ static void preamble(const char *cmd, const char *security, const char *sig, con
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_5\n");
     } else if (IQR_LMS_HEIGHT_10 == height) {
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_10\n");
+    } else if (IQR_LMS_HEIGHT_15 == height) {
+        fprintf(stdout, "    height: IQR_LMS_HEIGHT_15\n");
     } else if (IQR_LMS_HEIGHT_20 == height) {
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_20\n");
     } else {
@@ -359,6 +345,8 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **se
                 *height = IQR_LMS_HEIGHT_5;
             } else if  (paramcmp(argv[i], "10") == 0) {
                 *height = IQR_LMS_HEIGHT_10;
+            } else if  (paramcmp(argv[i], "15") == 0) {
+                *height = IQR_LMS_HEIGHT_15;
             } else if  (paramcmp(argv[i], "20") == 0) {
                 *height = IQR_LMS_HEIGHT_20;
             } else {
@@ -389,7 +377,7 @@ int main(int argc, const char **argv)
 
     /* Default values.  Please adjust the usage() message if you make changes
      * here. */
-    const char *security = "** ISARA LMS KEY IDENTIFIER ***";
+    const char *security = "** ISARA Corp - LMS Key Identifier must be 64 bytes in length **";
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";

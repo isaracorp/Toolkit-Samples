@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 KDF Samples
+# ISARA Radiate Security Solution Suite 1.2 KDF Samples
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Derivation Functions
 
@@ -26,8 +26,8 @@ hashes for attacks. The standard recommends a salt length of at least 64 bits.
 
 ## Getting Started
 
-We have created a sample application that demonstrates how to use the IQR
-Toolkit's PBKDF2 implementation.
+We have created a sample application that demonstrates how to use the
+toolkit's PBKDF2 implementation.
 
 Build the sample application:
 
@@ -115,7 +115,7 @@ The size of the requested key in bytes.
 
 ## Further Reading
 
-* See `iqr_kdf.h` in the IQR Toolkit's `include` directory.
+* See `iqr_kdf.h` in the toolkit's `include` directory.
 * [RFC 2898](https://www.ietf.org/rfc/rfc2898.txt)
 * [Choosing the number of iterations](http://security.stackexchange.com/a/3993)
 * [Obligatory XKCD reference](https://xkcd.com/936/)
@@ -124,7 +124,7 @@ The size of the requested key in bytes.
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

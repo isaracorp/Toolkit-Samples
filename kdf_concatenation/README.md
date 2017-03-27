@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 KDF Samples
+# ISARA Radiate Security Solution Suite 1.2 KDF Samples
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Derivation Functions
 
@@ -17,8 +17,8 @@ formatted per the specification.
 
 ## Getting Started
 
-We have created a sample application that demonstrates how to use the IQR
-Toolkit's Concatenation KDF implementation.
+We have created a sample application that demonstrates how to use the
+toolkit's Concatenation KDF implementation.
 
 Normally the shared secret would be a blob of binary data and would contain
 non-printable characters and so couldn't be read in from the command line.
@@ -104,7 +104,7 @@ The size of the requested key in bytes.
 
 ## Further Reading
 
-* See `iqr_kdf.h` in the IQR Toolkit's `include` directory.
+* See `iqr_kdf.h` in the toolkit's `include` directory.
 * [NIST SP 800-56A](http://dx.doi.org/10.6028/NIST.SP.800-56Ar2)Alternative 1
   Concatenation KDF specification
 
@@ -112,7 +112,7 @@ The size of the requested key in bytes.
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

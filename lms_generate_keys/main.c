@@ -1,6 +1,6 @@
-/** @file main.c Generate keys using the Toolkit's LMS Signature scheme.
+/** @file main.c Generate keys using the toolkit's LMS Signature scheme.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -197,7 +197,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -226,9 +226,9 @@ end:
 static void usage(void)
 {
     fprintf(stdout, "lms_generate_keys [--security <identifier>] [--pub <filename>]\n"
-        "  [--priv <filename>] [--winternitz 1|2|4|8] [--height 5|10|20]\n");
+        "  [--priv <filename>] [--winternitz 1|2|4|8] [--height 5|10|15|20]\n");
     fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --security \"** ISARA LMS KEY IDENTIFIER ***\" (must be 31 bytes)\n");
+    fprintf(stdout, "        --security \"** ISARA Corp - LMS Key Identifier must be 64 bytes in length **\"\n");
     fprintf(stdout, "        --pub pub.key\n");
     fprintf(stdout, "        --priv priv.key\n");
     fprintf(stdout, "        --winternitz 4\n");
@@ -243,7 +243,8 @@ static void preamble(const char *cmd, const char *security, const char *pub, con
     const iqr_LMSHeight height)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    fprintf(stdout, "    security string: %s\n", security);
+    fprintf(stdout, "    security string:\n");
+    fprintf(stdout, "        %s\n", security);
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
 
@@ -263,6 +264,8 @@ static void preamble(const char *cmd, const char *security, const char *pub, con
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_5\n");
     } else if (IQR_LMS_HEIGHT_10 == height) {
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_10\n");
+    } else if (IQR_LMS_HEIGHT_15 == height) {
+        fprintf(stdout, "    height: IQR_LMS_HEIGHT_15\n");
     } else if (IQR_LMS_HEIGHT_20 == height) {
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_20\n");
     } else {
@@ -324,12 +327,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **se
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 5|10|20] */
+            /* [--height 5|10|15|20] */
             i++;
             if (paramcmp(argv[i], "5") == 0) {
                 *height = IQR_LMS_HEIGHT_5;
             } else if  (paramcmp(argv[i], "10") == 0) {
                 *height = IQR_LMS_HEIGHT_10;
+            } else if  (paramcmp(argv[i], "15") == 0) {
+                *height = IQR_LMS_HEIGHT_15;
             } else if  (paramcmp(argv[i], "20") == 0) {
                 *height = IQR_LMS_HEIGHT_20;
             } else {
@@ -372,7 +377,7 @@ int main(int argc, const char **argv)
     /* Default values.  Please adjust the usage() message if you make changes
      * here.
      */
-    const char *security = "** ISARA LMS KEY IDENTIFIER ***";
+    const char *security = "** ISARA Corp - LMS Key Identifier must be 64 bytes in length **";
     const char *pub = "pub.key";
     const char *priv = "priv.key";
     iqr_LMSWinternitz w = IQR_LMS_WINTERNITZ_4;

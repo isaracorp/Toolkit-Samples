@@ -1,6 +1,6 @@
-/** @file main.c Produce random numbers using the Toolkit's RNG scheme.
+/** @file main.c Produce random numbers using the toolkit's RNG schemes.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
 // This function showcases random number generation.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_rng(iqr_Context *ctx, iqr_HashAlgorithmType hash, const uint8_t *seed_data, size_t seed_size,
-    const uint8_t *reseed_data, size_t reseed_size, const char *output, size_t count)
+static iqr_retval showcase_rng(iqr_Context *ctx, iqr_HashAlgorithmType hash, size_t shake_size,
+    const uint8_t *seed_data, size_t seed_size,const uint8_t *reseed_data, size_t reseed_size, const char *output, size_t count)
 {
     uint8_t *data = calloc(1, count);
     if (data == NULL) {
@@ -46,10 +46,19 @@ static iqr_retval showcase_rng(iqr_Context *ctx, iqr_HashAlgorithmType hash, con
     }
 
     iqr_RNG *rng = NULL;
-    iqr_retval ret = iqr_RNGCreateHMACDRBG(ctx, hash, &rng);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
-        goto end;
+    iqr_retval ret = IQR_OK;
+    if (shake_size == 0) {
+        ret = iqr_RNGCreateHMACDRBG(ctx, hash, &rng);
+        if (ret != IQR_OK) {
+            fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
+            goto end;
+        }
+    } else {
+        ret = iqr_RNGCreateSHAKE(ctx, shake_size, &rng);
+        if (ret != IQR_OK) {
+            fprintf(stderr, "Failed on iqr_RNGCreateSHAKE(): %s\n", iqr_StrError(ret));
+            goto end;
+        }
     }
 
     fprintf(stdout, "RNG object has been created.\n");
@@ -145,7 +154,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash, co
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -169,7 +178,7 @@ end:
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -222,31 +231,41 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "rng [--hash sha2-256|sha2-512|sha3-256|sha3-512] [--seed <filename>]\n"
-        "  [--reseed <filename>] [--output <filename>] [--count <bytes>]\n");
+    fprintf(stdout, "rng [--hash sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256]\n"
+        "  [--seed <filename>] [--reseed <filename>] [--output <filename>]\n"
+        "  [--count <bytes>]\n");
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --hash sha2-256\n");
     fprintf(stdout, "        --output random.dat\n");
     fprintf(stdout, "        --count 256\n");
+    fprintf(stdout, "  Uses SHAKE if shake-128 or shake-256 is specified, otherwise HMAC-DRBG.\n");
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const char *seed, const char *reseed, const char *output,
-    size_t count)
+static void preamble(const char *cmd, iqr_HashAlgorithmType hash, size_t shake_size, const char *seed, const char *reseed,
+    const char *output, size_t count)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
 
-    if (IQR_HASHALGO_SHA2_256 == hash) {
-        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_256\n");
-    } else if (IQR_HASHALGO_SHA2_512 == hash) {
-        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_512\n");
-    } else if (IQR_HASHALGO_SHA3_256 == hash) {
-        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_256\n");
-    } else if (IQR_HASHALGO_SHA3_512 == hash) {
-        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_512\n");
+    if (shake_size == 0) {
+        if (IQR_HASHALGO_SHA2_256 == hash) {
+            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA2_256\n");
+        } else if (IQR_HASHALGO_SHA2_512 == hash) {
+            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA2_512\n");
+        } else if (IQR_HASHALGO_SHA3_256 == hash) {
+            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA3_256\n");
+        } else if (IQR_HASHALGO_SHA3_512 == hash) {
+            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA3_512\n");
+        }
+    } else {
+        if (shake_size == IQR_SHAKE_128_SIZE) {
+            fprintf(stdout, "    SHAKE-128\n");
+        } else if (shake_size == IQR_SHAKE_256_SIZE) {
+            fprintf(stdout, "    SHAKE-256\n");
+        }
     }
     if (seed != NULL) {
         fprintf(stdout, "    seed source: %s\n", seed);
@@ -299,7 +318,7 @@ static int32_t get_positive_int_param(const char *p) {
 }
 
 static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorithmType *hash, const iqr_HashCallbacks **cb,
-    const char **seed, const char **reseed, const char **output, size_t *count)
+    size_t *shake_size, const char **seed, const char **reseed, const char **output, size_t *count)
 {
     int i = 1;
     while (i != argc) {
@@ -308,7 +327,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash sha2-256|sha2-512|sha3-256|sha3-512] */
+            /* [--hash sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256] */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
@@ -322,6 +341,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             } else if (paramcmp(argv[i], "sha3-512") == 0) {
                 *hash = IQR_HASHALGO_SHA3_512;
                 *cb = &IQR_HASH_DEFAULT_SHA3_512;
+            } else if (paramcmp(argv[i], "shake-128") == 0) {
+                *shake_size = IQR_SHAKE_128_SIZE;
+            } else if (paramcmp(argv[i], "shake-256") == 0) {
+                *shake_size = IQR_SHAKE_256_SIZE;
             } else {
                 usage();
                 return IQR_EBADVALUE;
@@ -391,6 +414,8 @@ int main(int argc, const char **argv)
     iqr_HashAlgorithmType hash = IQR_HASHALGO_SHA2_256;
     const iqr_HashCallbacks *cb = &IQR_HASH_DEFAULT_SHA2_256;
 
+    size_t shake_size = 0;  // If 0, use HMAC-DRBG, else use SHAKE.
+
     const char *seed = NULL;
     uint8_t *loaded_seed_data = NULL;
     const uint8_t *seed_data = default_seed_data;
@@ -409,13 +434,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &hash, &cb, &seed, &reseed, &output, &count);
+    iqr_retval ret = parse_commandline(argc, argv, &hash, &cb, &shake_size, &seed, &reseed, &output, &count);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], hash, seed, reseed, output, count);
+    preamble(argv[0], hash, shake_size, seed, reseed, output, count);
 
     /* IQR initialization that is not specific to RNG. */
     iqr_Context *ctx = NULL;
@@ -442,13 +467,13 @@ int main(int argc, const char **argv)
 
     /** This function showcases the usage of random number generation.
      */
-    ret = showcase_rng(ctx, hash, seed_data, seed_size, reseed_data, reseed_size, output, count);
+    ret = showcase_rng(ctx, hash, shake_size, seed_data, seed_size, reseed_data, reseed_size, output, count);
     if (ret != IQR_OK) {
         goto cleanup;
     }
 
     if (seed_data == default_seed_data && reseed_data == default_reseed_data && hash == IQR_HASHALGO_SHA2_256 &&
-        count == default_count) {
+        count == default_count && shake_size == 0) {
         /** The user has decided to use the default seed/reseed data, which we've chosen as the NIST
          * test vectors. So for fun we've decided to verify the output against the expected NIST output
          * and prove that it works. The NIST test reads two chunks of data and compares against the second

@@ -1,6 +1,6 @@
-/** @file main.c Sign a message using the Toolkit's LMS signature scheme.
+/** @file main.c Sign a message using the toolkit's LMS signature scheme.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,10 +49,8 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
     size_t priv_raw_size = 0;
     uint8_t *priv_raw = NULL;
 
-    size_t C_size = 0;
-    size_t y_size = 0;
-    size_t path_size = 0;
-    uint8_t *sig_buf = NULL;
+    size_t sig_size = 0;
+    uint8_t *sig = NULL;
 
     uint32_t remaining = 0;
     uint32_t max_sigs = 0;
@@ -60,20 +58,6 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
     iqr_retval ret = iqr_LMSCreateParams(ctx, w, height, security, security_size, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_LMSCreateParams(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-
-    ret = iqr_LMSGetMaximumSignatureCount(params, &max_sigs);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LMSGetMaximumSignatureCount(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-
-    fprintf(stdout, "Number of signatures for this private key: %d.\n", max_sigs);
-
-    if (index > max_sigs) {
-        fprintf(stderr, "The private key cannot sign any more messages. index = %d.\n", index);
-        ret = IQR_EKEYDEPLETED;
         goto end;
     }
 
@@ -91,17 +75,29 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
     fprintf(stdout, "Private key has been imported.\n");
 
-    /* Determine the size of the resulting signature and allocate memory. */
-    ret = iqr_LMSGetSignatureComponentSizes(params, &C_size, &y_size, &path_size);
+    ret = iqr_LMSGetMaximumSignatureCount(priv, &max_sigs);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_LMSGetSignatureComponentSizes(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_LMSGetMaximumSignatureCount(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    const size_t sig_size = C_size + y_size + path_size + sizeof(index);
+    fprintf(stdout, "Number of signatures for this private key: %d.\n", max_sigs);
 
-    sig_buf = calloc(1, sig_size);
-    if (sig_buf == NULL) {
+    if (index > max_sigs) {
+        fprintf(stderr, "The private key cannot sign any more messages. index = %d.\n", index);
+        ret = IQR_EKEYDEPLETED;
+        goto end;
+    }
+
+    /* Determine the size of the resulting signature and allocate memory. */
+    ret = iqr_LMSGetSignatureSize(params, &sig_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_LMSGetSignatureSize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    sig = calloc(1, sig_size);
+    if (sig == NULL) {
         fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
         ret = IQR_ENOMEM;
         goto end;
@@ -120,19 +116,8 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
      *
      *****************************************************************************/
 
-    /* Calculate where each signature component will be written to. */
-    uint8_t *C = sig_buf;
-    uint8_t *y = C + C_size;
-    uint8_t *path = y + y_size;
-    uint32_t *index_buf = (uint32_t *)(path + path_size);
-
-    /* Save index using system endian form. This serialization should be replaced
-     * with a standardized form, such as PKCS1 or XDR encoding.
-     */
-    *index_buf = index;
-
     /* Create the signature. */
-    ret = iqr_LMSSign(priv, rng, index, digest, IQR_SHA2_256_DIGEST_SIZE, C, C_size, y, y_size, path, path_size);
+    ret = iqr_LMSSign(priv, rng, index, digest, IQR_SHA2_256_DIGEST_SIZE, sig, sig_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_LMSSign(): %s\n", iqr_StrError(ret));
         goto end;
@@ -140,7 +125,7 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
     fprintf(stdout, "Signature has been created.\n");
 
-    ret = iqr_LMSGetRemainingSignatureCount(params, index + 1, &remaining);
+    ret = iqr_LMSGetRemainingSignatureCount(priv, index + 1, &remaining);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_LMSGetRemainingSignatureCount(): %s\n", iqr_StrError(ret));
         goto end;
@@ -150,7 +135,7 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
     fprintf(stdout, "IMPORTANT: Next time you sign, use index+1 (%d).\n", index + 1);
 
     /* And finally, write the signature to disk. */
-    ret = save_data(sig_file, sig_buf, sig_size);
+    ret = save_data(sig_file, sig, sig_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -162,7 +147,7 @@ end:
         /* (Private) Keys are private, sensitive data, be sure to clear memory containing them when you're done */
         secure_memset(priv_raw, 0, priv_raw_size);
     }
-    free(sig_buf);
+    free(sig);
     free(priv_raw);
 
     iqr_LMSDestroyPrivateKey(&priv);
@@ -277,7 +262,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -301,7 +286,7 @@ end:
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
-    FILE *fp = fopen(fname, "r");
+    FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -356,10 +341,10 @@ static void usage(void)
 {
     fprintf(stdout, "lms_sign --index <number> [--security <identifier>] \n"
         "  [--sig filename] [--priv <filename>]\n"
-        "  [--winternitz 1|2|4|8] [--height 5|10|20]\n"
+        "  [--winternitz 1|2|4|8] [--height 5|10|15|20]\n"
         "  [--message <filename>]\n");
     fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --security \"** ISARA LMS KEY IDENTIFIER ***\" (must be 31 bytes)\n");
+    fprintf(stdout, "        --security \"** ISARA Corp - LMS Key Identifier must be 64 bytes in length **\"\n");
     fprintf(stdout, "        --sig sig.dat\n");
     fprintf(stdout, "        --priv priv.key\n");
     fprintf(stdout, "        --winternitz 4\n");
@@ -375,7 +360,8 @@ static void preamble(const char *cmd, const char *security, const char *sig, con
     const iqr_LMSHeight height, uint32_t index, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    fprintf(stdout, "    security string: %s\n", security);
+    fprintf(stdout, "    security string:\n");
+    fprintf(stdout, "        %s\n", security);
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    private key file: %s\n", priv);
 
@@ -395,6 +381,8 @@ static void preamble(const char *cmd, const char *security, const char *sig, con
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_5\n");
     } else if (IQR_LMS_HEIGHT_10 == height) {
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_10\n");
+    } else if (IQR_LMS_HEIGHT_15 == height) {
+        fprintf(stdout, "    height: IQR_LMS_HEIGHT_15\n");
     } else if (IQR_LMS_HEIGHT_20 == height) {
         fprintf(stdout, "    height: IQR_LMS_HEIGHT_20\n");
     } else {
@@ -466,6 +454,8 @@ static iqr_retval parse_commandline(int argc, const char **argv,  const char **s
                 *height = IQR_LMS_HEIGHT_5;
             } else if  (paramcmp(argv[i], "10") == 0) {
                 *height = IQR_LMS_HEIGHT_10;
+            } else if  (paramcmp(argv[i], "15") == 0) {
+                *height = IQR_LMS_HEIGHT_15;
             } else if  (paramcmp(argv[i], "20") == 0) {
                 *height = IQR_LMS_HEIGHT_20;
             } else {
@@ -533,7 +523,7 @@ int main(int argc, const char **argv)
     /* Default values.  Please adjust the usage() message if you make changes
      *  here.
      */
-    const char *security = "** ISARA LMS KEY IDENTIFIER ***";
+    const char *security = "** ISARA Corp - LMS Key Identifier must be 64 bytes in length **";
     const char *sig = "sig.dat";
     const char *priv = "priv.key";
     const char *message = "message.dat";

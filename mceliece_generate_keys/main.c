@@ -1,7 +1,6 @@
-/** @file main.c Demonstrate the use of IQR's McEliece QC-MDPC cryptosystem
- * implementation.
+/** @file main.c Demonstrate the toolkit's McEliece QC-MDPC cryptosystem.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -218,7 +217,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -341,7 +340,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_McElieceKey
                 return IQR_EBADVALUE;
             }
             security_level_set = true;
-        } else if (paramcmp(argv[1], "--keysize") == 0) {
+        } else if (paramcmp(argv[i], "--keysize") == 0) {
             /* [--keysize <value>] */
             if (security_level_set) {
                 usage();

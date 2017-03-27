@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 KDF Samples
+# ISARA Radiate Security Solution Suite 1.2 KDF Samples
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Derivation Functions
 
@@ -18,8 +18,8 @@ information.
 
 ## Getting Started
 
-We have created a sample application that demonstrates how to use the IQR
-Toolkit's RFC 5869 HKDF implementation.
+We have created a sample application that demonstrates how to use the
+toolkit's RFC 5869 HKDF implementation.
 
 Normally the IKM would be a blob of binary data and would contain non-printable
 characters and so couldn't be read in from the command line. For ease of use
@@ -118,14 +118,14 @@ The size of the requested key in bytes.
 
 ## Further Reading
 
-* See `iqr_kdf.h` in the IQR Toolkit's `include` directory.
+* See `iqr_kdf.h` in the toolkit's `include` directory.
 * [RFC 5869](https://tools.ietf.org/html/rfc5869)
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

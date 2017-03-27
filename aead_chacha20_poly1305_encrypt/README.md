@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 ChaCha20/Poly1305 Sample
+# ISARA Radiate Security Solution Suite 1.2 ChaCha20/Poly1305 Sample
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Message Authentication Codes
 
@@ -19,8 +19,8 @@ Poly1305 is specified by the Internet Engineering Taskforce's
 
 ### Getting Started
 
-We have created 2 small sample applications that demonstrate how to use the IQR
-Toolkit's Poly1305 implementation. The samples do ChaCha20-Poly1305 AEAD
+We have created 2 small sample applications that demonstrate how to use the
+toolkit's Poly1305 implementation. The samples do ChaCha20-Poly1305 AEAD
 encryption/decryption and authentication.
 
 * `aead_chacha20_poly1305_encrypt` takes care of encryption and creating the
@@ -45,7 +45,7 @@ We can use `/dev/urandom` on Linux or OSX:
 $ dd if=/dev/urandom of=key.dat bs=32 count=1
 ```
 
-Or we can use the `rng` sample provided with the IQR Toolkit, although without
+Or we can use the `rng` sample provided with the toolkit, although without
 a seed to provide proper initial entropy this command will always output the
 same "random" bytes:
 
@@ -64,7 +64,7 @@ For our sample purposes we just created a nonce with a predefined value:
 $ echo -n "0123456789ab" > nonce.dat
 ```
 
-We could also use the IQR Toolkit sample's `rng`, with the same seed caveat as
+We could also use the toolkit sample's `rng`, with the same seed caveat as
 above:
 
 ```
@@ -220,14 +220,14 @@ Where the resulting plaintext will be saved after authentication succeeds.
 
 ## Further Reading
 
-* See `iqr_poly1305.h` in the IQR Toolkit's `include` directory.
+* See `iqr_poly1305.h` in the toolkit's `include` directory.
 * [RFC 7539](https://tools.ietf.org/html/rfc7539)
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

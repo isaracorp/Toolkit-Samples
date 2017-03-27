@@ -5,7 +5,7 @@
  * appears to keep her own state. It is done like this to show how the "Alice"
  * side of the transaction can be performed independent of Bob.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

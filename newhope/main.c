@@ -1,6 +1,6 @@
-/** @file main.c Demonstrate the Use of IQR's NewHope implementation.
+/** @file main.c Demonstrate the toolkit's NewHope implementation.
  *
- * @copyright Copyright 2016 ISARA Corporation
+ * @copyright Copyright 2016-2017 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -185,7 +185,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const iqr_NewHo
 
 iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
 {
-    FILE *fp = fopen(fname, "w");
+    FILE *fp = fopen(fname, "wb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
         return IQR_EBADVALUE;
@@ -216,10 +216,10 @@ static void usage(void)
     fprintf(stdout, "newhope [--dump] [--variant reference|boringSSL]\n");
     fprintf(stdout, "        --dump Dumps the generated keys and secrets to file.\n");
     fprintf(stdout, "               Filenames:\n");
-    fprintf(stdout, "                 Initiator key:  alice_key.dat\n");
-    fprintf(stdout, "                 Responder key:  bob_key.dat\n");
-    fprintf(stdout, "                 Alice's secret:  alice_secret.dat\n");
-    fprintf(stdout, "                 Bob's secret:    bob_secret.dat\n");
+    fprintf(stdout, "                 Alice's key:    alice_key.dat\n");
+    fprintf(stdout, "                 Bob's key:      bob_key.dat\n");
+    fprintf(stdout, "                 Alice's secret: alice_secret.dat\n");
+    fprintf(stdout, "                 Bob's secret:   bob_secret.dat\n");
     fprintf(stdout, "        --variant The variant of NewHope to use.\n");
     fprintf(stdout, "               Valid values are:\n");
     fprintf(stdout, "                 * reference\n");

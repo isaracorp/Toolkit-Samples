@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 LUKE Sample
+# ISARA Radiate Security Solution Suite 1.2 LUKE Sample
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Establishment Schemes
 
@@ -48,8 +48,8 @@ so weakens the security of the establishment.
 
 ## Getting Started
 
-We have created a small sample application that demonstrates how to use the IQR
-Toolkit's LUKE implementation. The application is structured in a way that
+We have created a small sample application that demonstrates how to use the
+toolkit's LUKE implementation. The application is structured in a way that
 isolates the roles played by Alice and Bob by simulating a communication
 channel.
 
@@ -96,22 +96,22 @@ Command line parameter descriptions:
 [--dump]
 A switch telling luke to dump the public information and secrets to file. The
 filenames are:
-    initiator_info.dat - Alice's public information.
-    responder_info.dat - Bob's public information.
+    alice_key.dat - Alice's public information.
+    bob_key.dat - Bob's public information.
     alice_secret.dat - Secret derived by Alice.
     bob_secret.dat - Secret derived by Bob.
 ```
 
 ## Further Reading
 
-* See `iqr_luke.h` in the IQR Toolkit's `include` directory.
+* See `iqr_luke.h` in the toolkit's `include` directory.
 * [Alice primer](http://www.gutenberg.org/ebooks/11.txt.utf-8)
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

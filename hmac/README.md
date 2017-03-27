@@ -1,6 +1,6 @@
-# ISARA Toolkit 1.1 HMAC Sample
+# ISARA Radiate Security Solution Suite 1.2 HMAC Sample
 ISARA Corporation <info@isara.com>
-v1.1, November 2016: Copyright (C) 2016 ISARA Corporation, All Rights Reserved.
+v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Message Authentication Codes
 
@@ -18,8 +18,8 @@ HMAC is specified by the Internet Engineering Taskforce's
 
 ## Getting Started
 
-We have created a sample application that demonstrates how to use the IQR
-Toolkit's HMAC implementation.
+We have created a sample application that demonstrates how to use the
+toolkit's HMAC implementation.
 
 Here is the simplest way to use the sample:
 
@@ -94,7 +94,7 @@ Command line format:
 
 ```
 hmac [--hash sha2-256|sha2-512|sha3-256|sha3-512]
-    [--key { string <key> | file <filename> | none }]
+    [--key { string <key> | file <filename> }]
     [--tag <filename>] msg1 [msg2 ...]
 ```
 
@@ -119,10 +119,6 @@ Read the key from the command line.
 Read the key from file <filename>. The entire contents of the file
 will be read.
 
-[--key none]
-Don't use a key. This is not recommended, without a key this is basically
-just a hashing function.
-
 [--tag <filename>]
 <filename> is the name of the file where the computed tag will be saved.
 
@@ -133,14 +129,14 @@ which to calculate the MAC.
 
 ## Further Reading
 
-* See `iqr_hmac.h` in the IQR Toolkit's `include` directory.
+* See `iqr_hmac.h` in the toolkit's `include` directory.
 * [RFC 2104](https://tools.ietf.org/html/rfc2104)
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
