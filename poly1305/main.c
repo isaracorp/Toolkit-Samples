@@ -344,7 +344,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t *
             if (paramcmp(param2, "string") == 0) {
                 *key = (const uint8_t *)argv[i];
                 *key_file = NULL;
-                if (strnlen((const char *)*key, _POSIX_ARG_MAX) < POLY1305_KEY_SIZE) {
+                if (strnlen((const char *)*key, POLY1305_KEY_SIZE) < POLY1305_KEY_SIZE) {
                     return IQR_EBADVALUE;
                 }
             } else if (paramcmp(param2, "file") == 0) {

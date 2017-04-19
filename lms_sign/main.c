@@ -229,6 +229,10 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
     if (ret != IQR_OK) {
         return ret;
     }
+    if (message_raw_size < 1) {
+        fprintf(stderr, "Input message must be one or more bytes long.\n");
+        return IQR_EINVBUFSIZE;
+    }
 
     *digest = calloc(1, IQR_SHA2_256_DIGEST_SIZE);
     if (NULL == *digest) {
