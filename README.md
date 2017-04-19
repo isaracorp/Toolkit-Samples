@@ -1,6 +1,6 @@
 # Toolkit-Samples
 
-> The IQR Toolkit is a security solution that offers an implementation of
+> The ISARA Radiate Security Solution Suite offers an implementation of
 > cryptographic algorithms resistant to quantum computer attacks through a
 > lightweight library with a C language interface. This toolkit is the first
 > opportunity for customers to start deploying quantum resistant technology in
@@ -13,31 +13,32 @@ our website: [www.isara.com](https://www.isara.com).
 
 You can also contact us directly at [info@isara.com](mailto:info@isara.com).
 
-Copyright &copy; 2016 ISARA Corporation, All Rights Reserved.
+Copyright &copy; 2016-2017 ISARA Corporation, All Rights Reserved.
 
-## ISARA Quantum Resistant Toolkit 1.0 Samples
+## ISARA Radiate Security Solution Suite 1.2 Samples
 
-These samples all require version 1.0 of our Toolkit; for more information,
+These samples all require version 1.2 of our toolkit; for more information,
 visit [www.isara.com](https://www.isara.com) or contact our
 [sales team](mailto:sales@isara.com).
 
-Each sample demonstrates one part of the Toolkit. We use the LMS samples to
-produce digital signatures of the Toolkit's installation packages, for example.
+Each sample demonstrates one part of the toolkit. We use the LMS samples to
+produce digital signatures of the toolkit's installation packages, for example.
 
 ### System Requirements
 
-These samples currently run best on Mac OS X and Linux, and have been tested
-on:
+These samples have been tested on:
 
-* 64-bit Mac OS X 10.11
-* 64-bit Ubuntu 16.04, 64-bit Arch
+* 64-bit FreeBSD 10
+* 64-bit Mac OS X 10.11, Mac OS X 10.12
+* 64-bit Ubuntu 14.04, Ubuntu 16.04, 64-bit Arch
+* 64-bit Windows 10
 
 For more information about the Toolkit's system requirements and supported
-platforms, please read the [documentation](https://www.isara.com/toolkit/1.0/).
+platforms, please read the [documentation](https://www.isara.com/radiate/1/).
 
 ## Samples
 
-Sample code for the ISARA Toolkit.
+Sample code for the ISARA toolkit.
 
 * `aead_chacha20_poly1305_decrypt` - Tool for performing ChaCha20/Poly1305 AEAD
    decryption.
@@ -66,15 +67,15 @@ Sample code for the ISARA Toolkit.
 
 ### Building Samples
 
-Each sample builds independently of the Toolkit, and each other.
+Each sample builds independently of the toolkit, and each other.
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
-determine the location of the Toolkit to build against. CMake requires that
+determine the location of the toolkit to build against. CMake requires that
 environment variables are set on the same line as the CMake command, or are
 exported environment variables in order to be read properly. If
 `IQR_TOOLKIT_ROOT` is a relative path, it must be relative to the individual
 sample subdirectories.
 
-1. Install the Toolkit somewhere, e.g. `/path/to/toolkitroot/`.
+1. Install the toolkit somewhere, e.g. `/path/to/toolkitroot/`.
 2. `cd` to a sample subdirectory, such as `samples/lms_generate_keys`.
 3. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .` or
 `IQR_TOOLKIT_ROOT=/path/to/toolkitroot cmake .`
@@ -87,11 +88,11 @@ instructions on running specific samples.
 
 ## License
 
-v1.0, September 2016:
+v1.2, April 2017:
 
 See the `LICENSE` file for details:
 
-> Copyright 2016 ISARA Corporation
+> Copyright 2016-2017 ISARA Corporation
 >
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
