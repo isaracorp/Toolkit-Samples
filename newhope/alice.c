@@ -34,7 +34,7 @@
  * facilitate the pseudo-separate process paradigm.
  */
 static iqr_NewHopeParams *params;
-static iqr_NewHopePrivateKey *private_key;
+static iqr_NewHopeInitiatorPrivateKey *initiator_private_key;
 
 iqr_retval init_alice(const iqr_Context *ctx, const iqr_NewHopeVariant *variant)
 {
@@ -57,19 +57,20 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
         return IQR_ENULLPTR;
     }
 
-    size_t initiator_size = IQR_NEWHOPE_INITIATOR_KEY_SIZE;
+    size_t initiator_size = IQR_NEWHOPE_INITIATOR_PUBLIC_KEY_SIZE;
     uint8_t *initiator_public_key = calloc(1, initiator_size);
     if (initiator_public_key == NULL) {
         fprintf(stderr, "We seem to have run out of memory. ret=%d\n", errno);
         return IQR_ENOMEM;
     }
 
-    iqr_retval ret = iqr_NewHopeCreatePrivateKey(params, &private_key);
+    iqr_retval ret = iqr_NewHopeCreateInitiatorPrivateKey(params, rng, &initiator_private_key);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeCreatePrivateKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_NewHopeCreateInitiatorPrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
     }
-    ret = iqr_NewHopeGetInitiatorPublicKey(private_key, rng, initiator_public_key, initiator_size);
+
+    ret = iqr_NewHopeGetInitiatorPublicKey(initiator_private_key, rng, initiator_public_key, initiator_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_NewHopeGetInitiatorPublicKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -86,7 +87,7 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
 
 end:
     if (ret != IQR_OK) {
-        iqr_NewHopeDestroyPrivateKey(&private_key);
+        iqr_NewHopeDestroyInitiatorPrivateKey(&initiator_private_key);
     }
     free(initiator_public_key);
     return ret;
@@ -94,37 +95,39 @@ end:
 
 iqr_retval alice_get_secret(uint8_t *secret, size_t secret_size)
 {
+    iqr_retval ret = IQR_OK;
+    uint8_t *responder_public_key = NULL;
+
     if (secret == NULL || secret_size != IQR_NEWHOPE_SECRET_SIZE) {
         fprintf(stderr, "The input parameters were bad.\n");
-        return IQR_ENULLPTR;
+        ret = IQR_ENULLPTR;
+        goto end;
     }
 
-    size_t responder_size = IQR_NEWHOPE_RESPONDER_KEY_SIZE;
-    uint8_t *responder_public_key = calloc(1, responder_size);
+    size_t responder_size = IQR_NEWHOPE_RESPONDER_PUBLIC_KEY_SIZE;
+    responder_public_key = calloc(1, responder_size);
     if (responder_public_key == NULL) {
         fprintf(stderr, "We seem to have run out of memory. ret=%d\n", errno);
-        return IQR_ENOMEM;
+        ret = IQR_ENOMEM;
+        goto end;
     }
 
-    iqr_retval ret = receive_from_bob(responder_public_key, &responder_size);
+    ret = receive_from_bob(responder_public_key, &responder_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "We couldn't get the responder key from Bob.\n");
         goto end;
     }
 
-    ret = iqr_NewHopeGetInitiatorSecret(private_key, responder_public_key, responder_size, secret, secret_size);
+    ret = iqr_NewHopeGetInitiatorSecret(initiator_private_key, responder_public_key, responder_size, secret, secret_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_NewHopeGetInitiatorSecret(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
 end:
-    ret = iqr_NewHopeDestroyPrivateKey(&private_key);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_NewHopeDestroyPrivateKey(): %s\n", iqr_StrError(ret));
-    }
-
     free(responder_public_key);
+    iqr_NewHopeDestroyInitiatorPrivateKey(&initiator_private_key);
+
     return ret;
 }
 

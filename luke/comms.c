@@ -33,7 +33,7 @@
 #include "iqr_luke.h"
 
 #define NUM_TRANSACTIONS    2
-#define MAX_PAYLOAD_BYTES   IQR_LUKE_RESPONDER_KEY_SIZE
+#define MAX_PAYLOAD_BYTES   IQR_LUKE_RESPONDER_PUBLIC_KEY_SIZE
 
 /* Alice sends initiator public key and is stored in index 0.
  * Bob sends responder public key and is stored in index 1.
@@ -84,22 +84,22 @@ iqr_retval send_to_bob(uint8_t *buf, size_t size)
 
 iqr_retval receive_from_alice(uint8_t *buf, size_t *size)
 {
-    if (*size < IQR_LUKE_INITIATOR_KEY_SIZE) {
+    if (*size < IQR_LUKE_INITIATOR_PUBLIC_KEY_SIZE) {
         fprintf(stderr, "That buffer is a tad on the small side.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(buf, gross_global_bufs[ALICE_KEY_INDEX], IQR_LUKE_INITIATOR_KEY_SIZE);
-    *size = IQR_LUKE_INITIATOR_KEY_SIZE;
+    memcpy(buf, gross_global_bufs[ALICE_KEY_INDEX], IQR_LUKE_INITIATOR_PUBLIC_KEY_SIZE);
+    *size = IQR_LUKE_INITIATOR_PUBLIC_KEY_SIZE;
     return IQR_OK;
 }
 
 iqr_retval receive_from_bob(uint8_t *buf, size_t *size)
 {
-    if (*size < IQR_LUKE_RESPONDER_KEY_SIZE) {
+    if (*size < IQR_LUKE_RESPONDER_PUBLIC_KEY_SIZE) {
         fprintf(stderr, "We have more data to give you then you are willing to receive.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(buf, gross_global_bufs[BOB_KEY_INDEX], IQR_LUKE_RESPONDER_KEY_SIZE);
-    *size = IQR_LUKE_RESPONDER_KEY_SIZE;
+    memcpy(buf, gross_global_bufs[BOB_KEY_INDEX], IQR_LUKE_RESPONDER_PUBLIC_KEY_SIZE);
+    *size = IQR_LUKE_RESPONDER_PUBLIC_KEY_SIZE;
     return IQR_OK;
 }

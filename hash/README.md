@@ -51,13 +51,14 @@ e4e02a210ac70fff4facf5a3351bc2df93e815e75ed19b161d385980fc0a5b8b
 
 ## hash Usage Details
 
-Generates a SHA2-256, SHA2-512, SHA3-256 or SHA3-512 hash of a message.
+Generates a SHA2-256, SHA2-512, SHA3-256, SHA3-512, BLAKE2b-256, or BLAKE2b-512
+hash of a message.
 
 Command line format:
 
 ```
-hash [--hash sha2-256|sha2-512|sha3-256|sha3-512] [--salt <filename>]
-    [--message <filename>]
+hash [--hash sha2-256|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]
+       [--salt <filename>] [--message <filename>]
 ```
 
 Command line defaults:
@@ -70,9 +71,9 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--hash sha2-256|sha2-512|sha3-256|sha3-512]
-Which hashing algorithm to use. One of SHA2-256, SHA2-512, SHA3-256 or
-SHA3-512.
+[--hash sha2-256|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]
+Which hashing algorithm to use. One of SHA2-256, SHA2-512, SHA3-256,
+SHA3-512, BLAKE2b-256 or BLAKE2b-512.
 
 [--salt <filename>]
 <filename> contains the random salt to apply to the hash.
@@ -88,6 +89,7 @@ Note that the `--salt` must have at least 16 bytes of data, if specified.
 * See `iqr_hash.h` in the toolkit's `include` directory.
 * [FIPS 180 - SHA2](http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf)
 * [FIPS 202 - SHA3](http://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf)
+* [Blake2](https://blake2.net/blake2.pdf)
 
 ## License
 

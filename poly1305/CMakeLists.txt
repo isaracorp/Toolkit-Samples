@@ -16,7 +16,7 @@
 #
 # * IQR_TOOLKIT_ROOT set to the IQR Toolkit's root directory.
 
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.7)
 cmake_policy (SET CMP0054 NEW)
 
 project (poly1305)
@@ -26,3 +26,5 @@ include (../compiler_options.cmake)
 
 add_executable (poly1305 main.c)
 target_link_libraries (poly1305 iqr_toolkit m)
+
+install (TARGETS poly1305 DESTINATION ${PROJECT_SOURCE_DIR})

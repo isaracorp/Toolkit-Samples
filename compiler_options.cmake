@@ -15,6 +15,13 @@
 string (TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
 string (TOLOWER "${CMAKE_SYSTEM_NAME}" CMAKE_SYSTEM_NAME_LOWER)
 
+# Linux headers don't define strnlen() unless you define _POSIX_C_SOURCE; the
+# tests definitely conform to POSIX 1003.2-2008. This affects both gcc and
+# clang builds because it's in the headers.
+if (("${CMAKE_SYSTEM_NAME}" MATCHES "Linux|Cygwin"))
+    add_compile_options("-D_POSIX_C_SOURCE=200809L")
+endif()
+
 # Compiler specific flags
 if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     ### Clang
@@ -35,6 +42,8 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     add_compile_options (-Wno-missing-field-initializers)
     add_compile_options (-fvisibility=hidden)
     add_compile_options (-std=c99)
+    ## We'll update the samples to use any changed APIs.
+    add_compile_options (-Wno-deprecated-declarations)
 
     ## Release
     if (CMAKE_BUILD_TYPE_LOWER STREQUAL "release")
@@ -60,7 +69,9 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
 
     ## Platform specific stuff
     if (("${CMAKE_SYSTEM_NAME_LOWER}" MATCHES "linux|windows|cygwin"))
-        add_compile_options (-D_GNU_SOURCE=1)
+        # Linux headers don't define strnlen() unless you define
+        # _POSIX_C_SOURCE; the samples definitely conform to POSIX 1003.2-2008.
+        add_compile_options("-D_POSIX_C_SOURCE=200809L")
     endif ()
 
     if (NOT ("${CMAKE_SYSTEM_NAME_LOWER}" MATCHES "cygwin"))
@@ -105,6 +116,8 @@ elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options (-pedantic)
     add_compile_options (-pipe)
     add_compile_options (-std=c99)
+    ## We'll update the samples to use any changed APIs.
+    add_compile_options (-Wno-deprecated-declarations)
 
     ## Release
     if (CMAKE_BUILD_TYPE_LOWER STREQUAL "release")

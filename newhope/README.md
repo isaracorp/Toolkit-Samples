@@ -73,7 +73,6 @@ Execution and expected outputs:
  $ ./newhope
 Running ./newhope with the following parameters...
     Dump data to files: False
-    Variant: Reference
 
 
 Alice and Bob's secrets match.
@@ -86,13 +85,7 @@ Generates a shared secret for Alice and Bob.
 Command line format:
 
 ```
-newhope [--dump] [--variant reference|boringSSL]
-```
-
-Command line defaults:
-
-```
---variant reference
+newhope [--dump]
 ```
 
 Command line parameter descriptions:
@@ -104,10 +97,7 @@ filenames are:
     alice_key.dat - Alice's public information.
     bob_key.dat - Bob's public information.
     alice_secret.dat - Secret derived by Alice.
-    bob_secret.dat - Secret derived by Bob.a
-
-[--variant reference|boringSSL]
-The variant of NewHope to use.
+    bob_secret.dat - Secret derived by Bob.
 ```
 
 ## Further Reading

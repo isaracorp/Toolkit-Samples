@@ -26,6 +26,7 @@
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
+#include "iqr_newhope.h"
 #include "iqr_retval.h"
 #include "iqr_rng.h"
 
@@ -63,8 +64,8 @@ static iqr_retval showcase_newhope(const iqr_Context *ctx, const iqr_RNG *rng, b
         return ret;
     }
 
-    uint8_t alice_secret[IQR_NEWHOPE_SECRET_SIZE] = {0};
-    uint8_t bob_secret[IQR_NEWHOPE_SECRET_SIZE] = {0};
+    uint8_t alice_secret[IQR_NEWHOPE_SECRET_SIZE] = { 0 };
+    uint8_t bob_secret[IQR_NEWHOPE_SECRET_SIZE] = { 0 };
 
     /* Alice must start the transfer. Bob cannot go first since, as the
      * responder, he needs information from Alice. For more information on how
@@ -74,12 +75,18 @@ static iqr_retval showcase_newhope(const iqr_Context *ctx, const iqr_RNG *rng, b
     if (ret != IQR_OK) {
         goto end;
     }
-    ret = bob_get_secret(rng, dump, bob_secret, sizeof(bob_secret));
+
+    ret = bob_start(rng, dump);
     if (ret != IQR_OK) {
         goto end;
     }
 
     ret = alice_get_secret(alice_secret, sizeof(alice_secret));
+    if (ret != IQR_OK) {
+        goto end;
+    }
+
+    ret = bob_get_secret(bob_secret, sizeof(bob_secret));
     if (ret != IQR_OK) {
         goto end;
     }
@@ -116,7 +123,7 @@ end:
 // NewHope.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const iqr_NewHopeVariant *variant)
+static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
     /* Create a Global Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
@@ -125,39 +132,17 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const iqr_NewHo
         return ret;
     }
 
-    if (variant == &IQR_NEWHOPE_REFERENCE) {
-        /* @c IQR_NEWHOPE_REFERENCE uses SHA3 256. */
-        ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_256, &IQR_HASH_DEFAULT_SHA3_256);
-        if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
-            return ret;
-        }
-
-        ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA3_256, rng);
-        if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
-            return ret;
-        }
-    } else if (variant == &IQR_NEWHOPE_BORINGSSL) {
-        /* @c IQR_NEWHOPE_BORINGSSL uses SHA2 256. */
-        ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
-        if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
-            return ret;
-        }
-
-        ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
-        if (ret != IQR_OK) {
-            fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
-            return ret;
-        }
-    } else {
-        ret = IQR_EBADVALUE;
-        fprintf(stderr, "Invalid variant.\n");
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_256, &IQR_HASH_DEFAULT_SHA3_256);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA3_256, rng);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
 
     /* The seed should be initialized from a guaranteed entropy source. This is
      * only an example; DO NOT INITIALIZE THE SEED LIKE THIS.
@@ -213,24 +198,20 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "newhope [--dump] [--variant reference|boringSSL]\n");
+    fprintf(stdout, "newhope [--dump]\n");
     fprintf(stdout, "        --dump Dumps the generated keys and secrets to file.\n");
     fprintf(stdout, "               Filenames:\n");
     fprintf(stdout, "                 Alice's key:    alice_key.dat\n");
     fprintf(stdout, "                 Bob's key:      bob_key.dat\n");
     fprintf(stdout, "                 Alice's secret: alice_secret.dat\n");
     fprintf(stdout, "                 Bob's secret:   bob_secret.dat\n");
-    fprintf(stdout, "        --variant The variant of NewHope to use.\n");
-    fprintf(stdout, "               Valid values are:\n");
-    fprintf(stdout, "                 * reference\n");
-    fprintf(stdout, "                 * boringSSL\n");
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, bool dump, const iqr_NewHopeVariant *variant)
+static void preamble(const char *cmd, bool dump)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    Dump data to files: ");
@@ -238,15 +219,6 @@ static void preamble(const char *cmd, bool dump, const iqr_NewHopeVariant *varia
         fprintf(stdout, "True\n");
     } else {
         fprintf(stdout, "False\n");
-    }
-
-    fprintf(stdout, "    Variant: ");
-    if (variant == &IQR_NEWHOPE_REFERENCE) {
-        fprintf(stdout, "Reference\n");
-    } else if (variant == &IQR_NEWHOPE_BORINGSSL) {
-        fprintf(stdout, "BoringSSL\n");
-    } else {
-        fprintf(stdout, "Invalid\n");
     }
 
     fprintf(stdout, "\n");
@@ -259,30 +231,20 @@ static void preamble(const char *cmd, bool dump, const iqr_NewHopeVariant *varia
  * Parameters are expected to be less than 32 characters in length
  */
 static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32; //arbitrary, but reasonable.
+    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
     if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
         return 1;
     }
     return strncmp(p1, p2, max_param_size);
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, bool *dump, const iqr_NewHopeVariant **variant)
+static iqr_retval parse_commandline(int argc, const char **argv, bool *dump)
 {
     int i = 1;
 
     while (i != argc) {
         if (paramcmp(argv[i], "--dump") == 0) {
             *dump = true;
-        } else if (paramcmp(argv[i], "--variant") == 0) {
-            i++;
-            if (paramcmp(argv[i], "reference") == 0) {
-                *variant = &IQR_NEWHOPE_REFERENCE;
-            } else if (paramcmp(argv[i], "boringSSL") == 0) {
-                *variant = &IQR_NEWHOPE_BORINGSSL;
-            } else {
-                usage();
-                return IQR_EBADVALUE;
-            }
         } else {
             usage();
             return IQR_EBADVALUE;
@@ -313,7 +275,6 @@ static void *secure_memset(void *b, int c, size_t len)
 
 int main(int argc, const char **argv)
 {
-
     /* Default values.  Please adjust the usage() message if you make changes
      * here.
      */
@@ -325,16 +286,16 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &dump, &variant);
+    iqr_retval ret = parse_commandline(argc, argv, &dump);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], dump, variant);
+    preamble(argv[0], dump);
 
     /* IQR initialization that is not specific to NewHope. */
-    ret = init_toolkit(&ctx, &rng, variant);
+    ret = init_toolkit(&ctx, &rng);
     if (ret != IQR_OK) {
         goto cleanup;
     }

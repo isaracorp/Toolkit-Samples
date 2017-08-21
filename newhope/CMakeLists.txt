@@ -16,7 +16,7 @@
 #
 # * IQR_TOOLKIT_ROOT set to the IQR Toolkit's root directory.
 
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.7)
 cmake_policy (SET CMP0054 NEW)
 
 project (newhope)
@@ -27,3 +27,4 @@ include (../compiler_options.cmake)
 add_executable (newhope main.c alice.c bob.c comms.c)
 target_link_libraries (newhope iqr_toolkit m)
 
+install (TARGETS newhope DESTINATION ${PROJECT_SOURCE_DIR})

@@ -24,9 +24,6 @@
 #include "iqr_mac.h"
 #include "iqr_retval.h"
 
-/* Poly1305 keys must be 32 bytes. */
-#define POLY1305_KEY_SIZE 32
-
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Structure Declarations.
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -51,14 +48,13 @@ static void *secure_memset(void *b, int c, size_t len);
 static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_data, size_t key_size,
     const struct file_list *files, const char *tag_file)
 {
-    if (key_size < POLY1305_KEY_SIZE) {
+    if (key_size < IQR_POLY1305_KEY_SIZE) {
         fprintf(stderr, "Key is %zu bytes, it must be at least %d bytes (only first %d bytes will be used)\n",
-            key_size, POLY1305_KEY_SIZE, POLY1305_KEY_SIZE);
+            key_size, IQR_POLY1305_KEY_SIZE, IQR_POLY1305_KEY_SIZE);
         return IQR_EINVBUFSIZE;
     }
 
     uint8_t *message = NULL;
-    uint8_t *poly1305_tag = NULL;
     iqr_MAC *poly1305_obj = NULL;
     iqr_retval ret = iqr_MACCreatePoly1305(ctx, &poly1305_obj);
     if (ret != IQR_OK) {
@@ -68,17 +64,7 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
 
     fprintf(stdout, "Poly1305 object has been created.\n");
 
-    size_t poly1305_tag_size = 0;
-    ret = iqr_MACGetTagSize(poly1305_obj, &poly1305_tag_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_MACGetTagSize(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-    poly1305_tag = calloc(1, poly1305_tag_size);
-    if (poly1305_tag == NULL) {
-        fprintf(stderr, "Unable to allocate tag buffer.\n");
-        goto end;
-    }
+    uint8_t poly1305_tag[IQR_POLY1305_TAG_SIZE] = { 0 };
 
     size_t message_size = 0;
     if (files->next == NULL) {
@@ -88,7 +74,7 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
             goto end;
         }
 
-        ret = iqr_MACMessage(poly1305_obj, key_data, key_size, message, message_size, poly1305_tag, poly1305_tag_size);
+        ret = iqr_MACMessage(poly1305_obj, key_data, key_size, message, message_size, poly1305_tag, IQR_POLY1305_TAG_SIZE);
         if (ret != IQR_OK) {
             fprintf(stderr, "Failed on iqr_MACMessage(): %s\n", iqr_StrError(ret));
             goto end;
@@ -123,7 +109,7 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
             files = files->next;
         }
 
-        ret = iqr_MACEnd(poly1305_obj, poly1305_tag, poly1305_tag_size);
+        ret = iqr_MACEnd(poly1305_obj, poly1305_tag, IQR_POLY1305_TAG_SIZE);
         if (ret != IQR_OK) {
             fprintf(stderr, "Failed on iqr_MACEnd(): %s\n", iqr_StrError(ret));
             goto end;
@@ -132,7 +118,7 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
 
     fprintf(stdout, "Poly1305 tag created.\n");
 
-    ret = save_data(tag_file, poly1305_tag, poly1305_tag_size);
+    ret = save_data(tag_file, poly1305_tag, IQR_POLY1305_TAG_SIZE);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -142,8 +128,6 @@ static iqr_retval showcase_poly1305(const iqr_Context *ctx, const uint8_t *key_d
 end:
     free(message);
     message = NULL;
-    free(poly1305_tag);
-    poly1305_tag = NULL;
     iqr_MACDestroy(&poly1305_obj);
     return ret;
 }
@@ -254,7 +238,7 @@ static void usage(void)
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --key string \"****** ISARA-POLY1305-KEY ******\"\n");
     fprintf(stdout, "        --tag tag.dat\n");
-    fprintf(stdout, "  The key must be %d or more bytes.\n", POLY1305_KEY_SIZE);
+    fprintf(stdout, "  The key must be %d or more bytes.\n", IQR_POLY1305_KEY_SIZE);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -287,7 +271,7 @@ static void preamble(const char *cmd, const uint8_t *key, const char *key_file, 
  * Parameters are expected to be less than 32 characters in length
  */
 static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32; //arbitrary, but reasonable.
+    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
     if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
         return 1;
     }
@@ -344,7 +328,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t *
             if (paramcmp(param2, "string") == 0) {
                 *key = (const uint8_t *)argv[i];
                 *key_file = NULL;
-                if (strnlen((const char *)*key, POLY1305_KEY_SIZE) < POLY1305_KEY_SIZE) {
+                if (strnlen((const char *)*key, IQR_POLY1305_KEY_SIZE) < IQR_POLY1305_KEY_SIZE) {
                     return IQR_EBADVALUE;
                 }
             } else if (paramcmp(param2, "file") == 0) {
@@ -424,8 +408,8 @@ int main(int argc, const char **argv)
         if (ret != IQR_OK) {
             goto cleanup;
         }
-        if (key_size < POLY1305_KEY_SIZE) {
-            fprintf(stderr, "Key file must have at least %d bytes.\n", POLY1305_KEY_SIZE);
+        if (key_size < IQR_POLY1305_KEY_SIZE) {
+            fprintf(stderr, "Key file must have at least %d bytes.\n", IQR_POLY1305_KEY_SIZE);
             ret = IQR_EINVBUFSIZE;
             goto cleanup;
         }
