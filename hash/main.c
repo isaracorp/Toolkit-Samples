@@ -295,7 +295,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             } else if (paramcmp(argv[i], "blake2b-256") == 0) {
                 *hash_alg = IQR_HASHALGO_BLAKE2B_256;
                 *cb = &IQR_HASH_DEFAULT_BLAKE2B_256;
-            } else if (paramcmp(argv[i], "blake2b-512")) {
+            } else if (paramcmp(argv[i], "blake2b-512") == 0) {
                 *hash_alg = IQR_HASHALGO_BLAKE2B_512;
                 *cb = &IQR_HASH_DEFAULT_BLAKE2B_512;
             } else {

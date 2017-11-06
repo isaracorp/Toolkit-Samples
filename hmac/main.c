@@ -16,6 +16,7 @@
  */
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,8 +57,20 @@ static iqr_retval showcase_hmac(const iqr_Context *ctx, iqr_HashAlgorithmType ha
         return ret;
     }
 
+    size_t min_key_size = 0;
     uint8_t *tag = NULL;
     uint8_t *data = NULL;
+
+    ret = iqr_MACGetKeySize(hmac, &min_key_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_MACGetKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    if (key_size < min_key_size) {
+        fprintf(stderr, "Key is %zu bytes, it must be at least %zu bytes.\n", key_size, min_key_size);
+        goto end;
+    }
 
     size_t tag_size = 0;
     ret = iqr_MACGetTagSize(hmac, &tag_size);
@@ -255,12 +268,12 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "hmac [--hash sha2-256|sha2-512|sha3-256|sha3-512]\n"
+    fprintf(stdout, "hmac [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]\n"
         "  [--key { string <key> | file <filename> }]\n"
         "  [--tag <filename>] msg1 [msg2 ...]\n");
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --hash sha2-256\n");
-    fprintf(stdout, "        --key string ISARA-HMAC-KEY\n");
+    fprintf(stdout, "        --key string *********ISARA-HMAC-KEY*********\n");
     fprintf(stdout, "        --tag tag.dat\n");
 }
 
@@ -281,6 +294,10 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_256\n");
     } else if (IQR_HASHALGO_SHA3_512 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_512\n");
+    } else if (IQR_HASHALGO_BLAKE2B_256 == hash) {
+        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_256\n");
+    } else if (IQR_HASHALGO_BLAKE2B_512 == hash) {
+        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_512\n");
     }
     if (key != NULL) {
         fprintf(stdout, "    key: %s\n", key);
@@ -305,7 +322,7 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
  * Parameters are expected to be less than 32 characters in length
  */
 static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32; //arbitrary, but reasonable.
+    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
     if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
         return 1;
     }
@@ -313,7 +330,7 @@ static int paramcmp(const char *p1 , const char *p2) {
 }
 
 static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorithmType *hash, const iqr_HashCallbacks **cb,
-    const uint8_t **key, const char **key_file, struct file_list **files, const char **tag_file)
+    const uint8_t **key, const char **key_file, bool *default_key, struct file_list **files, const char **tag_file)
 {
     int i = 1;
     while (1) {
@@ -350,7 +367,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash sha2-256|sha2-512|sha3-256|sha3-512] */
+            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512] */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
@@ -364,6 +381,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             } else if (paramcmp(argv[i], "sha3-512") == 0) {
                 *hash = IQR_HASHALGO_SHA3_512;
                 *cb = &IQR_HASH_DEFAULT_SHA3_512;
+            } else if (paramcmp(argv[i], "blake2b-256") == 0) {
+                *hash = IQR_HASHALGO_BLAKE2B_256;
+                *cb = &IQR_HASH_DEFAULT_BLAKE2B_256;
+            } else if (paramcmp(argv[i], "blake2b-512") == 0) {
+                *hash = IQR_HASHALGO_BLAKE2B_512;
+                *cb = &IQR_HASH_DEFAULT_BLAKE2B_512;
             } else {
                 usage();
                 return IQR_EBADVALUE;
@@ -388,6 +411,8 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
                 usage();
                 return IQR_EBADVALUE;
             }
+
+            *default_key = false;
         } else if (paramcmp(argv[i], "--tag") == 0) {
             /* [--tag <output tag file>] */
             i++;
@@ -421,12 +446,15 @@ static void *secure_memset(void *b, int c, size_t len)
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values. Please adjust the usage() message if you make changes
      * here.
      */
     iqr_HashAlgorithmType hash = IQR_HASHALGO_SHA2_256;
     const iqr_HashCallbacks *cb = &IQR_HASH_DEFAULT_SHA2_256;
-    const uint8_t *key = (const uint8_t *)"ISARA-HMAC-KEY";
+    const uint8_t *key = (const uint8_t *)"*********ISARA-HMAC-KEY*********";
+    const uint8_t *key_64 = (const uint8_t *)"*****************ISARA-HMAC-KEY-FOR-512-BIT-SHA*****************";
+
+    bool default_key = true;
     const char *key_file = NULL;
     struct file_list *files = NULL;
     const char *tag_file = "tag.dat";
@@ -434,9 +462,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &hash, &cb, &key, &key_file, &files, &tag_file);
+    iqr_retval ret = parse_commandline(argc, argv, &hash, &cb, &key, &key_file, &default_key, &files, &tag_file);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
+    }
+
+    if (default_key && (hash == IQR_HASHALGO_SHA2_512 || hash == IQR_HASHALGO_SHA3_512 || hash == IQR_HASHALGO_BLAKE2B_512)) {
+        key = key_64;
     }
 
     /* Make sure the user understands what we are about to do. */

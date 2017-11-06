@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.2 Rainbow Samples
+# ISARA Radiate Security Solution Suite 1.3 Rainbow Samples
 ISARA Corporation <info@isara.com>
-v1.2 2017: Copyright (C) 2017 ISARA Corporation, All Rights Reserved.
+v1.3 2017-11: Copyright (C) 2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 

@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.2 HMAC Sample
+# ISARA Radiate Security Solution Suite 1.3 HMAC Sample
 ISARA Corporation <info@isara.com>
-v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
+v1.3 2017-11: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Message Authentication Codes
 
@@ -10,8 +10,8 @@ produces a tag. The MAC tag protects both a message's data integrity as
 well as its authenticity, by allowing verifiers (who also possess the secret
 key) to detect any changes to the message content.
 
-HMAC is a MAC which uses a hash function (SHA2-256, SHA2-512, SHA3-256 or
-SHA3-512 in our case) to produce the tag.
+HMAC is a MAC which uses a hash function (BLAKE2b-256, BLAKE2b-512, SHA2-256,
+SHA2-512, SHA3-256, or SHA3-512 in our case) to produce the tag.
 
 HMAC is specified by the Internet Engineering Taskforce's
 [RFC 2104](https://tools.ietf.org/html/rfc2104).
@@ -45,7 +45,7 @@ Execution and expected outputs:
 $ ./hmac message.dat
 Running ./hmac with the following parameters...
     hash algorithm: IQR_HASHALGO_SHA2_256
-    key: ISARA-HMAC-KEY
+    key: *********ISARA-HMAC-KEY*********
     data file(s):
       message.dat
     output tag file: tag.dat
@@ -69,7 +69,7 @@ Execution and expected outputs:
 $ ./hmac message1.dat message2.dat message3.dat
 Running ./hmac with the following parameters...
     hash algorithm: IQR_HASHALGO_SHA2_256
-    key: ISARA-HMAC-KEY
+    key: *********ISARA-HMAC-KEY*********
     data file(s):
       message.dat
       message2.dat
@@ -93,7 +93,7 @@ Tag has been saved to disk.
 Command line format:
 
 ```
-hmac [--hash sha2-256|sha2-512|sha3-256|sha3-512]
+hmac [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]
     [--key { string <key> | file <filename> }]
     [--tag <filename>] msg1 [msg2 ...]
 ```
@@ -102,14 +102,14 @@ Command line defaults:
 
 ```
 --hash sha2-256
---key string ISARA-HMAC-KEY
+--key string *********ISARA-HMAC-KEY*********
 --tag tag.dat
 ```
 
 Command line parameter descriptions:
 
 ```
-[--hash sha2-256|sha2-512|sha3-256|sha3-512]
+[--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
 [--key string <key>]

@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.2 LUKE Sample
+# ISARA Radiate Security Solution Suite 1.3 LUKE Sample
 ISARA Corporation <info@isara.com>
-v1.2 2017-02: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
+v1.3 2017-11: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Establishment Schemes
 

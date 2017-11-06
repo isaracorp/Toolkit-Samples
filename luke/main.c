@@ -63,8 +63,8 @@ static iqr_retval showcase_luke(const iqr_Context *ctx, const iqr_RNG *rng, bool
         return ret;
     }
 
-    uint8_t alice_secret[IQR_LUKE_SECRET_SIZE] = {0};
-    uint8_t bob_secret[IQR_LUKE_SECRET_SIZE] = {0};
+    uint8_t alice_secret[IQR_LUKE_SECRET_SIZE] = { 0 };
+    uint8_t bob_secret[IQR_LUKE_SECRET_SIZE] = { 0 };
 
     /* Alice must start the transfer. Bob cannot go first since, as the
      * responder, he needs information from Alice. For more information on how
@@ -74,12 +74,18 @@ static iqr_retval showcase_luke(const iqr_Context *ctx, const iqr_RNG *rng, bool
     if (ret != IQR_OK) {
         goto end;
     }
-    ret = bob_get_secret(rng, dump, bob_secret, sizeof(bob_secret));
+
+    ret = bob_start(rng, dump);
     if (ret != IQR_OK) {
         goto end;
     }
 
     ret = alice_get_secret(alice_secret, sizeof(alice_secret));
+    if (ret != IQR_OK) {
+        goto end;
+    }
+
+    ret = bob_get_secret(bob_secret, sizeof(bob_secret));
     if (ret != IQR_OK) {
         goto end;
     }
@@ -226,7 +232,7 @@ static void preamble(const char *cmd, bool dump)
  * Parameters are expected to be less than 32 characters in length
  */
 static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32; //arbitrary, but reasonable.
+    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
     if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
         return 1;
     }
@@ -270,7 +276,6 @@ static void *secure_memset(void *b, int c, size_t len)
 
 int main(int argc, const char **argv)
 {
-
     /* Default values.  Please adjust the usage() message if you make changes
      * here.
      */

@@ -231,7 +231,8 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "rng [--hash sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256]\n"
+    fprintf(stdout, "rng [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512|\n"
+        "      shake-128|shake-256]\n"
         "  [--seed <filename>] [--reseed <filename>] [--output <filename>]\n"
         "  [--count <bytes>]\n");
     fprintf(stdout, "    Defaults are: \n");
@@ -259,6 +260,10 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, size_t shake_s
             fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA3_256\n");
         } else if (IQR_HASHALGO_SHA3_512 == hash) {
             fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA3_512\n");
+        } else if (IQR_HASHALGO_BLAKE2B_256 == hash) {
+            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_BLAKE2B_256\n");
+        } else if (IQR_HASHALGO_BLAKE2B_512 == hash) {
+            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_BLAKE2B_512\n");
         }
     } else {
         if (shake_size == IQR_SHAKE_128_SIZE) {
@@ -289,7 +294,7 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, size_t shake_s
  * Parameters are expected to be less than 32 characters in length
  */
 static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32; //arbitrary, but reasonable.
+    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
     if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
         return 1;
     }
@@ -327,7 +332,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256] */
+            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256] */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
@@ -341,6 +346,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             } else if (paramcmp(argv[i], "sha3-512") == 0) {
                 *hash = IQR_HASHALGO_SHA3_512;
                 *cb = &IQR_HASH_DEFAULT_SHA3_512;
+            } else if (paramcmp(argv[i], "blake2b-256") == 0) {
+                *hash = IQR_HASHALGO_BLAKE2B_256;
+                *cb = &IQR_HASH_DEFAULT_BLAKE2B_256;
+            } else if (paramcmp(argv[i], "blake2b-512") == 0) {
+                *hash = IQR_HASHALGO_BLAKE2B_512;
+                *cb = &IQR_HASH_DEFAULT_BLAKE2B_512;
             } else if (paramcmp(argv[i], "shake-128") == 0) {
                 *shake_size = IQR_SHAKE_128_SIZE;
             } else if (paramcmp(argv[i], "shake-256") == 0) {

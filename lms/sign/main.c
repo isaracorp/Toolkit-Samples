@@ -113,8 +113,10 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
      *
      *****************************************************************************/
 
-    /* Create the signature. */
-    ret = iqr_LMSSign(priv, rng, index, digest, IQR_SHA2_256_DIGEST_SIZE, sig, sig_size);
+    /* Create the signature. The signing API requires a minimum digest length of 64 bytes.
+     * Hence, SHA2-512 was used to guarantee that length.
+     */
+    ret = iqr_LMSSign(priv, rng, index, digest, IQR_SHA2_512_DIGEST_SIZE, sig, sig_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_LMSSign(): %s\n", iqr_StrError(ret));
         goto end;
@@ -157,13 +159,13 @@ end:
 static iqr_retval create_digest(const iqr_Context *ctx, uint8_t *data, size_t data_size, uint8_t *out_digest)
 {
     iqr_Hash *hash = NULL;
-    iqr_retval ret = iqr_HashCreate(ctx, IQR_HASHALGO_SHA2_256, &hash);
+    iqr_retval ret = iqr_HashCreate(ctx, IQR_HASHALGO_SHA2_512, &hash);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashCreate(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    ret = iqr_HashMessage(hash, data, data_size, out_digest, IQR_SHA2_256_DIGEST_SIZE);
+    ret = iqr_HashMessage(hash, data, data_size, out_digest, IQR_SHA2_512_DIGEST_SIZE);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashMessage(): %s\n", iqr_StrError(ret));
         iqr_HashDestroy(&hash);
@@ -188,6 +190,15 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
 
     /* This sets the hashing functions that will be used globally. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
+    if (IQR_OK != ret) {
+        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
+    /* SHA2-512 produces a 64-byte digest, which is required by iqr_LMSSign. Any 64-byte digest
+     * is suitable for signing.
+     */
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
@@ -223,14 +234,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
         return IQR_EINVBUFSIZE;
     }
 
-    *digest = calloc(1, IQR_SHA2_256_DIGEST_SIZE);
+    *digest = calloc(1, IQR_SHA2_512_DIGEST_SIZE);
     if (NULL == *digest) {
         fprintf(stderr, "Failed to allocate space for the digest\n");
         free(message_raw);
         return IQR_ENOMEM;
     }
 
-    /* calculate the digest */
+    /* Calculate the digest */
     ret = create_digest(*ctx, message_raw, message_raw_size, *digest);
     if (ret != IQR_OK) {
         free(message_raw);

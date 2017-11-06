@@ -188,7 +188,8 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "kdf_concatenation [--hash sha2-256|sha2-512|sha3-256|sha3-512]\n"
+    fprintf(stdout, "kdf_concatenation [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|\n"
+        "      sha3-256|sha3-512]\n"
         "  [--secret { string <secret> | file <filename> }]\n"
         "  [--info { string <info> | file <filename> | none }]\n"
         "  [--keysize <size>] [--keyfile <output_filename>]\n");
@@ -217,6 +218,10 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_256\n");
     } else if (IQR_HASHALGO_SHA3_512 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_512\n");
+    } else if (IQR_HASHALGO_BLAKE2B_256 == hash) {
+        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_256\n");
+    } else if (IQR_HASHALGO_BLAKE2B_512 == hash) {
+        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_512\n");
     }
     if (secret != NULL) {
         fprintf(stdout, "    shared secret: %s\n", secret);
@@ -242,7 +247,7 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
  * Parameters are expected to be less than 32 characters in length
  */
 static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32; //arbitrary, but reasonable.
+    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
     if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
         return 1;
     }
@@ -297,6 +302,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             } else if (paramcmp(argv[i], "sha3-512") == 0) {
                 *hash = IQR_HASHALGO_SHA3_512;
                 *cb = &IQR_HASH_DEFAULT_SHA3_512;
+            } else if (paramcmp(argv[i], "blake2b-256") == 0) {
+                *hash = IQR_HASHALGO_BLAKE2B_256;
+                *cb = &IQR_HASH_DEFAULT_BLAKE2B_256;
+            } else if (paramcmp(argv[i], "blake2b-512") == 0) {
+                *hash = IQR_HASHALGO_BLAKE2B_512;
+                *cb = &IQR_HASH_DEFAULT_BLAKE2B_512;
             } else {
                 usage();
                 return IQR_EBADVALUE;

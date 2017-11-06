@@ -1,6 +1,6 @@
 # ISARA Radiate Security Solution Suite 1.3 NTRUPrime KEM Samples
 ISARA Corporation <info@isara.com>
-v1.3 2017-09: Copyright (C) 2017 ISARA Corporation, All Rights Reserved.
+v1.3 2017-10: Copyright (C) 2017 ISARA Corporation, All Rights Reserved.
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
