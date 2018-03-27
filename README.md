@@ -14,11 +14,11 @@ our website: [www.isara.com](https://www.isara.com).
 You can also contact us directly at
 [quantumsafe@isara.com](mailto:quantumsafe@isara.com).
 
-Copyright &copy; 2016-2017 ISARA Corporation, All Rights Reserved.
+Copyright &copy; 2016-2018 ISARA Corporation, All Rights Reserved.
 
-## ISARA Radiate Security Solution Suite 1.3 Samples
+## ISARA Radiate Security Solution Suite 1.4 Samples
 
-These samples all require version 1.3 of our toolkit; for more information,
+These samples all require version 1.4 of our toolkit; for more information,
 visit [www.isara.com](https://www.isara.com) or contact our
 [sales team](mailto:quantumsafe@isara.com).
 
@@ -41,15 +41,15 @@ Minimum:
 * iOS 8.1 or newer
 * Linux (Ubuntu 14.04 LTS or newer, Debian 8 or newer)
 * macOS 10.10 or newer
-* Windows 7 or newer
+* Windows 7 or newer (64-bit platforms)
 
 Supported Architectures by OS:
 
-* Android: x86, x86_64, armabi, armabi-v7a, arm64-v8a, mips, mips64
+* Android: x86, x86_64, armabi-v7a, arm64-v8a
 * iOS: x86, x86_64, armv7, armv7s, arm64
-* Linux: x86, x86_64, core2, sandybridge, skylake
-* macOS: x86, x86_64, core2, sandybridge, skylake
-* Windows: x86, x86_64, core2, sandybridge, skylake
+* Linux: x86_64, core2, sandybridge, skylake
+* macOS: x86_64, core2, sandybridge, skylake
+* Windows: x86_64, core2, sandybridge, skylake
 
 Additional architecture-specific builds can also be created on demand; please
 contact ISARA’s [sales team](mailto:quantumsafe@isara.com).
@@ -84,6 +84,7 @@ number of top-level directories:
 * `rainbow` - Rainbow digital signature scheme.
 * `rng` - Random number generators.
 * `sidh` - Supersingular Isogeny Diffie-Hellman key exchange.
+* `xmss` - eXtended Merkel Signature System digital signature scheme.
 
 ### Building Samples
 
@@ -105,7 +106,7 @@ To build the samples:
 4. Run make: `make`
 
 For more details and tool requirements, please refer to the
-_[Developer's Guide](https://www.isara.com/toolkit/1.3/doc/guide/guide.html)_
+_[Developer's Guide](https://www.isara.com/toolkit/1.4/doc/guide/guide.html)_
 documentation.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
@@ -120,11 +121,11 @@ instructions on running specific samples.
 
 ## License
 
-v1.3 2017-11:
+v1.4 2018-03:
 
 See the `LICENSE` file for details:
 
-> Copyright 2016-2017 ISARA Corporation
+> Copyright 2016-2018 ISARA Corporation
 >
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
