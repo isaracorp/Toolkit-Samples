@@ -1,6 +1,8 @@
-/** @file internal.h Common header for the sample.
+/** @file internal.h
  *
- * @copyright Copyright 2017 ISARA Corporation
+ * @brief Common header for the sample.
+ *
+ * @copyright Copyright 2017-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

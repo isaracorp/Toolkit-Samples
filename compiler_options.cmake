@@ -1,4 +1,4 @@
-# Copyright 2016-2017 ISARA Corporation
+# Copyright 2016-2018 ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,8 +63,11 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
         add_compile_options (-O0)
     endif ()
 
-    if (NOT BUILD_SERVER)
-        add_compile_options (-fcolor-diagnostics)
+    if (CMAKE_C_COMPILER_VERSION VERSION_GREATER 5.2)
+        # GCC 5.2
+        if (NOT BUILD_SERVER)
+            add_compile_options (-fdiagnostics-color=always)
+        endif ()
     endif ()
 
     ## Platform specific stuff

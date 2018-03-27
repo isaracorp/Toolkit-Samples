@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.3 Rainbow Samples
+# ISARA Radiate Security Solution Suite 1.4 Rainbow Samples
 ISARA Corporation <info@isara.com>
-v1.3 2017-11: Copyright (C) 2017 ISARA Corporation, All Rights Reserved.
+v1.4 2018-03: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 
@@ -60,7 +60,7 @@ Keys have been generated.
 Public Key has been exported.
 Private Key has been exported.
 Successfully saved pub.key (47520 bytes)
-Successfully saved priv.key (35097 bytes)
+Successfully saved priv.key (35182 bytes)
 Public and private keys have been saved to disk.
 ```
 
@@ -76,7 +76,7 @@ Running ./rainbow_sign with the following parameters...
     message data file: message.dat
 
 Successfully loaded message.dat (173595 bytes)
-Successfully loaded priv.key (35097 bytes)
+Successfully loaded priv.key (35182 bytes)
 Private key has been imported.
 Signature has been created.
 Successfully saved sig.dat (53 bytes)
@@ -204,7 +204,7 @@ Command line parameter descriptions:
 
 See the `LICENSE` file for details:
 
-> Copyright 2017 ISARA Corporation
+> Copyright 2017-2018 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

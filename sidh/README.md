@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.3 SIDH Sample
+# ISARA Radiate Security Solution Suite 1.4 SIDH Sample
 ISARA Corporation <info@isara.com>
-v1.3 2017-11: Copyright (C) 2017 ISARA Corporation, All Rights Reserved.
+v1.4 2018-03: Copyright (C) 2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Establishment Schemes
 
@@ -96,7 +96,7 @@ filenames are:
 
 See the `LICENSE` file for details:
 
-> Copyright 2017 ISARA Corporation
+> Copyright 2017-2018 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

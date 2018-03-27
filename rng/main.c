@@ -1,6 +1,8 @@
-/** @file main.c Produce random numbers using the toolkit's RNG schemes.
+/** @file main.c
  *
- * @copyright Copyright 2016-2017 ISARA Corporation
+ * @brief Produce random numbers using the toolkit's RNG schemes.
+ *
+ * @copyright Copyright 2016-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -192,10 +194,11 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
     iqr_retval ret = IQR_OK;
     uint8_t *tmp = NULL;
     if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on implementation,
-         * so skip all this when the size is 0 so we consistently return NULL with a size of 0.
-         * In some samples it's useful to take empty files as input so users can pass NULL or 0
-         * for optional parameters.
+        /* calloc with a param of 0 could return a pointer or NULL depending on
+         * implementation, so skip all this when the size is 0 so we
+         * consistently return NULL with a size of 0. In some samples it's
+         * useful to take empty files as input so users can pass NULL or 0 for
+         * optional parameters.
          */
         tmp = calloc(1, tmp_size);
         if (tmp == NULL) {
@@ -232,14 +235,14 @@ end:
 static void usage(void)
 {
     fprintf(stdout, "rng [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512|\n"
-        "      shake-128|shake-256]\n"
+        "      shake128|shake256]\n"
         "  [--seed <filename>] [--reseed <filename>] [--output <filename>]\n"
         "  [--count <bytes>]\n");
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --hash sha2-256\n");
     fprintf(stdout, "        --output random.dat\n");
     fprintf(stdout, "        --count 256\n");
-    fprintf(stdout, "  Uses SHAKE if shake-128 or shake-256 is specified, otherwise HMAC-DRBG.\n");
+    fprintf(stdout, "  Uses SHAKE if shake128 or shake256 is specified, otherwise HMAC-DRBG.\n");
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -267,9 +270,9 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, size_t shake_s
         }
     } else {
         if (shake_size == IQR_SHAKE_128_SIZE) {
-            fprintf(stdout, "    SHAKE-128\n");
+            fprintf(stdout, "    SHAKE128\n");
         } else if (shake_size == IQR_SHAKE_256_SIZE) {
-            fprintf(stdout, "    SHAKE-256\n");
+            fprintf(stdout, "    SHAKE256\n");
         }
     }
     if (seed != NULL) {
@@ -332,7 +335,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512|shake-128|shake-256] */
+            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|
+             * sha3-512|shake128|shake256]
+             */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
@@ -352,9 +357,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             } else if (paramcmp(argv[i], "blake2b-512") == 0) {
                 *hash = IQR_HASHALGO_BLAKE2B_512;
                 *cb = &IQR_HASH_DEFAULT_BLAKE2B_512;
-            } else if (paramcmp(argv[i], "shake-128") == 0) {
+            } else if (paramcmp(argv[i], "shake128") == 0) {
                 *shake_size = IQR_SHAKE_128_SIZE;
-            } else if (paramcmp(argv[i], "shake-256") == 0) {
+            } else if (paramcmp(argv[i], "shake256") == 0) {
                 *shake_size = IQR_SHAKE_256_SIZE;
             } else {
                 usage();
@@ -390,7 +395,8 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// NIST test vectors used by the main() function if the user doesn't specify any seed/reseed data.
+// NIST test vectors used by the main() function if the user doesn't specify any
+// seed/reseed data.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const uint8_t default_seed_data[] = {
@@ -485,25 +491,28 @@ int main(int argc, const char **argv)
 
     if (seed_data == default_seed_data && reseed_data == default_reseed_data && hash == IQR_HASHALGO_SHA2_256 &&
         count == default_count && shake_size == 0) {
-        /** The user has decided to use the default seed/reseed data, which we've chosen as the NIST
-         * test vectors. So for fun we've decided to verify the output against the expected NIST output
-         * and prove that it works. The NIST test reads two chunks of data and compares against the second
-         * read. In showcase_rng we read in two chunks as well, but saved the entire data, so when we do
-         * the comparison here we just compare the second half of the output to the test vector.
+        /** The user has decided to use the default seed/reseed data, which
+         * we've chosen as the NIST test vectors. So for fun we've decided to
+         * verify the output against the expected NIST output and prove that it
+         * works.
+         *
+         * The NIST test reads two chunks of data and compares against the
+         * second read. In showcase_rng we read in two chunks as well, but saved
+         * the entire data, so when we do the comparison here we just compare
+         * the second half of the output to the test vector.
          */
         ret = load_data(output, &validate, &count);
         if (ret != IQR_OK) {
             goto cleanup;
         }
 
-        // The NIST vector validation calls GetBytes twice and only verifies the second call, so we do
-        // that here too by checking only the second half of the output.
+        // The NIST vector validation calls GetBytes twice and only verifies the
+        // second call, so we do that here too by checking only the second half
+        // of the output.
         if (memcmp(validate + count - sizeof(default_expected_data), default_expected_data, sizeof(default_expected_data)) == 0) {
             fprintf(stdout, "You're using the default NIST data and the output matches!\n");
         } else {
-            fprintf(stdout, "You're using the default NIST data but the output DOESN'T MATCH!!?\?!!?!\n");
-            // Apparently trigraphs are a thing in the C language spec, so I'll just keep this ^^ here
-            // so that you now know too. https://en.wikipedia.org/wiki/Digraphs_and_trigraphs#C
+            fprintf(stdout, "You're using the default NIST data but the output DOESN'T MATCH!\n");
         }
     }
 

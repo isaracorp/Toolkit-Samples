@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.3 LMS Samples
+# ISARA Radiate Security Solution Suite 1.4 LMS Samples
 ISARA Corporation <info@isara.com>
-v1.3 2017-11: Copyright (C) 2016-2017 ISARA Corporation, All Rights Reserved.
+v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 
@@ -23,7 +23,7 @@ an unlimited number of times.
 
 1.  The signer generates a public and private key pair.
 2.  The signer publishes the public key but keeps the private key secret.
-3.  **The signer must save the index index + 1 since index must not be reused.**
+3.  **The signer must save `index + 1` since an index must not be reused.**
     The signer then uses the private key and index to sign the digest of a
     message.
 4.  The signer publishes the message and signature.
@@ -173,9 +173,6 @@ Command line parameter descriptions:
 [--priv <filename>]
 <filename> is the name of the file where the private key is to be saved.
 
-[--hash 16|32]
-The size of the hashes to be used by the LMS algorithm.
-
 [--winternitz 1|2|4|8]
 The Winternitz value.
 
@@ -273,14 +270,14 @@ This must be the same value as was passed into lms_generate_keys.
 ## Further Reading
 
 * See `iqr_lms.h` in the toolkit's `include` directory.
-* [Hash-Based Signatures](https://tools.ietf.org/html/draft-mcgrew-hash-sigs-05)
+* [Hash-Based Signatures](https://tools.ietf.org/html/draft-mcgrew-hash-sigs-08)
   IETF Draft
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright 2016-2017 ISARA Corporation
+> Copyright 2016-2018 ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

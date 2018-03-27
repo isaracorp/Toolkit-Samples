@@ -1,6 +1,8 @@
-/** @file main.c Verify a signature using the toolkit's LMS signature scheme.
+/** @file main.c
  *
- * @copyright Copyright 2016-2017 ISARA Corporation
+ * @brief Verify a signature using the toolkit's LMS signature scheme.
+ *
+ * @copyright Copyright 2016-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,8 +77,8 @@ static iqr_retval showcase_lms_verify(const iqr_Context *ctx, const iqr_LMSWinte
 
     fprintf(stdout, "Public key has been loaded successfully!\n");
 
-    /* Sign and verify require a 64-byte message. Here, SHA2-512 is used because it
-     * produces a 64-byte digest (any 64-byte digest will work).
+    /* Sign and verify require a 64-byte message. Here, SHA2-512 is used because
+     * it produces a 64-byte digest (any 64-byte digest will work).
      */
     ret = iqr_LMSVerify(pub, digest, IQR_SHA2_512_DIGEST_SIZE, sig, sig_size);
     if (ret == IQR_OK) {
@@ -192,6 +194,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
+    iqr_retval ret = IQR_OK;
+
     FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
@@ -200,16 +204,42 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
 
     /* Obtain file size. */
     fseek(fp , 0 , SEEK_END);
-    size_t tmp_size = (size_t)ftell(fp);
+#if defined(_WIN32) || defined(_WIN64)
+    const int64_t tmp_size64 = (int64_t)_ftelli64(fp);
+    
+    if (tmp_size64 < 0) {
+        fprintf(stderr, "Failed on _ftelli64(): %s\n", strerror(errno));
+        ret = IQR_EBADVALUE;
+        goto end;
+    } else if ((uint64_t)tmp_size64 > (uint64_t)SIZE_MAX) {
+        /* On 32-bit systems, we cannot allocate enough memory for large key files. */
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    /* Due to a bug in GCC 7.2, it is necessary to make tmp_size volatile. Otherwise,
+     * the variable is removed by the compiler and tmp_size64 is used instead. This
+     * causes the calloc() call further down to raise a compiler warning. */
+    volatile size_t tmp_size = (size_t)tmp_size64;
+#else
+    const size_t tmp_size = (size_t)ftell(fp);
+#endif
+    if (ferror(fp) != 0) {
+        fprintf(stderr, "Failed on ftell(): %s\n", strerror(errno));
+        ret = IQR_EBADVALUE;
+        goto end;
+    }
+
     rewind(fp);
 
-    iqr_retval ret = IQR_OK;
-    uint8_t *tmp = NULL;
-    if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on implementation,
-         * so skip all this when the size is 0 so we consistently return NULL with a size of 0.
-         * In some samples it's useful to take empty files as input so users can pass NULL or 0
-         * for optional parameters.
+    if (tmp_size > 0) {
+        uint8_t *tmp = NULL;
+
+        /* calloc with a param of 0 could return a pointer or NULL depending on
+         * implementation, so skip all this when the size is 0 so we
+         * consistently return NULL with a size of 0. In some samples it's
+         * useful to take empty files as input so users can pass NULL or 0 for
+         * optional parameters.
          */
         tmp = calloc(1, tmp_size);
         if (tmp == NULL) {
@@ -226,12 +256,12 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
             ret = IQR_EBADVALUE;
             goto end;
         }
+
+        *data_size = tmp_size;
+        *data = tmp;
+
+        fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
     }
-
-    *data_size = tmp_size;
-    *data = tmp;
-
-    fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
 
 end:
     fclose(fp);
@@ -344,7 +374,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 5|10|20] */
+            /* [--height 5|10|15|20|25] */
             i++;
             if (paramcmp(argv[i], "5") == 0) {
                 *height = IQR_LMS_HEIGHT_5;
@@ -376,12 +406,6 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 
 int main(int argc, const char **argv)
 {
-    /* The security string is an identifier for the private key. This
-     * value must be distinct from all other identifiers and should be chosen
-     * via a pseudorandom function. See section 3.2 of the Hash-Based
-     * Signatures IETF specification (McGraw & Curcio).
-     */
-
     /* Default values.  Please adjust the usage() message if you make changes
      * here. */
     const char *sig = "sig.dat";

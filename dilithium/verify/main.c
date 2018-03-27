@@ -1,6 +1,8 @@
-/** @file main.c Verify a signature using the toolkit's Dilithium signature scheme.
+/** @file main.c
  *
- * @copyright Copyright 2017 ISARA Corporation
+ * @brief Verify a signature using the toolkit's Dilithium signature scheme.
+ *
+ * @copyright Copyright 2017-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +34,8 @@
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// This function showcases the verification of a Dilithium signature against a digest.
+// This function showcases the verification of a Dilithium signature against a
+// digest.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval showcase_dilithium_verify(const iqr_Context *ctx, const iqr_DilithiumVariant *variant, const char *pub_file,
@@ -150,10 +153,11 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
     iqr_retval ret = IQR_OK;
     uint8_t *tmp = NULL;
     if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on implementation,
-         * so skip all this when the size is 0 so we consistently return NULL with a size of 0.
-         * In some samples it's useful to take empty files as input so users can pass NULL or 0
-         * for optional parameters.
+        /* calloc with a param of 0 could return a pointer or NULL depending on
+         * implementation, so skip all this when the size is 0 so we
+         * consistently return NULL with a size of 0. In some samples it's
+         * useful to take empty files as input so users can pass NULL or 0 for
+         * optional parameters.
          */
         tmp = calloc(1, tmp_size);
         if (tmp == NULL) {

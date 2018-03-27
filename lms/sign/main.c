@@ -1,6 +1,8 @@
-/** @file main.c Sign a message using the toolkit's LMS signature scheme.
+/** @file main.c
  *
- * @copyright Copyright 2016-2017 ISARA Corporation
+ * @brief Sign a message using the toolkit's LMS signature scheme.
+ *
+ * @copyright Copyright 2016-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +20,22 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+// Declare memset_s() if the platform supports it.
+#if !defined(__ANDROID__)
+#define __STDC_WANT_LIB_EXT1__ 1
+#endif
 #include <string.h>
 #include <time.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+// For SecureZeroMemory().
+#include <Windows.h>
+#endif
+
+#if defined(__FreeBSD__)
+// For explicit_bzero().
+#include <strings.h>
+#endif
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
@@ -33,7 +49,7 @@
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
-static void *secure_memset(void *b, int c, size_t len);
+static void secure_memzero(void *b, size_t len);
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases signing of a digest using the LMS signature scheme.
@@ -100,21 +116,21 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
         goto end;
     }
 
-    /************************* CRITICALLY IMPORTANT STEP *************************
+    /*********************** CRITICALLY IMPORTANT STEP *************************
      *
-     * Before signing, the value of index+1 must be written to non-volatile memory.
-     * Failure to do so could result in a SECURITY BREACH as it could lead to the
-     * re-use of a one-time signature.
+     * Before signing, the value of index+1 must be written to non-volatile
+     * memory.  Failure to do so could result in a SECURITY BREACH as it could
+     * lead to the re-use of a one-time signature.
      *
      * This step has been omitted for brevity. Next time you sign, use index+1.
      *
      * For more information about this property of the LMS private key, please
      * refer to the LMS specification.
      *
-     *****************************************************************************/
+     **************************************************************************/
 
-    /* Create the signature. The signing API requires a minimum digest length of 64 bytes.
-     * Hence, SHA2-512 was used to guarantee that length.
+    /* Create the signature. The signing API requires a minimum digest length of
+     * 64 bytes. Hence, SHA2-512 was used to guarantee that length.
      */
     ret = iqr_LMSSign(priv, rng, index, digest, IQR_SHA2_512_DIGEST_SIZE, sig, sig_size);
     if (ret != IQR_OK) {
@@ -135,8 +151,10 @@ static iqr_retval showcase_lms_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
 end:
     if (priv_raw != NULL) {
-        /* (Private) Keys are private, sensitive data, be sure to clear memory containing them when you're done */
-        secure_memset(priv_raw, 0, priv_raw_size);
+        /* (Private) Keys are private, sensitive data, be sure to clear memory
+         * containing them when you're done.
+         */
+        secure_memzero(priv_raw, priv_raw_size);
     }
     free(sig);
     free(priv_raw);
@@ -195,8 +213,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
         return ret;
     }
 
-    /* SHA2-512 produces a 64-byte digest, which is required by iqr_LMSSign. Any 64-byte digest
-     * is suitable for signing.
+    /* SHA2-512 produces a 64-byte digest, which is required by iqr_LMSSign. Any
+     * 64-byte digest is suitable for signing.
      */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (IQR_OK != ret) {
@@ -290,6 +308,8 @@ end:
 
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
 {
+    iqr_retval ret = IQR_OK;
+
     FILE *fp = fopen(fname, "rb");
     if (fp == NULL) {
         fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
@@ -298,16 +318,42 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
 
     /* Obtain file size. */
     fseek(fp , 0 , SEEK_END);
-    size_t tmp_size = (size_t)ftell(fp);
+#if defined(_WIN32) || defined(_WIN64)
+    const int64_t tmp_size64 = (int64_t)_ftelli64(fp);
+    
+    if (tmp_size64 < 0) {
+        fprintf(stderr, "Failed on _ftelli64(): %s\n", strerror(errno));
+        ret = IQR_EBADVALUE;
+        goto end;
+    } else if ((uint64_t)tmp_size64 > (uint64_t)SIZE_MAX) {
+        /* On 32-bit systems, we cannot allocate enough memory for large key files. */
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+    
+    /* Due to a bug in GCC 7.2, it is necessary to make tmp_size volatile. Otherwise,
+     * the variable is removed by the compiler and tmp_size64 is used instead. This
+     * causes the calloc() call further down to raise a compiler warning. */
+    volatile size_t tmp_size = (size_t)tmp_size64;
+#else
+    const size_t tmp_size = (size_t)ftell(fp);
+#endif
+    if (ferror(fp) != 0) {
+        fprintf(stderr, "Failed on ftell(): %s\n", strerror(errno));
+        ret = IQR_EBADVALUE;
+        goto end;
+    }
+
     rewind(fp);
 
-    iqr_retval ret = IQR_OK;
-    uint8_t *tmp = NULL;
-    if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on implementation,
-         * so skip all this when the size is 0 so we consistently return NULL with a size of 0.
-         * In some samples it's useful to take empty files as input so users can pass NULL or 0
-         * for optional parameters.
+    if (tmp_size > 0) {
+        uint8_t *tmp = NULL;
+
+        /* calloc with a param of 0 could return a pointer or NULL depending on
+         * implementation, so skip all this when the size is 0 so we
+         * consistently return NULL with a size of 0. In some samples it's
+         * useful to take empty files as input so users can pass NULL or 0 for
+         * optional parameters.
          */
         tmp = calloc(1, tmp_size);
         if (tmp == NULL) {
@@ -324,12 +370,12 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
             ret = IQR_EBADVALUE;
             goto end;
         }
+
+        *data_size = tmp_size;
+        *data = tmp;
+
+        fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
     }
-
-    *data_size = tmp_size;
-    *data = tmp;
-
-    fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
 
 end:
     fclose(fp);
@@ -447,7 +493,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 5|10|20] */
+            /* [--height 5|10|15|20|25] */
             i++;
             if (paramcmp(argv[i], "5") == 0) {
                 *height = IQR_LMS_HEIGHT_5;
@@ -495,18 +541,36 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Secure (not really) memset().
+// Secure memory wipe.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void *secure_memset(void *b, int c, size_t len)
+static void secure_memzero(void *b, size_t len)
 {
-    /** This memset() is NOT secure. It could and probably will be optimized out by the compiler. There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows also provides SecureZeroMemory().
-     *
-     * This is just for sample purposes, do your own due diligence when choosing a secure memset() so you can securely
-     * clear sensitive data.
+    /* You may need to substitute your platform's version of a secure memset()
+     * (one that won't be optimized out by the compiler). There isn't a secure,
+     * portable memset() available before C11 which provides memset_s(). Windows
+     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
+     * explicit_bzero().
      */
-    return memset(b, c, len);
+#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
+    memset_s(b, len, 0, len);
+#elif defined(_WIN32) || defined(_WIN64)
+    SecureZeroMemory(b, len);
+#elif defined(__FreeBSD__)
+    explicit_bzero(b, len);
+#else
+    /* This fallback will not be optimized out, if the compiler has a conforming
+     * implementation of "volatile". It also won't take advantage of any faster
+     * intrinsics, so it may end up being slow.
+     *
+     * Implementation courtesy of this paper:
+     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
+     */
+    volatile unsigned char *ptr = b;
+    while (len--) {
+        *ptr++ = 0x00;
+    }
+#endif
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -515,12 +579,6 @@ static void *secure_memset(void *b, int c, size_t len)
 
 int main(int argc, const char **argv)
 {
-    /* The security string is an identifier for the private key. This
-     * value must be distinct from all other identifiers and should be chosen
-     * via a pseudorandom function. See section 3.2 of the Hash-Based
-     * Signatures IETF specification (McGraw & Curcio).
-     */
-
     /* Default values.  Please adjust the usage() message if you make changes
      *  here.
      */

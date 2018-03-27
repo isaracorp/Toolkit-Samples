@@ -1,6 +1,8 @@
-/** @file main.c Perform encryption using the toolkit's ChaCha20 scheme.
+/** @file main.c
  *
- * @copyright Copyright 2016-2017 ISARA Corporation
+ * @brief Perform encryption using the toolkit's ChaCha20 scheme.
+ *
+ * @copyright Copyright 2016-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +21,21 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+// Declare memset_s() if the platform supports it.
+#if !defined(__ANDROID__)
+#define __STDC_WANT_LIB_EXT1__ 1
+#endif
 #include <string.h>
+
+#if defined(_WIN32) || defined(_WIN64)
+// For SecureZeroMemory().
+#include <Windows.h>
+#endif
+
+#if defined(__FreeBSD__)
+// For explicit_bzero().
+#include <strings.h>
+#endif
 
 #include "iqr_chacha20.h"
 #include "iqr_context.h"
@@ -31,7 +47,7 @@
 
 static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
 static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
-static void *secure_memset(void *b, int c, size_t len);
+static void secure_memzero(void *b, size_t len);
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases ChaCha20 encryption.
@@ -119,10 +135,11 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
     iqr_retval ret = IQR_OK;
     uint8_t *tmp = NULL;
     if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on implementation,
-         * so skip all this when the size is 0 so we consistently return NULL with a size of 0.
-         * In some samples it's useful to take empty files as input so users can pass NULL or 0
-         * for optional parameters.
+        /* calloc with a param of 0 could return a pointer or NULL depending on
+         * implementation, so skip all this when the size is 0 so we
+         * consistently return NULL with a size of 0. In some samples it's
+         * useful to take empty files as input so users can pass NULL or 0 for
+         * optional parameters.
          */
         tmp = calloc(1, tmp_size);
         if (tmp == NULL) {
@@ -264,18 +281,36 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **ke
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Secure (not really) memset().
+// Secure memory wipe.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void *secure_memset(void *b, int c, size_t len)
+static void secure_memzero(void *b, size_t len)
 {
-    /** This memset() is NOT secure. It could and probably will be optimized out by the compiler. There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows also provides SecureZeroMemory().
-     *
-     * This is just for sample purposes, do your own due diligence when choosing a secure memset() so you can securely
-     * clear sensitive data.
+    /* You may need to substitute your platform's version of a secure memset()
+     * (one that won't be optimized out by the compiler). There isn't a secure,
+     * portable memset() available before C11 which provides memset_s(). Windows
+     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
+     * explicit_bzero().
      */
-    return memset(b, c, len);
+#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
+    memset_s(b, len, 0, len);
+#elif defined(_WIN32) || defined(_WIN64)
+    SecureZeroMemory(b, len);
+#elif defined(__FreeBSD__)
+    explicit_bzero(b, len);
+#else
+    /* This fallback will not be optimized out, if the compiler has a conforming
+     * implementation of "volatile". It also won't take advantage of any faster
+     * intrinsics, so it may end up being slow.
+     *
+     * Implementation courtesy of this paper:
+     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
+     */
+    volatile unsigned char *ptr = b;
+    while (len--) {
+        *ptr++ = 0x00;
+    }
+#endif
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -338,9 +373,11 @@ cleanup:
     plaintext_data = NULL;
     free(nonce_data);
     nonce_data = NULL;
-    /* Keys are private, sensitive data, be sure to clear memory containing them when you're done */
+    /* Keys are private, sensitive data, be sure to clear memory containing them
+     * when you're done.
+     */
     if (key_data != NULL) {
-        secure_memset(key_data, 0, key_size);
+        secure_memzero(key_data, key_size);
     }
     free(key_data);
     key_data = NULL;

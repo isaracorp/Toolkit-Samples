@@ -1,6 +1,8 @@
-/** @file main.c Demonstrate the toolkit's NTRUPrime Key Encapsulation Mechanism.
+/** @file main.c
  *
- * @copyright Copyright 2017 ISARA Corporation
+ * @brief Demonstrate the toolkit's NTRUPrime key encapsulation mechanism.
+ *
+ * @copyright Copyright 2017-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

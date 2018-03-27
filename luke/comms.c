@@ -1,5 +1,7 @@
-/** @file comms.c A fake communication channel used for communication between
- * the fabricated Alice and Bob. Meant to act as a network or other communication
+/** @file comms.c
+ *
+ * @brief A fake communication channel used for communication between the
+ * fabricated Alice and Bob. Meant to act as a network or other communication
  * channel to help demonstrate the process of key establishment.
  *
  * Quick suggestion, don't look too deeply into this file. It is not an example
@@ -7,7 +9,7 @@
  * understand the data flow of LUKE. Again, don't read this file! You're
  * going to read it anyway aren't you...
  *
- * @copyright Copyright 2016-2017 ISARA Corporation
+ * @copyright Copyright 2016-2018 ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
