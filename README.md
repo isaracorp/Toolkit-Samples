@@ -38,7 +38,7 @@ Recommended:
 
 Minimum:
 
-* Android 5.0 (Lollipop) or newer (API level 21 or higher)
+* Android 6.0 (Marshmallow) or newer (API level 23 or higher)
 * iOS 8.1 or newer
 * Linux (Ubuntu 14.04 LTS or newer, Debian 8 or newer)
 * macOS 10.10 or newer
