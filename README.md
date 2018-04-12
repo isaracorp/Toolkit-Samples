@@ -22,8 +22,9 @@ These samples all require version 1.4 of our toolkit; for more information,
 visit [www.isara.com](https://www.isara.com) or contact our
 [sales team](mailto:quantumsafe@isara.com).
 
-Each sample demonstrates one part of the toolkit. We use the LMS samples to
-produce digital signatures of the toolkit's installation packages, for example.
+Each sample demonstrates one part of the toolkit. We use the Dilithium samples
+to produce digital signatures of the toolkit's installation packages, for
+example.
 
 ### System Requirements
 
