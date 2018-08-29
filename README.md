@@ -16,9 +16,9 @@ You can also contact us directly at
 
 Copyright &copy; 2016-2018 ISARA Corporation, All Rights Reserved.
 
-## ISARA Radiate Security Solution Suite 1.4 Samples
+## ISARA Radiate Security Solution Suite 1.5 Samples
 
-These samples all require version 1.4 of our toolkit; for more information,
+These samples all require version 1.5 of our toolkit; for more information,
 visit [www.isara.com](https://www.isara.com) or contact our
 [sales team](mailto:quantumsafe@isara.com).
 
@@ -48,7 +48,7 @@ Supported Architectures by OS:
 
 * Android: x86, x86_64, armabi-v7a, arm64-v8a
 * iOS: x86, x86_64, armv7, armv7s, arm64
-* Linux: x86_64, core2, sandybridge, skylake
+* Linux: x86_64, core2, sandybridge, skylake, powerpc
 * macOS: x86_64, core2, sandybridge, skylake
 * Windows: x86_64, core2, sandybridge, skylake
 
@@ -57,15 +57,25 @@ contact ISARA’s [sales team](mailto:quantumsafe@isara.com).
 
 ## Samples
 
-Sample code for the ISARA toolkit. We're rearranged the samples so reduce the
+Sample code for the ISARA toolkit. We're rearranged the samples to reduce the
 number of top-level directories:
 
 * `aead_chacha20_poly1305` - ChaCha20/Poly1305 AEAD encryption and decryption.
-* `chacha20` - ChaCha20 encryption and decryption.
-* `dilithium` - Dilithium digital signature system.
-* `ecdh` - Elliptic curve Diffie-Hellman key exchange.
+* `chacha20` - ChaCha20 encryption and decryption, from
+  [RFC 8439](https://tools.ietf.org/html/rfc8439).
+* `dilithium` - Dilithium digital signature system, from the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions).
+* `ecdh` - Elliptic curve Diffie-Hellman key agreement.
+* `frododh` - Key agreement using the original
+  [Frodo algorithm](https://eprint.iacr.org/2016/659).
+* `frodokem` - Key encapsulation using the Frodo algorithm, from the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions).
 * `hash` - Hashing using any of our supported hash algorithms.
-* `hmac` - Hash-based Message Authentication Codes using any of our supported algorithms.
+* `hmac` - Hash-based Message Authentication Codes using any of our supported
+  algorithms.
+* `hss` - Hierarchical Signature Scheme, a hash-based digital signature system.
+  Formerly part of our toolkit as "LMS". Defined in
+  [Hash-Based Signatures IETF Draft 12](https://tools.ietf.org/html/draft-mcgrew-hash-sigs-12).
 * `kdf_concatenation` - Tool for deriving keys using the
   [NIST SP 800-56A](http://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-56Ar2.pdf)
   Alternative 1 Concatenation KDF scheme.
@@ -75,17 +85,29 @@ number of top-level directories:
 * `kdf_rfc5869` - Tool for deriving keys using the HMAC-based
   Extract-and-Expand Key Derivation Function from IETF's
   [RFC 5869](https://tools.ietf.org/html/rfc5869).
-* `kyber` - Kyber key-encapsulation mechanism.
-* `lms` - Leighton-Micali One Time Signature digital signature scheme.
-* `luke` - LUKE (Lattice based Unique Key Establishment) key exchange.
-* `mceliece` - McEliece QC-MDPC key-encapsulation mechanism.
-* `newhope` - NewHope key exchange.
-* `ntruprime` - NTRUPrime key-encapsulation mechanism.
-* `poly1305` - Poly1305 message authentication codes.
-* `rainbow` - Rainbow digital signature scheme.
+* `kyber` - Kyber key-encapsulation mechanism, from the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions).
+* `luke` - LUKE (Lattice based Unique Key Establishment) key agreement, our
+  optimized version of the original
+  [NewHope algorithm](https://eprint.iacr.org/2015/1092/).
+* `mceliece` - Our McEliece QC-MDPC key-encapsulation mechanism, part of the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions).
+* `newhopedh` - NewHope key agreement, from the original
+  [NewHope paper](https://eprint.iacr.org/2015/1092/).
+* `ntruprime` - NTRUPrime key-encapsulation mechanism, from the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions).
+* `poly1305` - Poly1305 message authentication codes, from the
+  [original paper](https://cr.yp.to/mac.html).
+* `rainbow` - Rainbow digital signature scheme, from the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions).
 * `rng` - Random number generators.
-* `sidh` - Supersingular Isogeny Diffie-Hellman key exchange.
-* `xmss` - eXtended Merkel Signature System digital signature scheme.
+* `sidh` - Supersingular Isogeny Diffie-Hellman key agreement, from the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions)
+  SIKE entry.
+* `sike` - Supersingular Isogeny Key Encapsulation, from the
+  [NIST competition](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-1-Submissions).
+* `xmss` - eXtended Merkel Signature System digital signature scheme, from
+  [RFC 8391](https://tools.ietf.org/html/rfc8391).
 
 ### Building Samples
 
@@ -122,7 +144,7 @@ instructions on running specific samples.
 
 ## License
 
-v1.4 2018-03:
+v1.5 2018-09:
 
 See the `LICENSE` file for details:
 
