@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 Poly1305 MAC Sample
+# ISARA Radiate Security Solution Suite 1.5 Poly1305 MAC Sample
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Random Number Generation
 
@@ -32,9 +32,9 @@ From NIST SP 800-90A Rev. 1:
 > applications.
 
 HMAC-DRBG is built around the use of a BLAKE2b-256, BLAKE2b-512, SHA2-256,
-SHA2-512, SHA3-256, or SHA3-512 hash function using the HMAC construction. The
-toolkit's HMAC-DRBG RNG implementation can be initiated using any of these hash
-functions.
+SHA2-384, SHA2-512, SHA3-256, or SHA3-512 hash function using the HMAC
+construction. The toolkit's HMAC-DRBG RNG implementation can be initiated using
+any of these hash functions.
 
 ## Getting Started
 
@@ -110,10 +110,11 @@ Random data has been saved to disk.
 Command line format:
 
 ```
-rng [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512|
-        shake128|shake256]
-    [--seed <filename>] [--reseed <filename>] [--output <filename>]
-    [--count <bytes>]
+rng
+  [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|
+  shake128|shake256]
+  [--seed <filename>] [--reseed <filename>] [--output <filename>]
+  [--count <bytes>]
 ```
 
 Command line defaults:
@@ -127,8 +128,8 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512|
-    shake128|shake256]
+[--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|
+  shake128|shake256]
 The hash algorithm to use in the HMAC-DRBG. Uses SHAKE instead of HMAC-DRBG if
 shake128 or shake256 is specified.
 

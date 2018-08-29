@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 KDF Samples
+# ISARA Radiate Security Solution Suite 1.5 KDF Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Derivation Functions
 
@@ -8,7 +8,7 @@ A key derivation function (or KDF) derives one or more secret keys from a
 secret value such as a master key, a password, or a passphrase using a
 pseudo-random function.
 
-[NIST SP 800-56A](http://dx.doi.org/10.6028/NIST.SP.800-56Ar2)Alternative 1
+[NIST SP 800-56C](http://dx.doi.org/10.6028/NIST.SP.800-56Cr1)Option 1
 Concatenation KDF is specified by NIST.
 
 This KDF uses concatenation and a hash function to derive keys. It takes as
@@ -56,11 +56,11 @@ Derived key has been saved to disk.
 Command line format:
 
 ```
-kdf_concatenation [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|
-        sha3-256|sha3-512]
-    [--secret { string <secret> | file <filename> }]
-    [--info { string <info> | file <filename> | none }]
-    [--keysize <size>] [--keyfile <output_filename>]
+kdf_concatenation [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|
+  sha3-256|sha3-512]
+  [--secret { string <secret> | file <filename> }]
+  [--info { string <info> | file <filename> | none }]
+  [--keysize <size>] [--keyfile <output_filename>]
 ```
 
 Command line defaults:
@@ -76,7 +76,7 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]
+[--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
 [--secret string <secret>]
@@ -106,7 +106,7 @@ The size of the requested key in bytes.
 ## Further Reading
 
 * See `iqr_kdf.h` in the toolkit's `include` directory.
-* [NIST SP 800-56A](http://dx.doi.org/10.6028/NIST.SP.800-56Ar2)Alternative 1
+* [NIST SP 800-56C](http://dx.doi.org/10.6028/NIST.SP.800-56Cr1)Option 1
   Concatenation KDF specification
 
 ## License

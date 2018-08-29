@@ -285,7 +285,8 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "hmac [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]\n"
+    fprintf(stdout, "hmac [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|\n"
+        "  sha3-256|sha3-512]\n"
         "  [--key { string <key> | file <filename> }]\n"
         "  [--tag <filename>] msg1 [msg2 ...]\n");
     fprintf(stdout, "    Defaults are: \n");
@@ -305,6 +306,8 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
 
     if (IQR_HASHALGO_SHA2_256 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_256\n");
+    } else if (IQR_HASHALGO_SHA2_384 == hash) {
+        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_384\n");
     } else if (IQR_HASHALGO_SHA2_512 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_512\n");
     } else if (IQR_HASHALGO_SHA3_256 == hash) {
@@ -384,13 +387,16 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256
-             * |sha3-512]
+            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|
+             * sha3-256|sha3-512]
              */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
                 *cb = &IQR_HASH_DEFAULT_SHA2_256;
+            } else if (paramcmp(argv[i], "sha2-384") == 0) {
+                *hash = IQR_HASHALGO_SHA2_384;
+                *cb = &IQR_HASH_DEFAULT_SHA2_384;
             } else if (paramcmp(argv[i], "sha2-512") == 0) {
                 *hash = IQR_HASHALGO_SHA2_512;
                 *cb = &IQR_HASH_DEFAULT_SHA2_512;
@@ -489,6 +495,7 @@ int main(int argc, const char **argv)
     iqr_HashAlgorithmType hash = IQR_HASHALGO_SHA2_256;
     const iqr_HashCallbacks *cb = &IQR_HASH_DEFAULT_SHA2_256;
     const uint8_t *key = (const uint8_t *)"*********ISARA-HMAC-KEY*********";
+    const uint8_t *key_48 = (const uint8_t *)"*********ISARA-HMAC-KEY-FOR-384-BIT-SHA*********";
     const uint8_t *key_64 = (const uint8_t *)"*****************ISARA-HMAC-KEY-FOR-512-BIT-SHA*****************";
 
     bool default_key = true;
@@ -502,6 +509,10 @@ int main(int argc, const char **argv)
     iqr_retval ret = parse_commandline(argc, argv, &hash, &cb, &key, &key_file, &default_key, &files, &tag_file);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
+    }
+
+    if (default_key && (hash == IQR_HASHALGO_SHA2_384)) {
+        key = key_48;
     }
 
     if (default_key && (hash == IQR_HASHALGO_SHA2_512 || hash == IQR_HASHALGO_SHA3_512 || hash == IQR_HASHALGO_BLAKE2B_512)) {
@@ -552,6 +563,8 @@ cleanup:
         files = next;
     }
     files = NULL;
+
     iqr_DestroyContext(&ctx);
+
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

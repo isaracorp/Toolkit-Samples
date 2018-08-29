@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 McEliece QC-MDPC KEM Samples
+# ISARA Radiate Security Solution Suite 1.5 McEliece QC-MDPC KEM Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -18,8 +18,8 @@ The shared key can now be used for symmetric encryption. Note that the key has
 already been passed through a Key Derivation Function (KDF) so it is not
 necessary to do so again.
 
-Generally speaking, public/private keys only need to be generated once.
-The McEliece cryptosystem follows this pattern.
+Generally speaking, public/private keys only need to be generated once. The
+McEliece KEM follows this pattern.
 
 ## Getting Started
 

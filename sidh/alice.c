@@ -38,16 +38,22 @@
 static iqr_SIDHParams *params;
 static iqr_SIDHAlicePrivateKey *alice_private_key;
 
-iqr_retval init_alice(const iqr_Context *ctx)
+iqr_retval init_alice(const iqr_Context *ctx, const iqr_SIDHVariant *variant, size_t *secret_size)
 {
-    if (ctx == NULL) {
+    if (ctx == NULL || variant == NULL || secret_size == NULL) {
         fprintf(stderr, "Context was null.\n");
         return IQR_ENULLPTR;
     }
 
-    iqr_retval ret = iqr_SIDHCreateParams(ctx, &params);
+    iqr_retval ret = iqr_SIDHCreateParams(ctx, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_SIDHCreateParams(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
+    ret = iqr_SIDHGetSecretSize(params, secret_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_SIDHGetSecretSize(): %s\n", iqr_StrError(ret));
     }
     return ret;
 }
@@ -59,14 +65,20 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
         return IQR_ENULLPTR;
     }
 
-    size_t alice_size = IQR_SIDH_ALICE_PUBLIC_KEY_SIZE;
+    size_t alice_size = 0;
+    iqr_retval ret = iqr_SIDHGetPublicKeySize(params, &alice_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_SIDHGetPublicKeySize(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
     uint8_t *alice_public_key = calloc(1, alice_size);
     if (alice_public_key == NULL) {
         fprintf(stderr, "We seem to have run out of memory. ret=%d\n", errno);
         return IQR_ENOMEM;
     }
 
-    iqr_retval ret = iqr_SIDHCreateAlicePrivateKey(params, rng, &alice_private_key);
+    ret = iqr_SIDHCreateAlicePrivateKey(params, rng, &alice_private_key);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_SIDHCreateAlicePrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -99,17 +111,22 @@ iqr_retval alice_get_secret(uint8_t *secret, size_t secret_size)
     iqr_retval ret = IQR_OK;
     uint8_t *bob_public_key = NULL;
 
-    if (secret == NULL || secret_size != IQR_SIDH_SECRET_SIZE) {
+    if (secret == NULL) {
         fprintf(stderr, "The input parameters were bad.\n");
-        ret = IQR_ENULLPTR;
-        goto end;
+        return IQR_ENULLPTR;
     }
 
-    size_t bob_size = IQR_SIDH_BOB_PUBLIC_KEY_SIZE;
+    size_t bob_size = 0;
+    ret = iqr_SIDHGetPublicKeySize(params, &bob_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_SIDHGetPublicKeySize(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
     bob_public_key = calloc(1, bob_size);
     if (bob_public_key == NULL) {
         fprintf(stderr, "We seem to have run out of memory. ret=%d\n", errno);
-        ret = IQR_ENOMEM;
+        return  IQR_ENOMEM;
     }
 
     ret = receive_from_bob(bob_public_key, &bob_size);

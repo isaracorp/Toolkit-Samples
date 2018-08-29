@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 ChaCha20 Sample
+# ISARA Radiate Security Solution Suite 1.5 ChaCha20 Sample
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Symmetric-Key Cryptography
 
@@ -13,7 +13,7 @@ messages, an initial block counter value and a piece of data to be encrypted or
 decrypted.
 
 ChaCha20 is specified by the Internet Engineering Taskforce's
-[RFC 7539](https://tools.ietf.org/html/rfc7539).
+[RFC 8439](https://tools.ietf.org/html/rfc8439).
 
 ### Getting Started
 
@@ -197,7 +197,7 @@ Where the resulting plaintext will be saved.
 ## Further Reading
 
 * See `iqr_chacha20.h` in the toolkit's `include` directory.
-* [RFC 7539](https://tools.ietf.org/html/rfc7539)
+* [RFC 8439](https://tools.ietf.org/html/rfc8439)
 
 ## License
 

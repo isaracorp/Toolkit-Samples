@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 Rainbow Samples
+# ISARA Radiate Security Solution Suite 1.5 Rainbow Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-03: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 
@@ -53,14 +53,16 @@ Execution and expected outputs:
 ```
 $ ./rainbow_generate_keys
 Running ./rainbow_generate_keys with the following parameters...
+    security level: IIIb. parameter set: (GF(31), 64, 32, 48)
     public key file: pub.key
     private key file: priv.key
 
+....................
 Keys have been generated.
 Public Key has been exported.
 Private Key has been exported.
-Successfully saved pub.key (47520 bytes)
-Successfully saved priv.key (35182 bytes)
+Successfully saved pub.key (564534 bytes)
+Successfully saved priv.key (409462 bytes)
 Public and private keys have been saved to disk.
 ```
 
@@ -71,15 +73,16 @@ Execution and expected output:
 ```
 $ ./rainbow_sign
 Running ./rainbow_sign with the following parameters...
+    security level: IIIb. parameter set: (GF(31), 64, 32, 48)
     signature file: sig.dat
     private key file: priv.key
     message data file: message.dat
 
-Successfully loaded message.dat (173595 bytes)
-Successfully loaded priv.key (35182 bytes)
+Successfully loaded priv.key (409462 bytes)
 Private key has been imported.
+Successfully loaded message.dat (60422 bytes)
 Signature has been created.
-Successfully saved sig.dat (53 bytes)
+Successfully saved sig.dat (112 bytes)
 Signature has been saved to disk.
 ```
 
@@ -90,14 +93,15 @@ Execution and expected output:
 ```
 $ ./rainbow_verify
 Running ./rainbow_verify with the following parameters...
+    security level: IIIb. parameter set: (GF(31), 64, 32, 48)
     signature file: sig.dat
     public key file: pub.key
     message data file: message.dat
 
-Successfully loaded message.dat (173595 bytes)
-Successfully loaded pub.key (47520 bytes)
-Successfully loaded sig.dat (53 bytes)
+Successfully loaded pub.key (564534 bytes)
+Successfully loaded sig.dat (112 bytes)
 Public key has been loaded successfully!
+Successfully loaded message.dat (60422 bytes)
 Rainbow verified the signature successfully!
 ```
 
@@ -111,12 +115,14 @@ files.
 Command line format:
 
 ```
-rainbow_generate_keys [--pub <filename>] [--priv <filename>]
+rainbow_generate_keys [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--pub <filename>]
+  [--priv <filename>]
 ```
 
 Command line defaults:
 
 ```
+--security IIIb
 --pub pub.key
 --priv priv.key
 ```
@@ -124,6 +130,9 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
+[--security IIIb|IIIc|IVa|Vc|VIa|VIb]
+The desired security parameters. See iqr_rainbow.h for details.
+
 [--pub <filename>]
 <filename> is the name of the file where the public key is to be saved.
 
@@ -139,13 +148,14 @@ file.
 Command line format:
 
 ```
-rainbow_sign [--sig filename] [--priv <filename>]
-  [--message <filename>]
+rainbow_sign [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--sig filename]
+  [--priv <filename>] [--message <filename>]
 ```
 
 Command line defaults:
 
 ```
+--security IIIb
 --sig sig.dat
 --priv priv.key
 --message message.dat
@@ -154,6 +164,9 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
+[--security IIIb|IIIc|IVa|Vc|VIa|VIb]
+The desired security parameters. See iqr_rainbow.h for details.
+
 [--sig <filename>]
 <filename> is the name of the file where the signature is to be saved.
 
@@ -171,13 +184,14 @@ Creates the digest of a message and verifies the signature against the digest.
 Command line format:
 
 ```
-rainbow_verify [--sig <filename>] [--pub <filename>]
-  [--message <filename>]
+rainbow_verify [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--sig <filename>]
+  [--pub <filename>] [--message <filename>]
 ```
 
 Command line defaults:
 
 ```
+--security IIIb
 --sig sig.dat
 --pub pub.key
 --message message.dat
@@ -186,6 +200,9 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
+[--security IIIb|IIIc|IVa|Vc|VIa|VIb]
+The desired security parameters. See iqr_rainbow.h for details.
+
 [--sig <filename>]
 <filename> is the name of the file where the signature is stored.
 

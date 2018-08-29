@@ -216,7 +216,8 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "hash [--hash sha2-256|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]\n"
+    fprintf(stdout, "hash\n"
+                    "  [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]\n"
                     "  [--salt <filename>] [--message <filename>]\n");
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --hash sha2-512\n");
@@ -234,6 +235,8 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash_alg, const char
 
     if (IQR_HASHALGO_SHA2_256 == hash_alg) {
         fprintf(stdout, "    hash: IQR_HASHALGO_SHA2_256\n");
+    } else if (IQR_HASHALGO_SHA2_384 == hash_alg) {
+        fprintf(stdout, "    hash: IQR_HASHALGO_SHA2_384\n");
     } else if (IQR_HASHALGO_SHA2_512 == hash_alg) {
         fprintf(stdout, "    hash: IQR_HASHALGO_SHA2_512\n");
     } else if (IQR_HASHALGO_SHA3_256 == hash_alg) {
@@ -281,13 +284,16 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
         }
 
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash sha2-256|sha2-512|sha3-256|sha3-512|blake2b-256|
+            /* [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|blake2b-256|
              * blake2b-512]
              */
             i++;
             if  (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash_alg = IQR_HASHALGO_SHA2_256;
                 *cb = &IQR_HASH_DEFAULT_SHA2_256;
+            } else if (paramcmp(argv[i], "sha2-384") == 0) {
+                *hash_alg = IQR_HASHALGO_SHA2_384;
+                *cb = &IQR_HASH_DEFAULT_SHA2_384;
             } else if (paramcmp(argv[i], "sha2-512") == 0) {
                 *hash_alg = IQR_HASHALGO_SHA2_512;
                 *cb = &IQR_HASH_DEFAULT_SHA2_512;

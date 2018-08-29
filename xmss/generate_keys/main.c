@@ -41,6 +41,7 @@
 #include "iqr_hash.h"
 #include "iqr_retval.h"
 #include "iqr_rng.h"
+#include "iqr_watchdog.h"
 #include "iqr_xmss.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -60,10 +61,11 @@ static void secure_memzero(void *b, size_t len);
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rng, const char *pub_file, const char *priv_file,
-    const iqr_XMSSHeight height)
+    const char *state_file, const iqr_XMSSTreeStrategy *strategy, const iqr_XMSSHeight height)
 {
     iqr_XMSSParams *params = NULL;
     iqr_XMSSPrivateKey *priv = NULL;
+    iqr_XMSSPrivateKeyState *state = NULL;
     iqr_XMSSPublicKey *pub = NULL;
 
     size_t pub_raw_size = 0;
@@ -72,19 +74,23 @@ static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rn
     size_t priv_raw_size = 0;
     uint8_t *priv_raw = NULL;
 
-    iqr_retval ret = iqr_XMSSCreateParams(ctx, height, &params);
+    size_t state_raw_size = 0;
+    uint8_t *state_raw = NULL;
+
+    iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, height, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
     /* Generate the keys. */
-    ret = iqr_XMSSCreateKeyPair(params, rng, IQR_XMSS_FULL_TREE, &pub, &priv);
+    ret = iqr_XMSSCreateKeyPair(params, rng, &pub, &priv, &state);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSCreateKeyPair(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
+    fprintf(stdout, "\n");
     fprintf(stdout, "Keys have been generated.\n");
 
     /* Get the size of the public key and export the buffer. */
@@ -131,6 +137,28 @@ static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rn
 
     fprintf(stdout, "Private Key has been exported.\n");
 
+    /* Get the size of the state and export the buffer. */
+    ret = iqr_XMSSGetStateSize(state, &state_raw_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_XMSSGetStateSize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    state_raw = calloc(1, state_raw_size);
+    if (state_raw == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    ret = iqr_XMSSExportState(state, state_raw, state_raw_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_XMSSExportState(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    fprintf(stdout, "Private Key State has been exported.\n");
+
     /* And finally, write the public and private key to disk. */
     ret = save_data(pub_file, pub_raw, pub_raw_size);
     if (ret != IQR_OK) {
@@ -142,7 +170,12 @@ static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rn
         goto end;
     }
 
-    fprintf(stdout, "Public and private keys have been saved to disk.\n");
+    ret = save_data(state_file, state_raw, state_raw_size);
+    if (ret != IQR_OK) {
+        goto end;
+    }
+
+    fprintf(stdout, "Public, private keys, and state have been saved to disk.\n");
 
 end:
     if (priv_raw != NULL) {
@@ -153,9 +186,11 @@ end:
     }
     free(pub_raw);
     free(priv_raw);
+    free(state_raw);
 
     iqr_XMSSDestroyPrivateKey(&priv);
     iqr_XMSSDestroyPublicKey(&pub);
+    iqr_XMSSDestroyState(&state);
     iqr_XMSSDestroyParams(&params);
 
     return ret;
@@ -166,12 +201,32 @@ end:
 // XMSS.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
+// Provides a cheap progress indicator for key generation, which is a long-
+// running task for large XMSS tree heights.
+static iqr_retval progress_watchdog(void *watchdog_data)
+{
+    (void)watchdog_data;  // Not used.
+
+    fprintf(stdout, ".");
+    fflush(stdout);
+
+    return IQR_OK;
+}
+
+// Initialize the toolkit and the algorithms required by XMSS.
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
     /* Create a Global Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
+    /* Call this watchdog function periodically during long-running tasks. */
+    ret = iqr_WatchdogRegisterCallback(*ctx, progress_watchdog, NULL);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_WatchdogRegisterCallback(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
@@ -234,7 +289,6 @@ static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_
 end:
     fclose(fp);
     fp = NULL;
-
     return ret;
 }
 
@@ -244,23 +298,27 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "xmss_generate_keys [--pub <filename>]\n"
-        "  [--priv <filename>] [--height 10|16|20]\n");
+    fprintf(stdout, "xmss_generate_keys [--pub <filename>] [--priv <filename>] [--state <filename>]\n"
+                    "  [--height 10|16|20] [--strategy bds|full]\n");
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --pub pub.key\n");
     fprintf(stdout, "        --priv priv.key\n");
+    fprintf(stdout, "        --state priv.state\n");
     fprintf(stdout, "        --height 10\n");
+    fprintf(stdout, "        --strategy full\n");
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *pub, const char *priv, const iqr_XMSSHeight height)
+static void preamble(const char *cmd, const char *pub, const char *priv, const char *state, const iqr_XMSSHeight height,
+    const iqr_XMSSTreeStrategy *strategy)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
+    fprintf(stdout, "    private key state file: %s\n", state);
 
     if (IQR_XMSS_HEIGHT_10 == height) {
         fprintf(stdout, "    height: IQR_XMSS_HEIGHT_10\n");
@@ -270,6 +328,14 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const i
         fprintf(stdout, "    height: IQR_XMSS_HEIGHT_20\n");
     } else {
         fprintf(stdout, "    height: INVALID\n");
+    }
+
+    if (strategy == &IQR_XMSS_FULL_STRATEGY) {
+        fprintf(stdout, "    strategy: Full Tree\n");
+    } else if (strategy == &IQR_XMSS_BDS_STRATEGY) {
+        fprintf(stdout, "    strategy: BDS\n");
+    } else {
+        fprintf(stdout, "    strategy: INVALID\n");
     }
 
     fprintf(stdout, "\n");
@@ -290,7 +356,8 @@ static int paramcmp(const char *p1 , const char *p2) {
     return strncmp(p1, p2, max_param_size);
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, const char **pub, const char **priv, iqr_XMSSHeight *height)
+static iqr_retval parse_commandline(int argc, const char **argv, const char **pub, const char **priv, const char **state,
+    iqr_XMSSHeight *height, const iqr_XMSSTreeStrategy **strategy)
 {
     int i = 1;
     while (i != argc) {
@@ -307,6 +374,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             /* [--priv <filename>] */
             i++;
             *priv = argv[i];
+        } else if (paramcmp(argv[i], "--state") == 0) {
+            /* [--state <filename>] */
+            i++;
+            *state = argv[i];
         } else if (paramcmp(argv[i], "--height") == 0) {
             /* [--height 10|16|20] */
             i++;
@@ -316,6 +387,17 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
                 *height = IQR_XMSS_HEIGHT_16;
             } else if  (paramcmp(argv[i], "20") == 0) {
                 *height = IQR_XMSS_HEIGHT_20;
+            } else {
+                usage();
+                return IQR_EBADVALUE;
+            }
+        } else if (paramcmp(argv[i], "--strategy") == 0) {
+            /* [--strategy bds|full] */
+            i++;
+            if (paramcmp(argv[i], "bds") == 0) {
+                *strategy = &IQR_XMSS_BDS_STRATEGY;
+            } else if (paramcmp(argv[i], "full") == 0) {
+                *strategy = &IQR_XMSS_FULL_STRATEGY;
             } else {
                 usage();
                 return IQR_EBADVALUE;
@@ -371,6 +453,8 @@ int main(int argc, const char **argv)
      */
     const char *pub = "pub.key";
     const char *priv = "priv.key";
+    const char *state = "priv.state";
+    const iqr_XMSSTreeStrategy *strategy = &IQR_XMSS_FULL_STRATEGY;
     iqr_XMSSHeight height =  IQR_XMSS_HEIGHT_10;
 
     iqr_Context *ctx = NULL;
@@ -379,13 +463,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &pub, &priv, &height);
+    iqr_retval ret = parse_commandline(argc, argv, &pub, &priv, &state, &height, &strategy);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], pub, priv, height);
+    preamble(argv[0], pub, priv, state, height, strategy);
 
     /* IQR initialization that is not specific to XMSS. */
     ret = init_toolkit(&ctx, &rng);
@@ -395,12 +479,11 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of XMSS key generation.
      */
-    ret = showcase_xmss_keygen(ctx, rng, pub, priv, height);
+    ret = showcase_xmss_keygen(ctx, rng, pub, priv, state, strategy, height);
 
 cleanup:
     /* Clean up. */
     iqr_RNGDestroy(&rng);
     iqr_DestroyContext(&ctx);
-
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

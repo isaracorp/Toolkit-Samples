@@ -1,6 +1,6 @@
 /** @file main.c
  *
- * @brief Derive a key using the toolkit's NIST SP 800-56A Alternative 1
+ * @brief Derive a key using the toolkit's NIST SP 800-56C Option 1
  * Concatenation KDF scheme.
  *
  * @copyright Copyright 2016-2018 ISARA Corporation
@@ -51,8 +51,8 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
 static void secure_memzero(void *b, size_t len);
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// This function showcases deriving a key using the toolkit's NIST SP 800-56A
-// Alternative 1 Concatenation KDF scheme.
+// This function showcases deriving a key using the toolkit's NIST SP 800-56C
+// Option 1 Concatenation KDF scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval showcase_kdf_concatenation(const iqr_Context *ctx, iqr_HashAlgorithmType hash, const uint8_t *secret,
@@ -207,7 +207,7 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "kdf_concatenation [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|\n"
+    fprintf(stdout, "kdf_concatenation [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|\n"
         "      sha3-256|sha3-512]\n"
         "  [--secret { string <secret> | file <filename> }]\n"
         "  [--info { string <info> | file <filename> | none }]\n"
@@ -231,6 +231,8 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
 
     if (IQR_HASHALGO_SHA2_256 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_256\n");
+    } else if (IQR_HASHALGO_SHA2_384 == hash) {
+        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_384\n");
     } else if (IQR_HASHALGO_SHA2_512 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_512\n");
     } else if (IQR_HASHALGO_SHA3_256 == hash) {
@@ -307,11 +309,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
         }
 
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash sha2-256|sha2-512|sha3-256|sha3-512] */
+            /* [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512] */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
                 *cb = &IQR_HASH_DEFAULT_SHA2_256;
+            } else if (paramcmp(argv[i], "sha2-384") == 0) {
+                *hash = IQR_HASHALGO_SHA2_384;
+                *cb = &IQR_HASH_DEFAULT_SHA2_384;
             } else if (paramcmp(argv[i], "sha2-512") == 0) {
                 *hash = IQR_HASHALGO_SHA2_512;
                 *cb = &IQR_HASH_DEFAULT_SHA2_512;
@@ -493,7 +498,7 @@ int main(int argc, const char **argv)
         info = loaded_info;
     }
 
-    /** This function showcases the usage of NIST SP 800-56A Alternative 1
+    /** This function showcases the usage of NIST SP 800-56C Option 1
      * Concatenation key derivation.
      */
     ret = showcase_kdf_concatenation(ctx, hash, secret, secret_size, info, info_size, key_size, key_file);
@@ -510,6 +515,8 @@ cleanup:
     loaded_info = NULL;
     free(loaded_secret);
     loaded_secret = NULL;
+
     iqr_DestroyContext(&ctx);
+
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

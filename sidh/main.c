@@ -60,27 +60,32 @@ static void secure_memzero(void *b, size_t len);
 // failure.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_sidh(const iqr_Context *ctx, const iqr_RNG *rng, bool dump)
+static iqr_retval showcase_sidh(const iqr_Context *ctx, const iqr_RNG *rng, const iqr_SIDHVariant *variant, bool dump)
 {
     iqr_retval ret = init_comms();
     if (ret != IQR_OK) {
         return ret;
     }
 
-    ret = init_alice(ctx);
+    size_t secret_size = 0;
+    ret = init_alice(ctx, variant, &secret_size);
     if (ret != IQR_OK) {
         cleanup_comms();
         return ret;
     }
-    ret = init_bob(ctx);
+    ret = init_bob(ctx, variant);
     if (ret != IQR_OK) {
         cleanup_alice();
         cleanup_comms();
         return ret;
     }
 
-    uint8_t alice_secret[IQR_SIDH_SECRET_SIZE] = { 0 };
-    uint8_t bob_secret[IQR_SIDH_SECRET_SIZE] = { 0 };
+    uint8_t *alice_secret = calloc(1, secret_size);
+    uint8_t *bob_secret = calloc(1, secret_size);
+    if (alice_secret == NULL || bob_secret == NULL) {
+        fprintf(stdout, "\nThis is awkward, we ran out of memory.\n\n");
+        goto end;
+    }
 
     ret = alice_start(rng, dump);
     if (ret != IQR_OK) {
@@ -92,37 +97,39 @@ static iqr_retval showcase_sidh(const iqr_Context *ctx, const iqr_RNG *rng, bool
         goto end;
     }
 
-    ret = alice_get_secret(alice_secret, sizeof(alice_secret));
+    ret = alice_get_secret(alice_secret, secret_size);
     if (ret != IQR_OK) {
         goto end;
     }
 
-    ret = bob_get_secret(bob_secret, sizeof(bob_secret));
+    ret = bob_get_secret(bob_secret, secret_size);
     if (ret != IQR_OK) {
         goto end;
     }
 
     /* Test to make sure the secrets are the same */
-    if (memcmp(alice_secret, bob_secret, sizeof(alice_secret)) == 0) {
+    if (memcmp(alice_secret, bob_secret, secret_size) == 0) {
         fprintf(stdout, "\nAlice and Bob's secrets match.\n\n");
     } else {
         fprintf(stdout, "\nAlice and Bob's secrets do NOT match.\n\n");
     }
 
     if (dump) {
-        ret = save_data(ALICE_SECRET_FNAME, alice_secret, sizeof(alice_secret));
+        ret = save_data(ALICE_SECRET_FNAME, alice_secret, secret_size);
         if (ret != IQR_OK) {
             goto end;
         }
-        ret = save_data(BOB_SECRET_FNAME, bob_secret, sizeof(bob_secret));
+        ret = save_data(BOB_SECRET_FNAME, bob_secret, secret_size);
     }
 
 end:
     /* These secrets are private, sensitive data, be sure to clear memory
      * containing them when you're done.
      */
-    secure_memzero(alice_secret, sizeof(alice_secret));
-    secure_memzero(bob_secret, sizeof(bob_secret));
+    secure_memzero(alice_secret, secret_size);
+    secure_memzero(bob_secret, secret_size);
+    free(alice_secret);
+    free(bob_secret);
 
     cleanup_alice();
     cleanup_bob();
@@ -213,7 +220,8 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "sidh [--dump]\n");
+    fprintf(stdout, "sidh [variant p503|p751] [--dump]\n");
+    fprintf(stdout, "        --variant p751\n");
     fprintf(stdout, "        --dump Dumps the generated keys and secrets to file.\n");
     fprintf(stdout, "               Filenames:\n");
     fprintf(stdout, "                 Alice's key:    alice_key.dat\n");
@@ -226,9 +234,14 @@ static void usage(void)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, bool dump)
+static void preamble(const char *cmd, const iqr_SIDHVariant *variant, bool dump)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
+    if (variant == &IQR_SIDH_P751) {
+        fprintf(stdout, "    variant: p751\n");
+    } else {
+        fprintf(stdout, "    variant: p503\n");
+    }
     fprintf(stdout, "    Dump data to files: ");
     if (dump) {
         fprintf(stdout, "True\n");
@@ -253,13 +266,24 @@ static int paramcmp(const char *p1 , const char *p2) {
     return strncmp(p1, p2, max_param_size);
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, bool *dump)
+static iqr_retval parse_commandline(int argc, const char **argv, const iqr_SIDHVariant **variant, bool *dump)
 {
     int i = 1;
 
     while (i != argc) {
         if (paramcmp(argv[i], "--dump") == 0) {
             *dump = true;
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant p503|p751] */
+            i++;
+            if (paramcmp(argv[i], "p503") == 0) {
+                *variant = &IQR_SIDH_P503;
+            } else if  (paramcmp(argv[i], "p751") == 0) {
+                *variant = &IQR_SIDH_P751;
+            } else {
+                usage();
+                return IQR_EBADVALUE;
+            }
         } else {
             usage();
             return IQR_EBADVALUE;
@@ -314,17 +338,18 @@ int main(int argc, const char **argv)
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
     bool dump = false;
+    const iqr_SIDHVariant *variant = &IQR_SIDH_P751;
 
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &dump);
+    iqr_retval ret = parse_commandline(argc, argv, &variant, &dump);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], dump);
+    preamble(argv[0], variant, dump);
 
     /* IQR initialization that is not specific to SIDH. */
     ret = init_toolkit(&ctx, &rng);
@@ -333,7 +358,7 @@ int main(int argc, const char **argv)
     }
 
     /* This function showcases the usage of SIDH. */
-    ret = showcase_sidh(ctx, rng, dump);
+    ret = showcase_sidh(ctx, rng, variant, dump);
 
 cleanup:
     /* Clean up. */

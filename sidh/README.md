@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 SIDH Sample
+# ISARA Radiate Security Solution Suite 1.5 SIDH Sample
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Establishment Schemes
 
@@ -57,6 +57,7 @@ Execution and expected outputs:
 ```
 $ ./sidh
 Running ./sidh with the following parameters...
+    variant: p751
     Dump data to files: False
 
 
@@ -70,7 +71,7 @@ Generates a shared secret for Alice and Bob.
 Command line format:
 
 ```
-sidh [--dump]
+sidh [--variant p503|p751] [--dump]
 ```
 
 Command line defaults: None.
@@ -78,6 +79,9 @@ Command line defaults: None.
 Command line parameter descriptions:
 
 ```
+[--variant p503|p751]
+The desired variant.
+
 [--dump]
 A switch telling sidh to dump the public information and secrets to file. The
 filenames are:

@@ -38,7 +38,8 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
 // digest.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_rainbow_verify(const iqr_Context *ctx, const uint8_t *digest, const char *pub_file, const char *sig_file)
+static iqr_retval showcase_rainbow_verify(const iqr_Context *ctx, const iqr_RainbowVariant *variant, const char *pub_file,
+    const char *message_file, const char *sig_file)
 {
     iqr_RainbowParams *params = NULL;
     iqr_RainbowPublicKey *pub = NULL;
@@ -46,10 +47,13 @@ static iqr_retval showcase_rainbow_verify(const iqr_Context *ctx, const uint8_t 
     size_t pub_raw_size = 0;
     uint8_t *pub_raw = NULL;
 
+    size_t message_size = 0;
+    uint8_t *message = NULL;
+
     size_t sig_size = 0;
     uint8_t *sig = NULL;
 
-    iqr_retval ret = iqr_RainbowCreateParams(ctx, &params);
+    iqr_retval ret = iqr_RainbowCreateParams(ctx, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RainbowCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -75,20 +79,26 @@ static iqr_retval showcase_rainbow_verify(const iqr_Context *ctx, const uint8_t 
 
     fprintf(stdout, "Public key has been loaded successfully!\n");
 
-    ret = iqr_RainbowVerify(pub, digest, IQR_SHA2_512_DIGEST_SIZE, sig, sig_size);
+    /* Load the message. */
+    ret = load_data(message_file, &message, &message_size);
+    if (ret != IQR_OK) {
+        goto end;
+    }
+
+    ret = iqr_RainbowVerify(pub, message, message_size, sig, sig_size);
     if (ret == IQR_OK) {
         fprintf(stdout, "Rainbow verified the signature successfully!\n");
     } else {
         fprintf(stderr, "Failed on iqr_RainbowVerify(): %s\n", iqr_StrError(ret));
     }
 
-    iqr_RainbowDestroyPublicKey(&pub);
-
 end:
+    iqr_RainbowDestroyPublicKey(&pub);
+    iqr_RainbowDestroyParams(&params);
+
+    free(message);
     free(pub_raw);
     free(sig);
-
-    iqr_RainbowDestroyParams(&params);
 
     return ret;
 }
@@ -98,38 +108,8 @@ end:
 // the Rainbow signature scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------------------------------------------------------------
-// This function takes a message buffer and creates a digest out of it.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval create_digest(const iqr_Context *ctx, uint8_t *data, size_t data_size, uint8_t *out_digest)
+static iqr_retval init_toolkit(iqr_Context **ctx)
 {
-    iqr_Hash *hash = NULL;
-    iqr_retval ret = iqr_HashCreate(ctx, IQR_HASHALGO_SHA2_512, &hash);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_HashCreate(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-
-    /* The Rainbow scheme will sign a digest of the message, so we need a digest
-     * of our message.  This will give us that digest.
-     */
-    ret = iqr_HashMessage(hash, data, data_size, out_digest, IQR_SHA2_512_DIGEST_SIZE);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_HashMessage(): %s\n", iqr_StrError(ret));
-        iqr_HashDestroy(&hash);
-        return ret;
-    }
-
-    iqr_HashDestroy(&hash);
-    return IQR_OK;
-}
-
-static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t **digest)
-{
-    uint8_t *message_raw = NULL;
-    size_t message_raw_size = 0;
-
     /* Create a Global Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
@@ -137,43 +117,20 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used by the scheme. */
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_384, &IQR_HASH_DEFAULT_SHA2_384);
+    if (IQR_OK != ret) {
+        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used by the scheme. */
-    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
-    if (IQR_OK != ret) {
-        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
 
-    /* Before we do any work, lets make sure we can load the message file. */
-    ret = load_data(message, &message_raw, &message_raw_size);
-    if (ret != IQR_OK) {
-        return ret;
-    }
-
-    *digest = calloc(1, IQR_SHA2_512_DIGEST_SIZE);
-    if (*digest == NULL) {
-        fprintf(stderr, "Failed to allocate space for the digest\n");
-        free(message_raw);
-        return IQR_ENOMEM;
-    }
-
-    /* calculate the digest */
-    ret = create_digest(*ctx, message_raw, message_raw_size, *digest);
-    if (ret != IQR_OK) {
-        free(message_raw);
-        free(*digest);
-        *digest = NULL;
-        return ret;
-    }
-
-    free(message_raw);
     return IQR_OK;
 }
 
@@ -243,9 +200,10 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "rainbow_verify [--sig <filename>] [--pub <filename>]\n"
-        "  [--message <filename>]\n");
+    fprintf(stdout, "rainbow_verify [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--sig <filename>]\n"
+                    "  [--pub <filename>] [--message <filename>]\n");
     fprintf(stdout, "    Defaults are: \n");
+    fprintf(stdout, "        --security IIIb\n");
     fprintf(stdout, "        --sig sig.dat\n");
     fprintf(stdout, "        --pub pub.key\n");
     fprintf(stdout, "        --message message.dat\n");
@@ -255,9 +213,22 @@ static void usage(void)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, const char *message)
+static void preamble(const char *cmd, const iqr_RainbowVariant *variant, const char *sig, const char *pub, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
+    if (variant == &IQR_RAINBOW_GF31_64_32_48) {
+        fprintf(stdout, "    security level: IIIb. parameter set: (GF(31), 64, 32, 48)\n");
+    } else if (variant == &IQR_RAINBOW_GF256_68_36_36) {
+        fprintf(stdout, "    security level: IIIc. parameter set: (GF(256), 68, 36, 36)\n");
+    } else if (variant == &IQR_RAINBOW_GF16_56_48_48) {
+        fprintf(stdout, "    security level: IVa. parameter set: (GF(16), 56, 48, 48)\n");
+    } else if (variant == &IQR_RAINBOW_GF256_92_48_48) {
+        fprintf(stdout, "    security level: Vc. parameter set: (GF(256), 92, 48, 48)\n");
+    } else if (variant == &IQR_RAINBOW_GF16_76_64_64) {
+        fprintf(stdout, "    security level: VIa. parameter set: (GF(16), 76, 64, 64)\n");
+    } else if (variant == &IQR_RAINBOW_GF31_84_56_56) {
+        fprintf(stdout, "    security level: VIb. parameter set: (GF(31), 84, 56, 56)\n");
+    }
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    message data file: %s\n", message);
@@ -278,7 +249,8 @@ static int paramcmp(const char *p1 , const char *p2) {
     return strncmp(p1, p2, max_param_size);
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **pub, const char **message)
+static iqr_retval parse_commandline(int argc, const char **argv, const iqr_RainbowVariant **variant, const char **sig,
+    const char **pub, const char **message)
 {
     int i = 1;
     while (i != argc) {
@@ -287,7 +259,26 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             return IQR_EBADVALUE;
         }
 
-        if (paramcmp(argv[i], "--sig") == 0) {
+        if (paramcmp(argv[i], "--security") == 0) {
+            /* [--security IIIb|IIIc|IVa|Vc|VIa|VIb] */
+            i++;
+            if  (paramcmp(argv[i], "IIIb") == 0) {
+                *variant = &IQR_RAINBOW_GF31_64_32_48;
+            } else if  (paramcmp(argv[i], "IIIc") == 0) {
+                *variant = &IQR_RAINBOW_GF256_68_36_36;
+            } else if  (paramcmp(argv[i], "IVa") == 0) {
+                *variant = &IQR_RAINBOW_GF16_56_48_48;
+            } else if  (paramcmp(argv[i], "Vc") == 0) {
+                *variant = &IQR_RAINBOW_GF256_92_48_48;
+            } else if  (paramcmp(argv[i], "VIa") == 0) {
+                *variant = &IQR_RAINBOW_GF16_76_64_64;
+            } else if  (paramcmp(argv[i], "VIb") == 0) {
+                *variant = &IQR_RAINBOW_GF31_84_56_56;
+            } else {
+                usage();
+                return IQR_EBADVALUE;
+            }
+        } else if (paramcmp(argv[i], "--sig") == 0) {
             /* [--sig <filename>] */
             i++;
             *sig = argv[i];
@@ -317,32 +308,32 @@ int main(int argc, const char **argv)
     const char *pub = "pub.key";
     const char *message = "message.dat";
 
+    const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF31_64_32_48;
+
     iqr_Context *ctx = NULL;
-    uint8_t *digest = NULL;
 
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &sig, &pub, &message);
+    iqr_retval ret = parse_commandline(argc, argv, &variant, &sig, &pub, &message);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], sig, pub, message);
+    preamble(argv[0], variant, sig, pub, message);
 
     /* IQR initialization that is not specific to Rainbow. */
-    ret = init_toolkit(&ctx, message, &digest);
+    ret = init_toolkit(&ctx);
     if (ret != IQR_OK) {
         goto cleanup;
     }
 
     /* This function showcases the usage of Rainbow signature verification.
      */
-    ret = showcase_rainbow_verify(ctx, digest, pub, sig);
+    ret = showcase_rainbow_verify(ctx, variant, pub, message, sig);
 
 cleanup:
     iqr_DestroyContext(&ctx);
-    free(digest);
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

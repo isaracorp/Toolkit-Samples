@@ -99,7 +99,7 @@ static iqr_retval showcase_kyber_decapsulation(const iqr_KyberParams *params, co
     fprintf(stdout, "Kyber decapsulation completed.\n");
 
 end:
-    if (privkey_dat!= NULL) {
+    if (privkey_dat != NULL) {
         /* (Private) Keys are private, sensitive data, be sure to clear memory
          * containing them when you're done.
          */
@@ -145,6 +145,20 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
+    /* This sets the SHA3-256 functions that will be used globally. */
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_256, &IQR_HASH_DEFAULT_SHA3_256);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
+    /* This sets the SHA3-512 functions that will be used globally. */
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
@@ -245,8 +259,8 @@ end:
 static void usage(void)
 {
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "kyber_decapsulate [--security 128|224] [--priv <filename>] [--ciphertext <filename>]\n"
-            "  [--shared <filename>]\n");
+    fprintf(stdout, "kyber_decapsulate [--security 128|224] [--priv <filename>]\n"
+                    "  [--ciphertext <filename>] [--shared <filename>]\n");
     fprintf(stdout, "    Default for the sample (when no option is specified):\n");
     fprintf(stdout, "        --security 128\n");
     fprintf(stdout, "        --priv priv.key\n");
@@ -271,12 +285,17 @@ static int paramcmp(const char *p1 , const char *p2)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *priv, const char *cipher, const char *sharedkey)
+static void preamble(const char *cmd, const iqr_KyberVariant *variant, const char *priv, const char *cipher, const char *sharedkey)
 {
     fprintf(stdout, "Running %s with the following parameters:\n", cmd);
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    ciphertext file: %s\n", cipher);
     fprintf(stdout, "    shared key file: %s\n", sharedkey);
+    if (variant == &IQR_KYBER_768) {
+        fprintf(stdout, "    security level: 128 bits\n");
+    } else {
+        fprintf(stdout, "    security level: 224 bits\n");
+    }
 }
 
 /* Parse the command line options. */
@@ -301,9 +320,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Kyber
             /* [--security 128|224] */
             i++;
             if (paramcmp(argv[i], "128") == 0) {
-                *variant = &IQR_KYBER_128;
+                *variant = &IQR_KYBER_768;
             } else if  (paramcmp(argv[i], "224") == 0) {
-                *variant = &IQR_KYBER_224;
+                *variant = &IQR_KYBER_1024;
             } else {
                 usage();
                 return IQR_EBADVALUE;
@@ -358,7 +377,7 @@ int main(int argc, const char **argv)
 {
     iqr_Context * ctx = NULL;
     iqr_KyberParams *parameters = NULL;
-    const iqr_KyberVariant *variant = &IQR_KYBER_128;
+    const iqr_KyberVariant *variant = &IQR_KYBER_768;
 
     /* Default values.  Please adjust the usage() message if you make changes
      * here.
@@ -376,7 +395,7 @@ int main(int argc, const char **argv)
     }
 
     /* Show the parameters for the program. */
-    preamble(argv[0], private_key_file, ciphertext_file, sharedkey_file);
+    preamble(argv[0], variant, private_key_file, ciphertext_file, sharedkey_file);
 
     /* IQR toolkit initialization. */
     ret = init_toolkit(&ctx);

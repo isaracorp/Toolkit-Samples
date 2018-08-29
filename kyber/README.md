@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 Kyber KEM Samples
+# ISARA Radiate Security Solution Suite 1.5 Kyber KEM Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -19,8 +19,8 @@ already been passed through a Key Derivation Function (KDF) so it is not
 necessary to do so again.
 
 Generally speaking, public/private keys only need to be generated once and can
-be re-used to create multiple shared secrets. The kyber cryptosystem follows
-this pattern.
+be re-used to create multiple shared secrets. The Kyber KEM follows this
+pattern.
 
 ## Getting Started
 
@@ -53,15 +53,17 @@ $ ./kyber_generate_keys
 Running ./kyber_generate_keys with the following parameters:
     public key file: pub.key
     private key file: priv.key
-    security: 128 bits
-The global context has been created.
+    security level: 128 bits
+The context has been created.
+Hash functions have been registered in the context.
 RNG object has been created.
 Kyber parameter structure has been created.
+Creating Kyber key-pair.
 Kyber public and private key-pair has been created
 Public key has been exported.
 Private key has been exported.
 Successfully saved pub.key (1088 bytes)
-Successfully saved priv.key (2656 bytes)
+Successfully saved priv.key (2664 bytes)
 Public and private keys have been saved to disk.
 ```
 
@@ -75,12 +77,12 @@ Running ./kyber_encapsulate with the following parameters:
     public key file: pub.key
     ciphertext file: ciphertext.dat
     shared key file: shared.key
-    security: 128 bits
+    security level: 128 bits
 The context has been created.
 RNG object has been created.
 Kyber parameter structure has been created.
 Successfully loaded pub.key (1088 bytes)
-Successfully saved ciphertext.dat (1184 bytes)
+Successfully saved ciphertext.dat (1152 bytes)
 Successfully saved shared.key (32 bytes)
 Kyber encapsulation completed.
 ```
@@ -95,11 +97,11 @@ Running ./kyber_decapsulate with the following parameters:
     private key file: priv.key
     ciphertext file: ciphertext.dat
     shared key file: shared.key
-    security: 128 bits
+    security level: 128 bits
 The context has been created.
 Kyber parameter structure has been created.
-Successfully loaded priv.key (2656 bytes)
-Successfully loaded ciphertext.dat (1184 bytes)
+Successfully loaded priv.key (2664 bytes)
+Successfully loaded ciphertext.dat (1152 bytes)
 Successfully saved shared.key (32 bytes)
 Kyber decapsulation completed.
 ```
@@ -144,13 +146,13 @@ Command line format:
 
 ```
 kyber_encapsulate [--security 128|224] [--pub <filename>]
-    [--ciphertext <filename>] [--shared <filename>]
-
+  [--ciphertext <filename>] [--shared <filename>]
 ```
 
 Command line defaults:
 
 ```
+--security 128
 --pub pub.key
 --ciphertext ciphertext.dat
 --shared shared.key
@@ -186,6 +188,7 @@ kyber_decapsulate [--security 128|224] [--priv <filename>]
 Command line defaults:
 
 ```
+--security 128
 --priv priv.key
 --ciphertext ciphertext.dat
 --shared shared.key

@@ -204,7 +204,8 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "kdf_pbkdf2 [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]\n"
+    fprintf(stdout, "kdf_pbkdf2 [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|\n"
+        "  sha3-256|sha3-512]\n"
         "  [--pass { string <password> | file <filename> | none }]\n"
         "  [--salt { string <salt> | file <filename> | none }]\n"
         "  [--iter <iterations>] [--keysize <size>] [--keyfile <output_filename>]\n");
@@ -228,6 +229,8 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
 
     if (IQR_HASHALGO_SHA2_256 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_256\n");
+    } else if (IQR_HASHALGO_SHA2_384 == hash) {
+        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_384\n");
     } else if (IQR_HASHALGO_SHA2_512 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_512\n");
     } else if (IQR_HASHALGO_SHA3_256 == hash) {
@@ -307,13 +310,16 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
         }
 
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|
-             * sha3-512]
+            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|
+             * sha3-256|sha3-512]
              */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
                 *cb = &IQR_HASH_DEFAULT_SHA2_256;
+            } else if (paramcmp(argv[i], "sha2-384") == 0) {
+                *hash = IQR_HASHALGO_SHA2_384;
+                *cb = &IQR_HASH_DEFAULT_SHA2_384;
             } else if (paramcmp(argv[i], "sha2-512") == 0) {
                 *hash = IQR_HASHALGO_SHA2_512;
                 *cb = &IQR_HASH_DEFAULT_SHA2_512;
@@ -520,6 +526,8 @@ cleanup:
     loaded_salt = NULL;
     free(loaded_password);
     loaded_password = NULL;
+
     iqr_DestroyContext(&ctx);
+
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

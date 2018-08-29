@@ -56,8 +56,8 @@ static void secure_memzero(void *b, size_t len);
 // scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_dilithium_sign(const iqr_Context *ctx, const iqr_RNG *rng, const iqr_DilithiumVariant *variant,
-    const char *priv_file, const char *message_file, const char *sig_file)
+static iqr_retval showcase_dilithium_sign(const iqr_Context *ctx, const iqr_DilithiumVariant *variant, const char *priv_file,
+    const char *message_file, const char *sig_file)
 {
     iqr_DilithiumParams *params = NULL;
     iqr_DilithiumPrivateKey *priv = NULL;
@@ -111,7 +111,7 @@ static iqr_retval showcase_dilithium_sign(const iqr_Context *ctx, const iqr_RNG 
         goto end;
     }
 
-    ret = iqr_DilithiumSign(priv, rng, message, message_size, sig, sig_size);
+    ret = iqr_DilithiumSign(priv, message, message_size, sig, sig_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_DilithiumSign(): %s\n", iqr_StrError(ret));
         goto end;
@@ -150,7 +150,7 @@ end:
 // the Dilithium signature scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
+static iqr_retval init_toolkit(iqr_Context **ctx)
 {
     /* Create a Global Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
@@ -163,24 +163,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-
-    /* This will allow us to give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA3_512, rng);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-
-    /* The seed should be initialized from a guaranteed entropy source. This is
-     * only an example; DO NOT INITIALIZE THE SEED LIKE THIS.
-     */
-    time_t seed = time(NULL);
-
-    ret = iqr_RNGInitialize(*rng, (uint8_t *)&seed, sizeof(seed));
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_RNGInitialize(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
@@ -308,9 +290,9 @@ static void preamble(const char *cmd, const iqr_DilithiumVariant *variant, const
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     if (variant == &IQR_DILITHIUM_160) {
-        fprintf(stdout, "    security level: 160\n");
+        fprintf(stdout, "    security level: 160 bits\n");
     } else {
-        fprintf(stdout, "    security level: 128\n");
+        fprintf(stdout, "    security level: 128 bits\n");
     }
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    private key file: %s\n", priv);
@@ -398,7 +380,6 @@ static void secure_memzero(void *b, size_t len)
 int main(int argc, const char **argv)
 {
     iqr_Context *ctx = NULL;
-    iqr_RNG *rng = NULL;
 
     const iqr_DilithiumVariant *variant = &IQR_DILITHIUM_128;
 
@@ -421,16 +402,15 @@ int main(int argc, const char **argv)
     preamble(argv[0], variant, sig, priv, message);
 
     /* IQR initialization that is not specific to Dilithium. */
-    ret = init_toolkit(&ctx, &rng);
+    ret = init_toolkit(&ctx);
     if (ret != IQR_OK) {
         goto cleanup;
     }
 
     /* Showcase the generation of a Dilithium signature. */
-    ret = showcase_dilithium_sign(ctx, rng, variant, priv, message, sig);
+    ret = showcase_dilithium_sign(ctx, variant, priv, message, sig);
 
 cleanup:
-    iqr_RNGDestroy(&rng);
     iqr_DestroyContext(&ctx);
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

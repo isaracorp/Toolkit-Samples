@@ -110,7 +110,7 @@ static iqr_retval showcase_ntruprime_params_creation(const iqr_Context *ctx, iqr
 // Initialize the toolkit by creating a context, registering hash
 // algorithm, and creating a RNG object.
 //
-// For NTRUPrime IQR_HASHALGO_SHA3_512 must be registered.
+// For NTRUPrime IQR_HASHALGO_SHA2_512 must be registered.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
@@ -125,7 +125,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     fprintf(stdout, "The context has been created.\n");
 
     /* Globally register the hashing functions. */
-    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
@@ -134,7 +134,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     fprintf(stdout, "Hash functions have been registered in the context.\n");
 
     /* Create a HMAC DRBG object. */
-    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA3_512, rng);
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_512, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;

@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 XMSS Samples
+# ISARA Radiate Security Solution Suite 1.5 XMSS Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 
@@ -21,21 +21,21 @@ an unlimited number of times.
 
 ### How XMSS Differs from the General Case
 
-1.  The signer generates a public and private key pair.
-2.  The signer publishes the public key but keeps the private key secret.
-3.  **The signer must save `index + 1` since an index must not be reused.**
-    The signer then uses the private key and index to sign the digest of a
-    message.
+1.  The signer generates a public and private key pair. The private key's
+    state is also initialized.
+2.  The signer publishes the public key but keeps the private key secret. The
+    private key state is considered public information.
+3.  The signer then uses the private key and state to sign the message.
+4.  The signer safely stores the modified state to non-volatile memory.
 4.  The signer publishes the message and signature.
 5.  A verifier obtains the public key, the message and the signature.
 6.  A verifier reproduces the digest of the message and verifies it
     against the signature.
 
 :star: **IMPORTANT**
-In step 3, the OTS index value `index + 1` must be saved due to its
-dynamic nature.  If the signer does not save it before signing the digest,
-the signer risks using the one time signature data multiple times which
-would destroy the security of the scheme.
+In step 4, the private key state must be saved due to its  dynamic nature.  If
+the signer does not save it after signing, the signer risks using the one time
+signature data multiple times which would destroy the security of the scheme.
 
 For XMSS, keys only need to be generated once, however, only a limited number
 of messages may be signed depending on the height parameter that is chosen by
@@ -84,14 +84,19 @@ $ ./xmss_generate_keys
 Running ./xmss_generate_keys with the following parameters...
     public key file: pub.key
     private key file: priv.key
+    private key state file: priv.state
     height: IQR_XMSS_HEIGHT_10
+    strategy: Full Tree
 
+................................................................
 Keys have been generated.
 Public Key has been exported.
 Private Key has been exported.
+Private Key State has been exported.
 Successfully saved pub.key (68 bytes)
-Successfully saved priv.key (65580 bytes)
-Public and private keys have been saved to disk.
+Successfully saved priv.key (104 bytes)
+Successfully saved priv.state (65564 bytes)
+Public, private keys, and state have been saved to disk.
 ```
 
 Execute `xmss_sign` using default parameters.
@@ -99,22 +104,28 @@ Execute `xmss_sign` using default parameters.
 Execution and expected output:
 
 ```
-$ ./xmss_sign --index 6
+$ ./xmss_sign
 Running ./xmss_sign with the following parameters...
     signature file: sig.dat
     private key file: priv.key
+    private key state file: priv.state
     height: IQR_XMSS_HEIGHT_10
-    index: 6
+    strategy: Full Tree
     message data file: message.dat
 
-Successfully loaded message.dat (167518 bytes)
-Successfully loaded priv.key (65580 bytes)
+Successfully loaded message.dat (60422 bytes)
+Successfully loaded priv.key (104 bytes)
+Successfully loaded priv.state (65564 bytes)
 Private key has been imported.
+Private key state has been imported.
 Number of signatures for this private key: 1024.
+Number of remaining signatures for this private key: 1024
 Signature has been created.
-IMPORTANT: Next time you sign, use index+1 (7).
+Successfully saved priv.state (65564 bytes)
 Successfully saved sig.dat (2500 bytes)
-Signature has been saved to disk.
+Signature and updated state have been saved to disk.
+Number of signatures for this state: 1024.
+Remaining signatures: 1023
 ```
 
 Execute `xmss_verify` using default parameters.
@@ -129,7 +140,7 @@ Running ./xmss_verify with the following parameters...
     height: IQR_XMSS_HEIGHT_10
     message data file: message.dat
 
-Successfully loaded message.dat (167518 bytes)
+Successfully loaded message.dat (60422 bytes)
 Successfully loaded pub.key (68 bytes)
 Successfully loaded sig.dat (2500 bytes)
 Public key has been loaded successfully!
@@ -146,8 +157,8 @@ files.
 Command line format:
 
 ```
-xmss_generate_keys [--pub <filename>]
-    [--priv <filename>] [--height 10|16|20]
+xmss_generate_keys [--pub <filename>] [--priv <filename>] [--state <filename>]
+  [--height 10|16|20] [--strategy bds|full]
 ```
 
 Command line defaults:
@@ -155,7 +166,9 @@ Command line defaults:
 ```
 --pub pub.key
 --priv priv.key
+--state priv.state
 --height 10
+--strategy full
 ```
 
 Command line parameter descriptions:
@@ -167,8 +180,14 @@ Command line parameter descriptions:
 [--priv <filename>]
 <filename> is the name of the file where the private key is to be saved.
 
+[--state <filename>]
+<filename> is the name of the file where the private key's state is stored.
+
 [--height 10|16|20]
 The height of the Merkle Tree in the XMSS algorithm.
+
+[--strategy bds|full]
+The tree strategy. See iqr_xmss.h for details.
 ```
 
 ### xmss_sign
@@ -179,9 +198,8 @@ signature to separate files.
 Command line format:
 
 ```
-xmss_sign --index <number>
-    [--sig filename] [--priv <filename>]
-    [--height 10|16|20] [--message <filename>]
+xmss_sign [--sig filename] [--priv <filename>] [--state <filename>]
+  [--height 10|16|20] [--strategy full|bds] [--message <filename>]
 ```
 
 Command line defaults:
@@ -189,7 +207,9 @@ Command line defaults:
 ```
 --sig sig.dat
 --priv priv.key
+--state priv.state
 --height 10
+--strategy full
 --message message.dat
 ```
 
@@ -205,8 +225,14 @@ This must be provided by the user. DO NOT REUSE index!
 [--priv <filename>]
 <filename> is the name of the file where the private key is stored.
 
+[--state <filename>]
+<filename> is the name of the file where the private key's state is stored.
+
 [--height 10|16|20]
 This must be the same value as was passed into xmss_generate_keys.
+
+[--strategy bds|full]
+The tree strategy. See iqr_xmss.h for details.
 
 [--message <filename>]
 <filename> is the name of the file where the message is stored.
@@ -219,8 +245,8 @@ Creates the digest of a message and verifies the signature against the digest.
 Command line format:
 
 ```
-xmss_verify [--sig <filename>] [--pub <filename>]
-    [--height 10|16|20] [--message <filename>]
+xmss_verify [--sig <filename>] [--pub <filename>] [--height 10|16|20]
+  [--message <filename>]
 ```
 
 Command line defaults:
@@ -251,8 +277,8 @@ This must be the same value as was passed into xmss_generate_keys.
 ## Further Reading
 
 * See `iqr_xmss.h` in the toolkit's `include` directory.
-* https://datatracker.ietf.org/doc/draft-irtf-cfrg-xmss-hash-based-signatures[XMSS:
-  Extended Hash-Based Signatures] IETF Draft
+* [XMSS: eXtended Merkel Signature Scheme](https://tools.ietf.org/html/rfc8391)
+  RFC
 
 ## License
 

@@ -42,10 +42,10 @@
 #include "iqr_mac.h"
 #include "iqr_retval.h"
 
-/* RFC 7539 specifies that data is padded with zero-bytes so the length is a
+/* RFC 8439 specifies that data is padded with zero-bytes so the length is a
  * 16 byte multiple. */
 #define PAD_TO_LENGTH 16
-/* RFC 7539 specifies that lengths are written out at 8 bytes. */
+/* RFC 8439 specifies that lengths are written out at 8 bytes. */
 #define LENGTH_BYTES 8
 
 /* Poly1305 keys must be 32 bytes. */
@@ -87,7 +87,7 @@ static iqr_retval showcase_AEAD_chacha20_poly1305_encrypt(const iqr_Context *ctx
     }
 
     /* Generate the Poly1305 key using ChaCha20 with key and nonce.
-     * Counter is set to 0 per RFC 7539.
+     * Counter is set to 0 per RFC 8439.
      */
     ret = iqr_ChaCha20Encrypt(key_data, key_size, nonce_data, nonce_size, 0, poly1305_key, sizeof(poly1305_key),
         poly1305_key, sizeof(poly1305_key));
@@ -183,7 +183,7 @@ static iqr_retval encrypt_plaintext(const uint8_t *key_data, size_t key_size, co
     }
 
     /* Encrypt the plaintext using ChaCha20 with its key and nonce.
-     * Counter is set to 1 per RFC 7539, since counter 0 is used to generate
+     * Counter is set to 1 per RFC 8439, since counter 0 is used to generate
      * the Poly1305 key.
      */
     iqr_retval ret = iqr_ChaCha20Encrypt(key_data, key_size, nonce_data, nonce_size, 1, plaintext_data, plaintext_size,

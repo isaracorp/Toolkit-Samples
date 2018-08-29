@@ -234,8 +234,9 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "rng [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512|\n"
-        "      shake128|shake256]\n"
+    fprintf(stdout, "rng\n"
+        "  [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|\n"
+        "  shake128|shake256]\n"
         "  [--seed <filename>] [--reseed <filename>] [--output <filename>]\n"
         "  [--count <bytes>]\n");
     fprintf(stdout, "    Defaults are: \n");
@@ -256,17 +257,19 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, size_t shake_s
 
     if (shake_size == 0) {
         if (IQR_HASHALGO_SHA2_256 == hash) {
-            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA2_256\n");
+            fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_256\n");
+        } else if (IQR_HASHALGO_SHA2_384 == hash) {
+            fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_384\n");
         } else if (IQR_HASHALGO_SHA2_512 == hash) {
-            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA2_512\n");
+            fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA2_512\n");
         } else if (IQR_HASHALGO_SHA3_256 == hash) {
-            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA3_256\n");
+            fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_256\n");
         } else if (IQR_HASHALGO_SHA3_512 == hash) {
-            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_SHA3_512\n");
+            fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_512\n");
         } else if (IQR_HASHALGO_BLAKE2B_256 == hash) {
-            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_BLAKE2B_256\n");
+            fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_256\n");
         } else if (IQR_HASHALGO_BLAKE2B_512 == hash) {
-            fprintf(stdout, "    HMAC-DRBG with IQR_HASHALGO_BLAKE2B_512\n");
+            fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_512\n");
         }
     } else {
         if (shake_size == IQR_SHAKE_128_SIZE) {
@@ -335,13 +338,16 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|
-             * sha3-512|shake128|shake256]
+            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|
+             * sha3-256|sha3-512|shake128|shake256]
              */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
                 *cb = &IQR_HASH_DEFAULT_SHA2_256;
+            } else if (paramcmp(argv[i], "sha2-384") == 0) {
+                *hash = IQR_HASHALGO_SHA2_384;
+                *cb = &IQR_HASH_DEFAULT_SHA2_384;
             } else if (paramcmp(argv[i], "sha2-512") == 0) {
                 *hash = IQR_HASHALGO_SHA2_512;
                 *cb = &IQR_HASH_DEFAULT_SHA2_512;
@@ -523,6 +529,8 @@ cleanup:
     loaded_reseed_data = NULL;
     free(loaded_seed_data);
     loaded_seed_data = NULL;
+
     iqr_DestroyContext(&ctx);
+
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

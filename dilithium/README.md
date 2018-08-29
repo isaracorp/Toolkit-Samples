@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 Dilithium Samples
+# ISARA Radiate Security Solution Suite 1.5 Dilithium Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Signature Schemes
 
@@ -56,9 +56,8 @@ Execution and expected outputs:
 
 ```
 $ ./dilithium_generate_keys
-Running dilithium/generate_keys/dilithium_generate_keys with the following
-parameters...
-    security level: 128
+Running ./dilithium_generate_keys with the following parameters...
+    security level: 128 bits
     public key file: pub.key
     private key file: priv.key
 
@@ -66,7 +65,7 @@ Keys have been generated.
 Public Key has been exported.
 Private Key has been exported.
 Successfully saved pub.key (1472 bytes)
-Successfully saved priv.key (15816 bytes)
+Successfully saved priv.key (15896 bytes)
 Public and private keys have been saved to disk.
 ```
 
@@ -76,17 +75,17 @@ Execution and expected output:
 
 ```
 $ ./dilithium_sign
-Running dilithium/sign/dilithium_sign with the following parameters...
-    security level: 128
+Running ./dilithium_sign with the following parameters...
+    security level: 128 bits
     signature file: sig.dat
     private key file: priv.key
     message data file: message.dat
 
-Successfully loaded priv.key (15816 bytes)
+Successfully loaded priv.key (15896 bytes)
 Private key has been imported.
-Successfully loaded message.dat (35907 bytes)
+Successfully loaded message.dat (60422 bytes)
 Signature has been created.
-Successfully saved sig.dat (2700 bytes)
+Successfully saved sig.dat (2701 bytes)
 Signature has been saved to disk.
 ```
 
@@ -96,15 +95,15 @@ Execution and expected output:
 
 ```
 $ ./dilithium_verify
-Running dilithium/verify/dilithium_verify with the following parameters...
-    security level: 128
+Running ./dilithium_verify with the following parameters...
+    security level: 128 bits
     signature file: sig.dat
     public key file: pub.key
     message data file: message.dat
 
 Successfully loaded pub.key (1472 bytes)
-Successfully loaded message.dat (35907 bytes)
-Successfully loaded sig.dat (2700 bytes)
+Successfully loaded message.dat (60422 bytes)
+Successfully loaded sig.dat (2701 bytes)
 Public key has been loaded successfully!
 Dilithium verified the signature successfully!
 ```
@@ -120,7 +119,7 @@ Command line format:
 
 ```
 dilithium_generate_keys [--security 128|160] [--pub <filename>]
-[--priv <filename>]
+  [--priv <filename>]
 ```
 
 Command line defaults:

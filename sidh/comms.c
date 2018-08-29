@@ -35,23 +35,30 @@
 #include "iqr_sidh.h"
 
 #define NUM_TRANSACTIONS    2
-#define MAX_PAYLOAD_BYTES   IQR_SIDH_ALICE_PUBLIC_KEY_SIZE
+#define MAX_PAYLOAD_BYTES   564
 
 /* Alice sends her public key stored in index 0.
  * Bob sends his public key stored in index 1.
  */
 #define ALICE_KEY_INDEX    0
 #define BOB_KEY_INDEX      1
-static uint8_t *gross_global_bufs[NUM_TRANSACTIONS];
+
+struct com_buf {
+    uint8_t *data;
+    size_t size;
+};
+
+static struct com_buf gross_global_bufs[NUM_TRANSACTIONS];
 
 iqr_retval init_comms(void)
 {
     for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-        gross_global_bufs[i] = calloc(1, MAX_PAYLOAD_BYTES);
-        if (gross_global_bufs[i] == NULL) {
+        gross_global_bufs[i].data = calloc(1, MAX_PAYLOAD_BYTES);
+        if (gross_global_bufs[i].data == NULL) {
             fprintf(stderr, "MEMORY ERROR!!!. ret=%d\n", errno);
             return IQR_ENOMEM;
         }
+        gross_global_bufs[i].size = 0;
     }
     return IQR_OK;
 }
@@ -59,7 +66,7 @@ iqr_retval init_comms(void)
 void cleanup_comms(void)
 {
     for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-        free(gross_global_bufs[i]);
+        free(gross_global_bufs[i].data);
     }
 }
 
@@ -69,7 +76,9 @@ iqr_retval send_to_alice(uint8_t *buf, size_t size)
         fprintf(stderr, "Need less bytes.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(gross_global_bufs[BOB_KEY_INDEX], buf, size);
+
+    memcpy(gross_global_bufs[BOB_KEY_INDEX].data, buf, size);
+    gross_global_bufs[BOB_KEY_INDEX].size = size;
     return IQR_OK;
 }
 
@@ -79,28 +88,32 @@ iqr_retval send_to_bob(uint8_t *buf, size_t size)
         fprintf(stderr, "Bob cannot store that much data.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(gross_global_bufs[ALICE_KEY_INDEX], buf, size);
+
+    memcpy(gross_global_bufs[ALICE_KEY_INDEX].data, buf, size);
+    gross_global_bufs[ALICE_KEY_INDEX].size = size;
     return IQR_OK;
 }
 
 iqr_retval receive_from_alice(uint8_t *buf, size_t *size)
 {
-    if (*size < IQR_SIDH_ALICE_PUBLIC_KEY_SIZE) {
-        fprintf(stderr, "That buffer is a tad on the small side.\n");
+    if (*size > MAX_PAYLOAD_BYTES) {
+        fprintf(stderr, "That buffer is a tad on the large side.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(buf, gross_global_bufs[ALICE_KEY_INDEX], IQR_SIDH_ALICE_PUBLIC_KEY_SIZE);
-    *size = IQR_SIDH_ALICE_PUBLIC_KEY_SIZE;
+
+    memcpy(buf, gross_global_bufs[ALICE_KEY_INDEX].data, gross_global_bufs[ALICE_KEY_INDEX].size);
+    *size = gross_global_bufs[ALICE_KEY_INDEX].size;
     return IQR_OK;
 }
 
 iqr_retval receive_from_bob(uint8_t *buf, size_t *size)
 {
-    if (*size < IQR_SIDH_BOB_PUBLIC_KEY_SIZE) {
-        fprintf(stderr, "We have more data to give you then you are willing to receive.\n");
+    if (*size > MAX_PAYLOAD_BYTES) {
+        fprintf(stderr, "You want too many bytes, don't be greedy.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(buf, gross_global_bufs[BOB_KEY_INDEX], IQR_SIDH_BOB_PUBLIC_KEY_SIZE);
-    *size = IQR_SIDH_BOB_PUBLIC_KEY_SIZE;
+
+    memcpy(buf, gross_global_bufs[BOB_KEY_INDEX].data, gross_global_bufs[BOB_KEY_INDEX].size);
+    *size = gross_global_bufs[BOB_KEY_INDEX].size;
     return IQR_OK;
 }

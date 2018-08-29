@@ -238,7 +238,8 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "dilithium_generate_keys [--security 128|160] [--pub <filename>] [--priv <filename>]\n");
+    fprintf(stdout, "dilithium_generate_keys [--security 128|160] [--pub <filename>]\n"
+                    "  [--priv <filename>]\n");
     fprintf(stdout, "    Defaults for the sample are: \n");
     fprintf(stdout, "        --security 128\n");
     fprintf(stdout, "        --pub pub.key\n");
@@ -267,9 +268,9 @@ static void preamble(const char *cmd, const iqr_DilithiumVariant *variant, const
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     if (variant == &IQR_DILITHIUM_160) {
-        fprintf(stdout, "    security level: 160\n");
+        fprintf(stdout, "    security level: 160 bits\n");
     } else {
-        fprintf(stdout, "    security level: 128\n");
+        fprintf(stdout, "    security level: 128 bits\n");
     }
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);

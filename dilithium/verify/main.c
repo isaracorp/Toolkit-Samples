@@ -224,9 +224,9 @@ static void preamble(const char *cmd, const iqr_DilithiumVariant *variant, const
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     if (variant == &IQR_DILITHIUM_160) {
-        fprintf(stdout, "    security level: 160\n");
+        fprintf(stdout, "    security level: 160 bits\n");
     } else {
-        fprintf(stdout, "    security level: 128\n");
+        fprintf(stdout, "    security level: 128 bits\n");
     }
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);

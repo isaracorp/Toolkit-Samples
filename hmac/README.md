@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 HMAC Sample
+# ISARA Radiate Security Solution Suite 1.5 HMAC Sample
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Message Authentication Codes
 
@@ -11,7 +11,7 @@ well as its authenticity, by allowing verifiers (who also possess the secret
 key) to detect any changes to the message content.
 
 HMAC is a MAC which uses a hash function (BLAKE2b-256, BLAKE2b-512, SHA2-256,
-SHA2-512, SHA3-256, or SHA3-512 in our case) to produce the tag.
+SHA2-384, SHA2-512, SHA3-256, or SHA3-512 in our case) to produce the tag.
 
 HMAC is specified by the Internet Engineering Taskforce's
 [RFC 2104](https://tools.ietf.org/html/rfc2104).
@@ -93,9 +93,10 @@ Tag has been saved to disk.
 Command line format:
 
 ```
-hmac [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]
-    [--key { string <key> | file <filename> }]
-    [--tag <filename>] msg1 [msg2 ...]
+hmac [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|
+  sha3-256|sha3-512]
+  [--key { string <key> | file <filename> }]
+  [--tag <filename>] msg1 [msg2 ...]
 ```
 
 Command line defaults:
@@ -109,7 +110,7 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]
+[--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
 [--key string <key>]

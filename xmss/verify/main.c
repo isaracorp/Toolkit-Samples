@@ -38,8 +38,8 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
 // digest.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_xmss_verify(const iqr_Context *ctx, const iqr_XMSSHeight height,
-    const uint8_t *digest, const char *pub_file, const char *sig_file)
+static iqr_retval showcase_xmss_verify(const iqr_Context *ctx, const iqr_XMSSHeight height, const uint8_t *digest,
+    const char *pub_file, const char *sig_file)
 {
     iqr_XMSSParams *params = NULL;
     iqr_XMSSPublicKey *pub = NULL;
@@ -50,7 +50,8 @@ static iqr_retval showcase_xmss_verify(const iqr_Context *ctx, const iqr_XMSSHei
     size_t sig_size = 0;
     uint8_t *sig = NULL;
 
-    iqr_retval ret = iqr_XMSSCreateParams(ctx, height, &params);
+    /* The tree strategy chosen will have no effect on verification. */
+    iqr_retval ret = iqr_XMSSCreateParams(ctx, &IQR_XMSS_VERIFY_ONLY_STRATEGY, height, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -115,8 +116,8 @@ static iqr_retval create_digest(const iqr_Context *ctx, uint8_t *data, size_t da
         return ret;
     }
 
-    /* The XMSS scheme will sign a digest of the message, so we need a digest
-     * of our message.  This will give us that digest.
+    /* XMSS will sign a digest of the message, so we need a digest of our
+     * message. This will give us that digest.
      */
     ret = iqr_HashMessage(hash, data, data_size, out_digest, IQR_SHA2_512_DIGEST_SIZE);
     if (ret != IQR_OK) {
@@ -180,7 +181,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
     }
 
     free(message_raw);
-
     return IQR_OK;
 }
 
@@ -241,7 +241,6 @@ static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size
 end:
     fclose(fp);
     fp = NULL;
-
     return ret;
 }
 
@@ -251,11 +250,13 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "xmss_verify [--sig <filename>] [--pub <filename>]\n"
-        "  [--height 10|16|20] [--message <filename>]\n");
+
+    fprintf(stdout, "xmss_verify [--sig <filename>] [--pub <filename>] [--height 10|16|20]\n"
+                    "  [--message <filename>]\n");
     fprintf(stdout, "    Defaults are: \n");
     fprintf(stdout, "        --sig sig.dat\n");
     fprintf(stdout, "        --pub pub.key\n");
+    fprintf(stdout, "        --height 10\n");
     fprintf(stdout, "        --message message.dat\n");
 }
 
@@ -263,7 +264,8 @@ static void usage(void)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSHeight height, const char *message)
+static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSHeight height,
+    const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
@@ -278,6 +280,7 @@ static void preamble(const char *cmd, const char *sig, const char *pub, const iq
     } else {
         fprintf(stdout, "    height: INVALID\n");
     }
+
     fprintf(stdout, "    message data file: %s\n", message);
     fprintf(stdout, "\n");
 }
@@ -379,6 +382,5 @@ int main(int argc, const char **argv)
 cleanup:
     iqr_DestroyContext(&ctx);
     free(digest);
-
     return (ret == IQR_OK) ? EXIT_SUCCESS : EXIT_FAILURE;
 }

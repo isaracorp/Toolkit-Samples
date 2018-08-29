@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 KDF Samples
+# ISARA Radiate Security Solution Suite 1.5 KDF Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Key Derivation Functions
 
@@ -58,7 +58,7 @@ Derived key has been saved to disk.
 Command line format:
 
 ```
-kdf_rfc5869 [--hash blake2b-256|blake2b-512|sha2-256|sha2-512|
+kdf_rfc5869 [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|
         sha3-256|sha3-512]
     [--salt { string <salt> | file <filename> | none }]
     [--ikm { string <ikm> | file <filename> }]
@@ -80,7 +80,7 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--hash blake2b-256|blake2b-512|sha2-256|sha2-512|sha3-256|sha3-512]
+[--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]
 The hash algorithm to use.
 
 [--salt string <salt>]

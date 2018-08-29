@@ -26,6 +26,7 @@
 
 #include "iqr_context.h"
 #include "iqr_rng.h"
+#include "iqr_sidh.h"
 
 #define ALICE_KEY_FNAME     "alice_key.dat"
 #define BOB_KEY_FNAME       "bob_key.dat"
@@ -33,13 +34,13 @@
 #define BOB_SECRET_FNAME    "bob_secret.dat"
 
 /* Alice related. */
-iqr_retval init_alice(const iqr_Context *ctx);
+iqr_retval init_alice(const iqr_Context *ctx, const iqr_SIDHVariant *variant, size_t *secret_size);
 iqr_retval alice_start(const iqr_RNG *rng, bool dump);
 iqr_retval alice_get_secret(uint8_t *secret, size_t secret_size);
 iqr_retval cleanup_alice(void);
 
 /* Bob related */
-iqr_retval init_bob(const iqr_Context *ctx);
+iqr_retval init_bob(const iqr_Context *ctx, const iqr_SIDHVariant *variant);
 iqr_retval bob_start(const iqr_RNG *rng, bool dump);
 iqr_retval bob_get_secret(uint8_t *secret, size_t secret_size);
 iqr_retval cleanup_bob(void);

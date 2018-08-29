@@ -42,6 +42,7 @@
 #include "iqr_rainbow.h"
 #include "iqr_retval.h"
 #include "iqr_rng.h"
+#include "iqr_watchdog.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Function Declarations
@@ -59,16 +60,20 @@ static void secure_memzero(void *b, size_t len);
 // failure.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_rainbow_keygen(const iqr_Context *ctx, const iqr_RNG *rng, const char *pub_file, const char *priv_file)
+static iqr_retval showcase_rainbow_keygen(const iqr_Context *ctx, const iqr_RNG *rng, const iqr_RainbowVariant *variant,
+    const char *pub_file, const char *priv_file)
 {
     iqr_RainbowParams *params = NULL;
     iqr_RainbowPrivateKey *priv = NULL;
     iqr_RainbowPublicKey *pub = NULL;
 
-    uint8_t pub_raw[IQR_RAINBOW_PUBLIC_KEY_SIZE] = { 0 };
-    uint8_t priv_raw[IQR_RAINBOW_PRIVATE_KEY_SIZE] = { 0 };
+    size_t pub_raw_size = 0;
+    uint8_t *pub_raw = NULL;
 
-    iqr_retval ret = iqr_RainbowCreateParams(ctx, &params);
+    size_t priv_raw_size = 0;
+    uint8_t *priv_raw = NULL;
+
+    iqr_retval ret = iqr_RainbowCreateParams(ctx, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RainbowCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -81,9 +86,23 @@ static iqr_retval showcase_rainbow_keygen(const iqr_Context *ctx, const iqr_RNG 
         goto end;
     }
 
+    fprintf(stdout, "\n");
     fprintf(stdout, "Keys have been generated.\n");
 
-    ret = iqr_RainbowExportPublicKey(pub, pub_raw, sizeof(pub_raw));
+    ret = iqr_RainbowGetPublicKeySize(params, &pub_raw_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_RainbowGetPublicKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    pub_raw = calloc(1, pub_raw_size);
+    if (pub_raw == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    ret = iqr_RainbowExportPublicKey(pub, pub_raw, pub_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RainbowExportPublicKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -91,7 +110,20 @@ static iqr_retval showcase_rainbow_keygen(const iqr_Context *ctx, const iqr_RNG 
 
     fprintf(stdout, "Public Key has been exported.\n");
 
-    ret = iqr_RainbowExportPrivateKey(priv, priv_raw, sizeof(priv_raw));
+    ret = iqr_RainbowGetPrivateKeySize(params, &priv_raw_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_RainbowGetPrivateKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    priv_raw = calloc(1, priv_raw_size);
+    if (pub_raw == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    ret = iqr_RainbowExportPrivateKey(priv, priv_raw, priv_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RainbowExportPrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -100,12 +132,12 @@ static iqr_retval showcase_rainbow_keygen(const iqr_Context *ctx, const iqr_RNG 
     fprintf(stdout, "Private Key has been exported.\n");
 
     /* And finally, write the public and private key to disk. */
-    ret = save_data(pub_file, pub_raw, sizeof(pub_raw));
+    ret = save_data(pub_file, pub_raw, pub_raw_size);
     if (ret != IQR_OK) {
         goto end;
     }
 
-    ret = save_data(priv_file, priv_raw, sizeof(priv_raw));
+    ret = save_data(priv_file, priv_raw, priv_raw_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -122,6 +154,9 @@ end:
     iqr_RainbowDestroyPublicKey(&pub);
     iqr_RainbowDestroyParams(&params);
 
+    free(pub_raw);
+    free(priv_raw);
+
     return ret;
 }
 
@@ -130,6 +165,19 @@ end:
 // the Rainbow signature scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
+// Provides a cheap progress indicator for key generation, which is a long-
+// running task depending on your parameters.
+static iqr_retval progress_watchdog(void *watchdog_data)
+{
+    (void)watchdog_data;  // Not used.
+
+    fprintf(stdout, ".");
+    fflush(stdout);
+
+    return IQR_OK;
+}
+
+// Initialize the toolkit and the algorithms required by HSS.
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
     /* Create a Global Context. */
@@ -139,15 +187,28 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
+    /* Call this watchdog function periodically during long-running tasks. */
+    ret = iqr_WatchdogRegisterCallback(*ctx, progress_watchdog, NULL);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_WatchdogRegisterCallback(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
     /* This sets the hashing functions that will be used globally. */
-    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_384, &IQR_HASH_DEFAULT_SHA2_384);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
     /* This will allow us to give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
+    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_384, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
@@ -207,8 +268,10 @@ end:
 
 static void usage(void)
 {
-    fprintf(stdout, "rainbow_generate_keys [--pub <filename>] [--priv <filename>]\n");
+    fprintf(stdout, "rainbow_generate_keys [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--pub <filename>]\n"
+                    "  [--priv <filename>]\n");
     fprintf(stdout, "    Defaults are: \n");
+    fprintf(stdout, "        --security IIIb\n");
     fprintf(stdout, "        --pub pub.key\n");
     fprintf(stdout, "        --priv priv.key\n");
 }
@@ -217,9 +280,22 @@ static void usage(void)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *pub, const char *priv)
+static void preamble(const char *cmd, const iqr_RainbowVariant *variant, const char *pub, const char *priv)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
+    if (variant == &IQR_RAINBOW_GF31_64_32_48) {
+        fprintf(stdout, "    security level: IIIb. parameter set: (GF(31), 64, 32, 48)\n");
+    } else if (variant == &IQR_RAINBOW_GF256_68_36_36) {
+        fprintf(stdout, "    security level: IIIc. parameter set: (GF(256), 68, 36, 36)\n");
+    } else if (variant == &IQR_RAINBOW_GF16_56_48_48) {
+        fprintf(stdout, "    security level: IVa. parameter set: (GF(16), 56, 48, 48)\n");
+    } else if (variant == &IQR_RAINBOW_GF256_92_48_48) {
+        fprintf(stdout, "    security level: Vc. parameter set: (GF(256), 92, 48, 48)\n");
+    } else if (variant == &IQR_RAINBOW_GF16_76_64_64) {
+        fprintf(stdout, "    security level: VIa. parameter set: (GF(16), 76, 64, 64)\n");
+    } else if (variant == &IQR_RAINBOW_GF31_84_56_56) {
+        fprintf(stdout, "    security level: VIb. parameter set: (GF(31), 84, 56, 56)\n");
+    }
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "\n");
@@ -239,7 +315,8 @@ static int paramcmp(const char *p1 , const char *p2) {
     return strncmp(p1, p2, max_param_size);
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, const char **pub, const char **priv)
+static iqr_retval parse_commandline(int argc, const char **argv, const iqr_RainbowVariant **variant, const char **pub,
+    const char **priv)
 {
     int i = 1;
     while (i != argc) {
@@ -248,7 +325,26 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             return IQR_EBADVALUE;
         }
 
-        if (paramcmp(argv[i], "--pub") == 0) {
+        if (paramcmp(argv[i], "--security") == 0) {
+            /* [--security IIIb|IIIc|IVa|Vc|VIa|VIb] */
+            i++;
+            if  (paramcmp(argv[i], "IIIb") == 0) {
+                *variant = &IQR_RAINBOW_GF31_64_32_48;
+            } else if  (paramcmp(argv[i], "IIIc") == 0) {
+                *variant = &IQR_RAINBOW_GF256_68_36_36;
+            } else if  (paramcmp(argv[i], "IVa") == 0) {
+                *variant = &IQR_RAINBOW_GF16_56_48_48;
+            } else if  (paramcmp(argv[i], "Vc") == 0) {
+                *variant = &IQR_RAINBOW_GF256_92_48_48;
+            } else if  (paramcmp(argv[i], "VIa") == 0) {
+                *variant = &IQR_RAINBOW_GF16_76_64_64;
+            } else if  (paramcmp(argv[i], "VIb") == 0) {
+                *variant = &IQR_RAINBOW_GF31_84_56_56;
+            } else {
+                usage();
+                return IQR_EBADVALUE;
+            }
+        } else if (paramcmp(argv[i], "--pub") == 0) {
             /* [--pub <filename>] */
             i++;
             *pub = argv[i];
@@ -308,19 +404,21 @@ int main(int argc, const char **argv)
     const char *pub = "pub.key";
     const char *priv = "priv.key";
 
+    const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF31_64_32_48;
+
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
 
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &pub, &priv);
+    iqr_retval ret = parse_commandline(argc, argv, &variant, &pub, &priv);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], pub, priv);
+    preamble(argv[0], variant, pub, priv);
 
     /* IQR initialization that is not specific to Rainbow. */
     ret = init_toolkit(&ctx, &rng);
@@ -330,7 +428,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of Rainbow key generation.
      */
-    ret = showcase_rainbow_keygen(ctx, rng, pub, priv);
+    ret = showcase_rainbow_keygen(ctx, rng, variant, pub, priv);
 
 cleanup:
     /* Clean up. */

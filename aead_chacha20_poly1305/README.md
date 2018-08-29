@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 ChaCha20/Poly1305 Sample
+# ISARA Radiate Security Solution Suite 1.5 ChaCha20/Poly1305 Sample
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Message Authentication Codes
 
@@ -15,7 +15,7 @@ ChaCha20-Poly1305 AEAD (Authenticated Encryption with Associated Data) for
 combined encryption and authentication.
 
 Poly1305 is specified by the Internet Engineering Taskforce's
-[RFC 7539](https://tools.ietf.org/html/rfc7539).
+[RFC 8439](https://tools.ietf.org/html/rfc8439).
 
 ### Getting Started
 
@@ -221,7 +221,7 @@ Where the resulting plaintext will be saved after authentication succeeds.
 ## Further Reading
 
 * See `iqr_poly1305.h` in the toolkit's `include` directory.
-* [RFC 7539](https://tools.ietf.org/html/rfc7539)
+* [RFC 8439](https://tools.ietf.org/html/rfc8439)
 
 ## License
 

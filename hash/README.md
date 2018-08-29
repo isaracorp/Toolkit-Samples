@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 Hash Sample
+# ISARA Radiate Security Solution Suite 1.5 Hash Sample
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction to Hashing Algorithms
 
@@ -10,7 +10,8 @@ input and output of the hashing algorithm it would be difficult to create a
 different input that would get the hashing algorithm to produce the exact same
 output.
 
-SHA2-256, SHA2-512, SHA3-256 and SHA3-512 are commonly used hashing functions.
+SHA2-256, SHA2-384, SHA2-512, SHA3-256 and SHA3-512 are commonly used hashing
+functions.
 
 ## Getting Started
 
@@ -51,14 +52,15 @@ e4e02a210ac70fff4facf5a3351bc2df93e815e75ed19b161d385980fc0a5b8b
 
 ## hash Usage Details
 
-Generates a SHA2-256, SHA2-512, SHA3-256, SHA3-512, BLAKE2b-256, or BLAKE2b-512
-hash of a message.
+Generates a SHA2-256, SHA2-384, SHA2-512, SHA3-256, SHA3-512, BLAKE2b-256, or
+BLAKE2b-512 hash of a message.
 
 Command line format:
 
 ```
-hash [--hash sha2-256|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]
-       [--salt <filename>] [--message <filename>]
+hash
+  [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]
+  [--salt <filename>] [--message <filename>]
 ```
 
 Command line defaults:
@@ -71,8 +73,8 @@ Command line defaults:
 Command line parameter descriptions:
 
 ```
-[--hash sha2-256|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]
-Which hashing algorithm to use. One of SHA2-256, SHA2-512, SHA3-256,
+[--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|blake2b-256|blake2b-512]
+Which hashing algorithm to use. One of SHA2-256, SHA2-384, SHA2-512, SHA3-256,
 SHA3-512, BLAKE2b-256 or BLAKE2b-512.
 
 [--salt <filename>]

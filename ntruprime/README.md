@@ -1,6 +1,6 @@
-# ISARA Radiate Security Solution Suite 1.4 NTRUPrime KEM Samples
+# ISARA Radiate Security Solution Suite 1.5 NTRUPrime KEM Samples
 ISARA Corporation <info@isara.com>
-v1.4 2018-03: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
+v1.5 2018-09: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -19,8 +19,7 @@ already been passed through a Key Derivation Function (KDF) so it is not
 necessary to do so again.
 
 Generally speaking, public/private keys only need to be generated once and can
-be re-used multiple times.
-The NTRUPrime cryptosystem follows this pattern.
+be re-used multiple times. The NTRUPrime KEM follows this pattern.
 
 ## Getting Started
 
