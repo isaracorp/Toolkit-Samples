@@ -64,20 +64,14 @@ iqr_retval alice_start(const iqr_RNG *rng, bool dump)
         return IQR_ENULLPTR;
     }
 
-    size_t initiator_size = 0;
-    iqr_retval ret = iqr_FrodoDHGetInitiatorPublicKeySize(params, &initiator_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_FrodoDHGetInitiatorPublicKeySize(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-
+    size_t initiator_size = IQR_FRODODH_INITIATOR_PUBLIC_KEY_SIZE;
     uint8_t *initiator_public_key = calloc(1, initiator_size);
     if (initiator_public_key == NULL) {
         fprintf(stderr, "We seem to have run out of memory. ret=%d\n", errno);
         return IQR_ENOMEM;
     }
 
-    ret = iqr_FrodoDHCreateInitiatorPrivateKey(params, rng, &initiator_private_key);
+    iqr_retval ret = iqr_FrodoDHCreateInitiatorPrivateKey(params, rng, &initiator_private_key);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_FrodoDHCreateInitiatorPrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -117,13 +111,7 @@ iqr_retval alice_get_secret(uint8_t *secret, size_t secret_size)
         goto end;
     }
 
-    size_t responder_size = 0;
-    ret = iqr_FrodoDHGetResponderPublicKeySize(params, &responder_size);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_FrodoDHGetResponderPublicKeySize(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-
+    size_t responder_size = IQR_FRODODH_RESPONDER_PUBLIC_KEY_SIZE;
     responder_public_key = calloc(1, responder_size);
     if (responder_public_key == NULL) {
         fprintf(stderr, "We seem to have run out of memory. ret=%d\n", errno);

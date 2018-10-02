@@ -35,7 +35,7 @@
 #include "iqr_frododh.h"
 
 #define NUM_TRANSACTIONS    2
-#define MAX_PAYLOAD_BYTES   13000  // The largest key size used in FrodoDH is 12992 bytes.
+#define MAX_PAYLOAD_BYTES   16000  // The largest key size used in FrodoDH is 15632 bytes.
 
 /* Alice sends initiator public key and is stored in index 0.
  * Bob sends responder public key and is stored in index 1.

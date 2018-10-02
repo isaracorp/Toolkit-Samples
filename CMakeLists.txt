@@ -64,6 +64,7 @@ set (
     sike/decapsulate
     sike/encapsulate
     sike/generate_keys
+    version
     xmss/detach
     xmss/generate_keys
     xmss/sign

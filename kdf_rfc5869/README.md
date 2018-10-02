@@ -1,4 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 KDF Samples
+# ISARA Radiate Security Solution Suite 1.5 RFC 5869 KDF Sample
 ISARA Corporation <info@isara.com>
 v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
 

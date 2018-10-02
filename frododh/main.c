@@ -227,8 +227,8 @@ static void usage(void)
     fprintf(stdout, "                 Bob's secret:   bob_secret.dat\n");
     fprintf(stdout, "        --variant The variant of FrodoDH to use.\n");
     fprintf(stdout, "               Valid values are:\n");
-    fprintf(stdout, "                 * recommended\n");
-    fprintf(stdout, "                 * paranoid\n");
+    fprintf(stdout, "                 * AES\n");
+    fprintf(stdout, "                 * cSHAKE\n");
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -246,10 +246,10 @@ static void preamble(const char *cmd, bool dump, const iqr_FrodoDHVariant *varia
     }
 
     fprintf(stdout, "    Variant: ");
-    if (variant == &IQR_FRODODH_RECOMMENDED) {
-        fprintf(stdout, "Recommended\n");
-    } else if (variant == &IQR_FRODODH_PARANOID) {
-        fprintf(stdout, "Paranoid\n");
+    if (variant == &IQR_FRODODH_976_AES) {
+        fprintf(stdout, "AES\n");
+    } else if (variant == &IQR_FRODODH_976_CSHAKE) {
+        fprintf(stdout, "cSHAKE\n");
     } else {
         fprintf(stdout, "Invalid\n");
     }
@@ -280,10 +280,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, bool *dump, con
             *dump = true;
         } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
-            if (paramcmp(argv[i], "recommended") == 0) {
-                *variant = &IQR_FRODODH_RECOMMENDED;
-            } else if (paramcmp(argv[i], "paranoid") == 0) {
-                *variant = &IQR_FRODODH_PARANOID;
+            if (paramcmp(argv[i], "AES") == 0) {
+                *variant = &IQR_FRODODH_976_AES;
+            } else if (paramcmp(argv[i], "cSHAKE") == 0) {
+                *variant = &IQR_FRODODH_976_CSHAKE;
             } else {
                 usage();
                 return IQR_EBADVALUE;
@@ -342,7 +342,7 @@ int main(int argc, const char **argv)
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
     bool dump = false;
-    const iqr_FrodoDHVariant *variant = &IQR_FRODODH_RECOMMENDED;
+    const iqr_FrodoDHVariant *variant = &IQR_FRODODH_976_AES;
 
     /* If the command line arguments were not sane, this function will return
      * an error.

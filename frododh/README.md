@@ -1,4 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 Frodo Sample
+# ISARA Radiate Security Solution Suite 1.5 FrodoDH Sample
 ISARA Corporation <info@isara.com>
 v1.5 2018-09: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
 
@@ -73,7 +73,7 @@ Execution and expected outputs:
 $ ./frododh
 Running ./frododh with the following parameters...
     Dump data to files: False
-    Variant: Recommended
+    Variant: AES
 
 
 Alice and Bob's secrets match.
@@ -86,13 +86,13 @@ Generates a shared secret for Alice and Bob.
 Command line format:
 
 ```
-frododh [--dump] [--variant recommended|paranoid]
+frododh [--dump] [--variant AES|cSHAKE]
 ```
 
 Command line defaults:
 
 ```
---variant recommended
+--variant AES
 ```
 
 Command line parameter descriptions:
@@ -106,7 +106,7 @@ filenames are:
     alice_secret.dat - Secret derived by Alice.
     bob_secret.dat - Secret derived by Bob.
 
-[--variant recommended|paranoid]
+[--variant AES|cSHAKE]
 The variant of FrodoDH to use.
 ```
 
