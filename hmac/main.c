@@ -2,7 +2,7 @@
  *
  * @brief Produce a MAC tag using the toolkit's HMAC scheme.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,26 +21,27 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Declare memset_s() if the platform supports it.
-#if !defined(__ANDROID__)
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
 #include <string.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-// For SecureZeroMemory().
-#include <Windows.h>
-#endif
-
-#if defined(__FreeBSD__)
-// For explicit_bzero().
-#include <strings.h>
-#endif
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
 #include "iqr_mac.h"
 #include "iqr_retval.h"
+#include "isara_samples.h"
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// Document the command-line arguments.
+//  --------------------------------------------------------------------------------------------------------------------------------
+
+static const char *usage_msg =
+"hmac [--hash sha2-256|sha2-384|sha2-512|\n"
+"  sha3-256|sha3-512]\n"
+"  [--key { string <key> | file <filename> }]\n"
+"  [--tag <filename>] msg1 [msg2 ...]\n"
+"    Defaults are: \n"
+"        --hash sha2-256\n"
+"        --key string *********ISARA-HMAC-KEY*********\n"
+"        --tag tag.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Structure Declarations.
@@ -50,14 +51,6 @@ struct file_list {
     const char *filename;
     struct file_list *next;
 };
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
-static void secure_memzero(void *b, size_t len);
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases HMAC tag creation.
@@ -202,100 +195,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash, co
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
-{
-    FILE *fp = fopen(fname, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    /* Obtain file size. */
-    fseek(fp , 0 , SEEK_END);
-    size_t tmp_size = (size_t)ftell(fp);
-    rewind(fp);
-
-    iqr_retval ret = IQR_OK;
-    uint8_t *tmp = NULL;
-    if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on
-         * implementation, so skip all this when the size is 0 so we
-         * consistently return NULL with a size of 0. In some samples it's
-         * useful to take empty files as input so users can pass NULL or 0 for
-         * optional parameters.
-         */
-        tmp = calloc(1, tmp_size);
-        if (tmp == NULL) {
-            fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        size_t read_size = fread(tmp, 1, tmp_size, fp);
-        if (read_size != tmp_size) {
-            fprintf(stderr, "Failed on fread(): %s\n", strerror(errno));
-            free(tmp);
-            tmp = NULL;
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-    }
-
-    *data_size = tmp_size;
-    *data = tmp;
-
-    fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-//  --------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "hmac [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|\n"
-        "  sha3-256|sha3-512]\n"
-        "  [--key { string <key> | file <filename> }]\n"
-        "  [--tag <filename>] msg1 [msg2 ...]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --hash sha2-256\n");
-    fprintf(stdout, "        --key string *********ISARA-HMAC-KEY*********\n");
-    fprintf(stdout, "        --tag tag.dat\n");
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -314,10 +213,6 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_256\n");
     } else if (IQR_HASHALGO_SHA3_512 == hash) {
         fprintf(stdout, "    hash algorithm: IQR_HASHALGO_SHA3_512\n");
-    } else if (IQR_HASHALGO_BLAKE2B_256 == hash) {
-        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_256\n");
-    } else if (IQR_HASHALGO_BLAKE2B_512 == hash) {
-        fprintf(stdout, "    hash algorithm: IQR_HASHALGO_BLAKE2B_512\n");
     }
     if (key != NULL) {
         fprintf(stdout, "    key: %s\n", key);
@@ -335,20 +230,6 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
     fprintf(stdout, "\n");
 }
 
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
-
 static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorithmType *hash, const iqr_HashCallbacks **cb,
     const uint8_t **key, const char **key_file, bool *default_key, struct file_list **files, const char **tag_file)
 {
@@ -356,7 +237,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
     while (1) {
         if (i == argc) {
             // We need at least one message file.
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -383,12 +264,11 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
         }
 
         if (i + 2 > argc) {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|
-             * sha3-256|sha3-512]
+            /* [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]
              */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
@@ -406,21 +286,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             } else if (paramcmp(argv[i], "sha3-512") == 0) {
                 *hash = IQR_HASHALGO_SHA3_512;
                 *cb = &IQR_HASH_DEFAULT_SHA3_512;
-            } else if (paramcmp(argv[i], "blake2b-256") == 0) {
-                *hash = IQR_HASHALGO_BLAKE2B_256;
-                *cb = &IQR_HASH_DEFAULT_BLAKE2B_256;
-            } else if (paramcmp(argv[i], "blake2b-512") == 0) {
-                *hash = IQR_HASHALGO_BLAKE2B_512;
-                *cb = &IQR_HASH_DEFAULT_BLAKE2B_512;
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--key") == 0) {
             /* [--key { string <key> | file <filename> }] */
             i++;
             if (i + 2 > argc) {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
 
@@ -433,7 +307,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
                 *key = NULL;
                 *key_file = argv[i];
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
 
@@ -443,44 +317,11 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             i++;
             *tag_file = argv[i];
         } else {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
         i++;
     }
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Secure memory wipe.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void secure_memzero(void *b, size_t len)
-{
-    /* You may need to substitute your platform's version of a secure memset()
-     * (one that won't be optimized out by the compiler). There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows
-     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
-     * explicit_bzero().
-     */
-#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
-    memset_s(b, len, 0, len);
-#elif defined(_WIN32) || defined(_WIN64)
-    SecureZeroMemory(b, len);
-#elif defined(__FreeBSD__)
-    explicit_bzero(b, len);
-#else
-    /* This fallback will not be optimized out, if the compiler has a conforming
-     * implementation of "volatile". It also won't take advantage of any faster
-     * intrinsics, so it may end up being slow.
-     *
-     * Implementation courtesy of this paper:
-     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
-     */
-    volatile unsigned char *ptr = b;
-    while (len--) {
-        *ptr++ = 0x00;
-    }
-#endif
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -489,7 +330,7 @@ static void secure_memzero(void *b, size_t len)
 
 int main(int argc, const char **argv)
 {
-    /* Default values. Please adjust the usage() message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     iqr_HashAlgorithmType hash = IQR_HASHALGO_SHA2_256;
@@ -497,11 +338,11 @@ int main(int argc, const char **argv)
     const uint8_t *key = (const uint8_t *)"*********ISARA-HMAC-KEY*********";
     const uint8_t *key_48 = (const uint8_t *)"*********ISARA-HMAC-KEY-FOR-384-BIT-SHA*********";
     const uint8_t *key_64 = (const uint8_t *)"*****************ISARA-HMAC-KEY-FOR-512-BIT-SHA*****************";
-
+    const char *tag_file = "tag.dat";
     bool default_key = true;
+
     const char *key_file = NULL;
     struct file_list *files = NULL;
-    const char *tag_file = "tag.dat";
 
     /* If the command line arguments were not sane, this function will return
      * an error.
@@ -515,7 +356,7 @@ int main(int argc, const char **argv)
         key = key_48;
     }
 
-    if (default_key && (hash == IQR_HASHALGO_SHA2_512 || hash == IQR_HASHALGO_SHA3_512 || hash == IQR_HASHALGO_BLAKE2B_512)) {
+    if (default_key && (hash == IQR_HASHALGO_SHA2_512 || hash == IQR_HASHALGO_SHA3_512)) {
         key = key_64;
     }
 

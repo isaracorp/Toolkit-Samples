@@ -1,4 +1,4 @@
-# Copyright 2017-2018 ISARA Corporation
+# Copyright (C) 2017-2019, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,11 @@ project (ntruprime_decapsulate)
 include (../../find_toolkit.cmake)
 include (../../compiler_options.cmake)
 
-add_executable (ntruprime_decapsulate main.c)
-target_link_libraries (ntruprime_decapsulate iqr_toolkit m)
+include_directories(../../common)
+if (NOT TARGET isara_samples)
+    add_subdirectory(../../common common)
+endif ()
 
-install (TARGETS ntruprime_decapsulate DESTINATION ${PROJECT_SOURCE_DIR})
+add_executable (ntruprime_decapsulate main.c)
+add_dependencies(ntruprime_decapsulate isara_samples)
+target_link_libraries (ntruprime_decapsulate iqr_toolkit isara_samples)

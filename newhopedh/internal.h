@@ -2,7 +2,7 @@
  *
  * @brief Common header for the sample.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,5 @@ iqr_retval send_to_bob(uint8_t *buf, size_t size);
 iqr_retval receive_from_alice(uint8_t *buf, size_t *size);
 iqr_retval receive_from_bob(uint8_t *buf, size_t *size);
 void cleanup_comms(void);
-
-iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
 
 #endif

@@ -1,4 +1,4 @@
-# Copyright 2017-2018 ISARA Corporation
+# Copyright (C) 2017-2019, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,14 +23,20 @@ include (compiler_options.cmake)
 set (
     samples
 
+    # Common sample code. Builds a small static library.
+    common
+
+    # Individual samples.
     aead_chacha20_poly1305/decrypt
     aead_chacha20_poly1305/encrypt
     chacha20/decrypt
     chacha20/encrypt
+    classicmceliece/decapsulate
+    classicmceliece/encapsulate
+    classicmceliece/generate_keys
     dilithium/generate_keys
     dilithium/sign
     dilithium/verify
-    ecdh
     frododh
     frodokem/decapsulate
     frodokem/encapsulate
@@ -47,14 +53,10 @@ set (
     kyber/decapsulate
     kyber/encapsulate
     kyber/generate_keys
-    luke
-    mceliece/generate_keys
-    mceliece/encapsulate
-    mceliece/decapsulate
     newhopedh
-    ntruprime/generate_keys
-    ntruprime/encapsulate
     ntruprime/decapsulate
+    ntruprime/encapsulate
+    ntruprime/generate_keys
     poly1305
     rainbow/generate_keys
     rainbow/sign
@@ -64,11 +66,18 @@ set (
     sike/decapsulate
     sike/encapsulate
     sike/generate_keys
+    sphincs/generate_keys
+    sphincs/sign
+    sphincs/verify
     version
     xmss/detach
     xmss/generate_keys
     xmss/sign
     xmss/verify
+    xmssmt/detach
+    xmssmt/generate_keys
+    xmssmt/sign
+    xmssmt/verify
 )
 
 foreach(sample ${samples})

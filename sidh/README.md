@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 SIDH Sample
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 SIDH Sample
 
 ## Introduction to Key Establishment Schemes
 
@@ -43,53 +41,17 @@ channel.
 
 To view the code necessary for Alice view `alice.c`, for Bob it is `bob.c`.
 
-Build the sample application:
+Build the sample application in a `build` directory:
 
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `sidh` using default parameters.
-
-Execution and expected outputs:
-
-```
-$ ./sidh
-Running ./sidh with the following parameters...
-    variant: p751
-    Dump data to files: False
-
-
-Alice and Bob's secrets match.
-```
-
-## SIDH Usage Details
-
-Generates a shared secret for Alice and Bob.
-
-Command line format:
-
-```
-sidh [--variant p503|p751] [--dump]
-```
-
-Command line defaults: None.
-
-Command line parameter descriptions:
-
-```
-[--variant p503|p751]
-The desired variant.
-
-[--dump]
-A switch telling sidh to dump the public information and secrets to file. The
-filenames are:
-    alice_key.dat - Alice's public information.
-    bob_key.dat - Bob's public information.
-    alice_secret.dat - Secret derived by Alice.
-    bob_secret.dat - Secret derived by Bob.
-```
+Execute the samples with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -100,7 +62,7 @@ filenames are:
 
 See the `LICENSE` file for details:
 
-> Copyright 2017-2018 ISARA Corporation
+> Copyright (C) 2017-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -113,3 +75,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.

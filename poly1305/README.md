@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 Poly1305 MAC Sample
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 Poly1305 MAC Sample
 
 ## Introduction to Message Authentication Codes
 
@@ -27,96 +25,17 @@ Wonderland by Lewis Carroll. (It can be freely obtained from
 We downloaded the plaintext version and saved it as `message.dat` in the same
 directory that contained the compiled executable of the sample.
 
-Build the sample application:
+Build the sample application in a `build` directory:
 
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `poly1305` with a single input file to MAC, using default parameters.
-
-Execution and expected outputs:
-
-```
-$ ./poly1305 message.dat
-Running ./poly1305 with the following parameters...
-    key: ****** ISARA-POLY1305-KEY ******
-    data file(s):
-      message.dat
-    tag file: tag.dat
-
-Poly1305 object has been created.
-Successfully loaded message.dat (167518 bytes)
-Poly1305 tag has been created from message.dat
-Poly1305 tag created.
-Successfully saved tag.dat (16 bytes)
-Poly1305 tag has been saved to disk.
-```
-
-Execute `poly1305` with multiple input files to MAC, using default parameters.
-`message.dat` is the same file as in the previous example, `message2.dat`
-and `message3.dat` are just files containing arbitrary data. Poly1305 can
-operate on chunks, in this sample we use individual files to represent the
-chunks.
-
-Execution and expected outputs:
-
-```
-$ ./poly1305 message.dat message2.dat message3.dat
-Running ./poly1305 with the following parameters...
-    key: ****** ISARA-POLY1305-KEY ******
-    data file(s):
-      message.dat
-      message2.dat
-      message3.dat
-    tag file: tag.dat
-
-Poly1305 object has been created.
-Successfully loaded message.dat (167518 bytes)
-Poly1305 tag has been updated from message.dat
-Successfully loaded message2.dat (50 bytes)
-Poly1305 tag has been updated from message2.dat
-Successfully loaded message3.dat (100 bytes)
-Poly1305 tag has been updated from message3.dat
-Poly1305 tag created.
-Successfully saved tag.dat (16 bytes)
-Poly1305 tag has been saved to disk.
-```
-
-## poly1305 Usage Details
-
-Command line format:
-
-```
-poly1305 [--key { string <key> | file <filename> }]
-  [--tag <filename>]  msg1 [msg2 ...]
-```
-
-Command line defaults:
-
-```
---key string "****** ISARA-POLY1305-KEY ******"
---tag tag.dat
-```
-
-Command line parameter descriptions:
-
-```
-[--key string <key>]
-Read the key from the command line. It must be at least 32 bytes.
-
-[--key file <filename>]
-Read the key from file <filename>. The entire contents of the file
-will be read. It must be at least 32 bytes.
-
-[--tag <filename>]
-Where the resulting tag will be saved.
-
-msg1 [msg2 ...]
-One of more files must be provided which contain the parts of the message on
-which to calculate the MAC.
-```
+Execute the samples with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -127,7 +46,7 @@ which to calculate the MAC.
 
 See the `LICENSE` file for details:
 
-> Copyright 2016-2018 ISARA Corporation
+> Copyright (C) 2016-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -140,3 +59,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.

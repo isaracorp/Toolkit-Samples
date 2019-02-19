@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's Dilithium signature scheme.
  *
- * @copyright Copyright 2017-2018 ISARA Corporation
+ * @copyright Copyright (C) 2017-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,12 +26,20 @@
 #include "iqr_dilithium.h"
 #include "iqr_hash.h"
 #include "iqr_retval.h"
+#include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations.
+// Tell the user about the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
+static const char *usage_msg =
+"dilithium_verify [--security 128|160] [--sig <filename>] [--pub <filename>]\n"
+"  [--message <filename>]\n"
+"    Defaults are: \n"
+"        --security 128\n"
+"        --sig sig.dat\n"
+"        --pub pub.key\n"
+"        --message message.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the verification of a Dilithium signature against a
@@ -134,89 +142,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
-{
-    FILE *fp = fopen(fname, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    /* Obtain file size. */
-    fseek(fp , 0 , SEEK_END);
-    size_t tmp_size = (size_t)ftell(fp);
-    rewind(fp);
-
-    iqr_retval ret = IQR_OK;
-    uint8_t *tmp = NULL;
-    if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on
-         * implementation, so skip all this when the size is 0 so we
-         * consistently return NULL with a size of 0. In some samples it's
-         * useful to take empty files as input so users can pass NULL or 0 for
-         * optional parameters.
-         */
-        tmp = calloc(1, tmp_size);
-        if (tmp == NULL) {
-            fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        size_t read_size = fread(tmp, 1, tmp_size, fp);
-        if (read_size != tmp_size) {
-            fprintf(stderr, "Failed on fread(): %s\n", strerror(errno));
-            free(tmp);
-            tmp = NULL;
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-    }
-
-    *data_size = tmp_size;
-    *data = tmp;
-
-    fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "dilithium_verify [--security 128|160] [--sig <filename>] [--pub <filename>]\n"
-        "  [--message <filename>]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --security 128\n");
-    fprintf(stdout, "        --sig sig.dat\n");
-    fprintf(stdout, "        --pub pub.key\n");
-    fprintf(stdout, "        --message message.dat\n");
-}
-
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match, non-zero otherwise.
- * Parameters are expected to be less than 32 characters in length.
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-
-    return strncmp(p1, p2, max_param_size);
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -248,7 +173,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Dilit
             } else if  (paramcmp(argv[i], "160") == 0) {
                 *variant = &IQR_DILITHIUM_160;
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--sig") == 0) {
@@ -264,7 +189,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Dilit
            i++;
            *message = argv[i];
         } else {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -280,16 +205,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Dilit
 
 int main(int argc, const char **argv)
 {
-    iqr_Context *ctx = NULL;
-
-    const iqr_DilithiumVariant *variant = &IQR_DILITHIUM_128;
-
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
+    const iqr_DilithiumVariant *variant = &IQR_DILITHIUM_128;
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
+
+    iqr_Context *ctx = NULL;
 
     /* If the command line arguments were not sane, this function will return
      * an error.

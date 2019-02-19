@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 NewHopeDH Sample
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 NewHopeDH Sample
 
 ## Introduction to Key Establishment Schemes
 
@@ -58,47 +56,17 @@ These filenames were chosen since Alice and Bob are common cryptographic terms
 and a simple client/server model doesn't work for all cases here. Also having a
 file called `bob.c` is awesome!
 
-Build the sample application:
+Build the sample application in a `build` directory:
 
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `newhopedh` using default parameters.
-
-Execution and expected outputs:
-
-```
- $ ./newhopedh
-Running ./newhopedh with the following parameters...
-    Dump data to files: False
-
-
-Alice and Bob's secrets match.
-```
-
-## newhopedh Usage Details
-
-Generates a shared secret for Alice and Bob.
-
-Command line format:
-
-```
-newhopedh [--dump]
-```
-
-Command line parameter descriptions:
-
-```
-[--dump]
-A switch telling newhopedh to dump the public information and secrets to file.
-The filenames are:
-    alice_key.dat - Alice's public information.
-    bob_key.dat - Bob's public information.
-    alice_secret.dat - Secret derived by Alice.
-    bob_secret.dat - Secret derived by Bob.
-```
+Execute the sample with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -109,7 +77,7 @@ The filenames are:
 
 See the `LICENSE` file for details:
 
-> Copyright 2016-2018 ISARA Corporation
+> Copyright (C) 2016-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -122,3 +90,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.

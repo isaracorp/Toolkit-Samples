@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's HSS signature scheme.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,19 +26,27 @@
 #include "iqr_hash.h"
 #include "iqr_hss.h"
 #include "iqr_retval.h"
+#include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations.
+// Document the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
+static const char *usage_msg =
+"hss_verify [--sig <filename>] [--pub <filename>] [--winternitz 1|2|4|8]\n"
+"  [--variant 2e30f|2e45f|2e65f|2e30s|2e45s|2e65s] [--message <filename>]\n"
+"    Defaults are: \n"
+"        --sig sig.dat\n"
+"        --pub pub.key\n"
+"        --variant 2e30f\n"
+"        --message message.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the verification of an HSS signature against a
 // digest.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_hss_verify(const iqr_Context *ctx, iqr_HSSWinternitz w, iqr_HSSHeight height, const uint8_t *digest,
+static iqr_retval showcase_hss_verify(const iqr_Context *ctx, const iqr_HSSVariant *variant, const uint8_t *digest,
     const char *pub_file, const char *sig_file)
 {
     iqr_HSSParams *params = NULL;
@@ -51,7 +59,7 @@ static iqr_retval showcase_hss_verify(const iqr_Context *ctx, iqr_HSSWinternitz 
     uint8_t *sig = NULL;
 
     /* The tree strategy chosen will have no effect on verification. */
-    iqr_retval ret = iqr_HSSCreateParams(ctx, &IQR_HSS_VERIFY_ONLY_STRATEGY, w, height, IQR_HSS_LEVEL_1, &params);
+    iqr_retval ret = iqr_HSSCreateParams(ctx, &IQR_HSS_VERIFY_ONLY_STRATEGY, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -186,164 +194,43 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
-{
-    iqr_retval ret = IQR_OK;
-
-    FILE *fp = fopen(fname, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    /* Obtain file size. */
-    fseek(fp , 0 , SEEK_END);
-#if defined(_WIN32) || defined(_WIN64)
-    const int64_t tmp_size64 = (int64_t)_ftelli64(fp);
-
-    if (tmp_size64 < 0) {
-        fprintf(stderr, "Failed on _ftelli64(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    } else if ((uint64_t)tmp_size64 > (uint64_t)SIZE_MAX) {
-        /* On 32-bit systems, we cannot allocate enough memory for large key files. */
-        ret = IQR_ENOMEM;
-        goto end;
-    }
-
-    /* Due to a bug in GCC 7.2, it is necessary to make tmp_size volatile. Otherwise,
-     * the variable is removed by the compiler and tmp_size64 is used instead. This
-     * causes the calloc() call further down to raise a compiler warning. */
-    volatile size_t tmp_size = (size_t)tmp_size64;
-#else
-    const size_t tmp_size = (size_t)ftell(fp);
-#endif
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on ftell(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    rewind(fp);
-
-    if (tmp_size > 0) {
-        uint8_t *tmp = NULL;
-
-        /* calloc with a param of 0 could return a pointer or NULL depending on
-         * implementation, so skip all this when the size is 0 so we
-         * consistently return NULL with a size of 0. In some samples it's
-         * useful to take empty files as input so users can pass NULL or 0 for
-         * optional parameters.
-         */
-        tmp = calloc(1, tmp_size);
-        if (tmp == NULL) {
-            fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        size_t read_size = fread(tmp, 1, tmp_size, fp);
-        if (read_size != tmp_size) {
-            fprintf(stderr, "Failed on fread(): %s\n", strerror(errno));
-            free(tmp);
-            tmp = NULL;
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        *data_size = tmp_size;
-        *data = tmp;
-
-        fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
-    }
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "hss_verify [--sig <filename>] [--pub <filename>] [--winternitz 1|2|4|8]\n"
-"  [--height 5|10|15|20|25] [--message <filename>]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --sig sig.dat\n");
-    fprintf(stdout, "        --pub pub.key\n");
-    fprintf(stdout, "        --winternitz 4\n");
-    fprintf(stdout, "        --height 5\n");
-    fprintf(stdout, "        --message message.dat\n");
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, iqr_HSSWinternitz w, iqr_HSSHeight height,
+static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_HSSVariant *variant,
     const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
 
-    if (IQR_HSS_WINTERNITZ_1 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_1\n");
-    } else if (IQR_HSS_WINTERNITZ_2 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_2\n");
-    } else if (IQR_HSS_WINTERNITZ_4 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_4\n");
-    } else if (IQR_HSS_WINTERNITZ_8 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_8\n");
+    if (variant == &IQR_HSS_2E30F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30F (small)\n");
+    } else if (variant == &IQR_HSS_2E30S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30S (fast)\n");
+    } else if (variant == &IQR_HSS_2E45F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45F (small)\n");
+    } else if (variant == &IQR_HSS_2E45S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45S (fast)\n");
+    } else if (variant == &IQR_HSS_2E65F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65F (small)\n");
+    } else if (variant == &IQR_HSS_2E65S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65S (fast)\n");
     } else {
-        fprintf(stdout, "    winternitz value: INVALID\n");
-    }
-
-    if (IQR_HSS_HEIGHT_5 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_5\n");
-    } else if (IQR_HSS_HEIGHT_10 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_10\n");
-    } else if (IQR_HSS_HEIGHT_15 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_15\n");
-    } else if (IQR_HSS_HEIGHT_20 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_20\n");
-    } else if (IQR_HSS_HEIGHT_25 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_25\n");
-    } else {
-        fprintf(stdout, "    height: INVALID\n");
+        fprintf(stdout, "    Variant: INVALID\n");
     }
 
     fprintf(stdout, "    message data file: %s\n", message);
     fprintf(stdout, "\n");
 }
 
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
-
-static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **pub, iqr_HSSWinternitz *w,
-    iqr_HSSHeight *height, const char **message)
+static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **pub, const iqr_HSSVariant **variant,
+    const char **message)
 {
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -355,36 +242,22 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             /* [--pub <filename>] */
             i++;
             *pub = argv[i];
-        } else if (paramcmp(argv[i], "--winternitz") == 0) {
-            /* [--winternitz 1|2|4|8] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
-            if (paramcmp(argv[i], "1") == 0) {
-                *w = IQR_HSS_WINTERNITZ_1;
-            } else if  (paramcmp(argv[i], "2") == 0) {
-                *w = IQR_HSS_WINTERNITZ_2;
-            } else if  (paramcmp(argv[i], "4") == 0) {
-                *w = IQR_HSS_WINTERNITZ_4;
-            } else if  (paramcmp(argv[i], "8") == 0) {
-                *w = IQR_HSS_WINTERNITZ_8;
+            if (paramcmp(argv[i], "2e30f") == 0) {
+                *variant = &IQR_HSS_2E30F;
+            } else if (paramcmp(argv[i], "2e30s") == 0) {
+                *variant = &IQR_HSS_2E30S;
+            } else if (paramcmp(argv[i], "2e45f") == 0) {
+                *variant = &IQR_HSS_2E45F;
+            } else if (paramcmp(argv[i], "2e45s") == 0) {
+                *variant = &IQR_HSS_2E45S;
+            } else if (paramcmp(argv[i], "2e65f") == 0) {
+                *variant = &IQR_HSS_2E65F;
+            } else if (paramcmp(argv[i], "2e65s") == 0) {
+                *variant = &IQR_HSS_2E65S;
             } else {
-                usage();
-                return IQR_EBADVALUE;
-            }
-        } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 5|10|15|20|25] */
-            i++;
-            if (paramcmp(argv[i], "5") == 0) {
-                *height = IQR_HSS_HEIGHT_5;
-            } else if  (paramcmp(argv[i], "10") == 0) {
-                *height = IQR_HSS_HEIGHT_10;
-            } else if  (paramcmp(argv[i], "15") == 0) {
-                *height = IQR_HSS_HEIGHT_15;
-            } else if  (paramcmp(argv[i], "20") == 0) {
-                *height = IQR_HSS_HEIGHT_20;
-            } else if  (paramcmp(argv[i], "25") == 0) {
-                *height = IQR_HSS_HEIGHT_25;
-            } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--message") == 0) {
@@ -404,13 +277,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here. */
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
-    iqr_HSSWinternitz w = IQR_HSS_WINTERNITZ_4;
-    iqr_HSSHeight height =  IQR_HSS_HEIGHT_5;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E30F;
 
     iqr_Context *ctx = NULL;
     uint8_t *digest = NULL;
@@ -418,13 +290,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &sig, &pub, &w, &height, &message);
+    iqr_retval ret = parse_commandline(argc, argv, &sig, &pub, &variant, &message);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], sig, pub, w, height, message);
+    preamble(argv[0], sig, pub, variant, message);
 
     /* IQR initialization that is not specific to HSS. */
     ret = init_toolkit(&ctx, message, &digest);
@@ -434,7 +306,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of HSS signature verification.
      */
-    ret = showcase_hss_verify(ctx, w, height, digest, pub, sig);
+    ret = showcase_hss_verify(ctx, variant, digest, pub, sig);
 
 cleanup:
     iqr_DestroyContext(&ctx);

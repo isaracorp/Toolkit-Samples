@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 ChaCha20 Sample
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 ChaCha20 Sample
 
 ## Introduction to Symmetric-Key Cryptography
 
@@ -65,134 +63,17 @@ above:
 $ ../rng/rng --count 12 --output nonce.dat
 ```
 
-Build the sample application:
+Build the sample application in a `build` directory:
 
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `chacha20_encrypt` with default parameters.
-
-Execution and expected outputs:
-
-```
-$ ./chacha20_encrypt
-Running ./chacha20_encrypt with the following parameters...
-    key file: key.dat
-    nonce file: nonce.dat
-    initial counter: 0
-    plaintext file: message.dat
-    ciphertext file: ciphertext.dat
-
-Successfully loaded key.dat (32 bytes)
-Successfully loaded nonce.dat (12 bytes)
-Successfully loaded message.dat (167518 bytes)
-ChaCha20 encrypt completed.
-Successfully saved ciphertext.dat (167518 bytes)
-Ciphertext has been saved to disk.
-```
-
-Execute `chacha20_decrypt` with default parameters.
-
-Execution and expected outputs:
-
-```
-$ ./chacha20_decrypt
-Running ./chacha20_decrypt with the following parameters...
-    key file: key.dat
-    nonce file: nonce.dat
-    initial counter: 0
-    ciphertext file: ciphertext.dat
-    plaintext file: plaintext.dat
-
-Successfully loaded key.dat (32 bytes)
-Successfully loaded nonce.dat (12 bytes)
-Successfully loaded ciphertext.dat (167518 bytes)
-ChaCha20 decrypt completed.
-Successfully saved plaintext.dat (167518 bytes)
-Plaintext has been saved to disk.
-```
-
-## Sample Applications Usage Details
-
-### chacha20_encrypt
-
-Command line format:
-
-```
-chacha20_encrypt [--key <filename>] [--nonce <filename>]
-  [--initial_counter <counter>] [--plaintext <filename>]
-  [--ciphertext <filename>]
-```
-
-Command line defaults:
-
-```
---key key.dat
---nonce nonce.dat
---initial_counter 0
---plaintext message.dat
---ciphertext ciphertext.dat
-```
-
-Command line parameter descriptions:
-
-```
-[--key <filename>]
-Read the key from file <filename>. Must contain exactly 32 bytes.
-
-[--nonce <filename>]
-Read the nonce from file <filename>. Must contain exactly 12 bytes.
-
-[--initial_counter counter]
-The value which the ChaCha20 initial block counter will be initialized to.
-
-[--plaintext <filename>]
-The data which will be encrypted.
-
-[--ciphertext <filename>]
-Where the resulting ciphertext will be saved.
-```
-
-### chacha20_decrypt
-
-Command line format:
-
-```
-chacha20_decrypt [--key <filename>] [--nonce <filename>]
-  [--initial_counter <counter>] [--ciphertext <filename>]
-  [--plaintext <filename>]
-```
-
-Command line defaults:
-
-```
---key key.dat
---nonce nonce.dat
---initial_counter 0
---ciphertext ciphertext.dat
---plaintext plaintext.dat
-```
-
-Command line parameter descriptions:
-
-```
-[--key <filename>]
-Read the key from file <filename>. Must contain exactly 32 bytes.
-
-[--nonce <filename>]
-Read the nonce from file <filename>. Must contain exactly 12 bytes.
-
-[--initial_counter counter]
-The value which the ChaCha20 initial block counter will be initialized to.
-
-[--ciphertext <filename>]
-The data which will be decrypted.
-
-[--plaintext <filename>]
-Where the resulting plaintext will be saved.
-```
+Execute the samples with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -203,7 +84,7 @@ Where the resulting plaintext will be saved.
 
 See the `LICENSE` file for details:
 
-> Copyright 2016-2018 ISARA Corporation
+> Copyright (C) 2016-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -216,3 +97,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.

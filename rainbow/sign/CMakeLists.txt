@@ -1,4 +1,4 @@
-# Copyright 2017-2018 ISARA Corporation
+# Copyright (C) 2017-2019, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,11 @@ project (rainbow_sign)
 include (../../find_toolkit.cmake)
 include (../../compiler_options.cmake)
 
-add_executable (rainbow_sign main.c)
-target_link_libraries (rainbow_sign iqr_toolkit m)
+include_directories (../../common)
+if (NOT TARGET isara_samples)
+    add_subdirectory(../../common common)
+endif ()
 
-install (TARGETS rainbow_sign DESTINATION ${PROJECT_SOURCE_DIR})
+add_executable (rainbow_sign main.c)
+add_dependencies (rainbow_sign isara_samples)
+target_link_libraries (rainbow_sign iqr_toolkit isara_samples)

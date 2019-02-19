@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 NTRUPrime KEM Samples
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 NTRUPrime KEM Samples
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -34,168 +32,17 @@ As per [NTRU Prime](https://eprint.iacr.org/2016/461).
 The toolkit's NTRUPrime implementation uses the parameter set recommended in
 the above paper for 128-bit quantum security.
 
-Here is the simplest way to use the samples:
-
-Build the sample application:
+Build the sample application in a `build` directory:
 
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `ntruprime_generate_keys` using default parameters.
-
-Execution and expected outputs:
-
-```
-$ ./ntruprime_generate_keys
-Running ./ntruprime_generate_keys with the following parameters:
-    public key file: pub.key
-    private key file: priv.key
-The context has been created.
-Hash functions have been registered in the context.
-RNG object has been created.
-NTRUPrime parameter structure has been created.
-Creating NTRUPrime key-pair.
-NTRUPrime public and private key-pair has been created
-Public key has been exported.
-Private key has been exported.
-Successfully saved pub.key (1235 bytes)
-Successfully saved priv.key (4434 bytes)
-Public and private keys have been saved to disk.
-```
-
-Execute `ntruprime_encapsulate` using default parameters.
-
-Execution and expected output:
-
-```
-$ ./ntruprime_encapsulate
-Running ./ntruprime_encapsulate with the following parameters:
-    public key file: pub.key
-    ciphertext file: ciphertext.dat
-    shared key file: shared.key
-The context has been created.
-Hash functions have been registered in the context.
-RNG object has been created.
-NTRUPrime parameter structure has been created.
-Successfully loaded pub.key (1235 bytes)
-Successfully saved ciphertext.dat (1267 bytes)
-Successfully saved shared.key (32 bytes)
-NTRUPrime encapsulation completed.
-```
-
-Execute `ntruprime_decapsulate` using default parameters.
-
-Execution and expected output:
-
-```
-$ ./ntruprime_decapsulate
-Running ./ntruprime_decapsulate with the following parameters:
-    private key file: priv.key
-    ciphertext file: ciphertext.dat
-    shared key file: shared.key
-The context has been created.
-Hash functions have been registered in the context.
-NTRUPrime parameter structure has been created.
-Successfully loaded priv.key (4434 bytes)
-Successfully loaded ciphertext.dat (1267 bytes)
-Successfully saved shared.key (32 bytes)
-NTRUPrime decapsulation completed.
-```
-
-### ntruprime_generate_key
-
-Generates a new public key and private key and saves them to two separate
-files.
-
-Command line format:
-
-```
-ntruprime_generate_keys [--pub <filename>] [--priv <filename>]
-```
-
-Command line defaults:
-
-```
---pub pub.key
---priv priv.key
-```
-
-Command line parameter descriptions:
-
-```
-[--pub <filename>]
-<filename> is the name of the file where the public key is to be saved.
-
-[--priv <filename>]
-<filename> is the name of the file where the private key is to be saved.
-```
-
-### ntruprime_encapsulate
-
-Creates and saves a ciphertext and shared key.
-
-Command line format:
-
-```
-ntruprime_encapsulate [--pub <filename>] [--ciphertext <filename>]
- [--shared <filename>]
-
-```
-
-Command line defaults:
-
-```
---pub pub.key
---ciphertext ciphertext.dat
---shared shared.key
-```
-
-Command line parameter descriptions:
-
-```
-[--pub <filename>]
-<filename> is the name of the file where the public key is stored.
-
-[--ciphertext <filename>]
-<filename> is the name of the file where the ciphertext is to be saved.
-
-[--shared <filename>]
-<filename> is the name of the file where the shared key is to be saved.
-```
-
-### ntruprime_decapsulate
-
-Decapsulates an encapsulated ciphertext and saves the shared key.
-
-Command line format:
-
-```
-ntruprime_decapsulate [--priv <filename>] [--ciphertext <filename>]
- [--shared <filename>]
-```
-
-Command line defaults:
-
-```
---priv priv.key
---ciphertext ciphertext.dat
---shared shared.key
-```
-
-Command line parameter descriptions:
-
-```
-[--priv <filename>]
-<filename> is the name of the file where the private key is stored.
-
-[--ciphertext <filename>]
-<filename> is the name of the file where the ciphertext is stored.
-
-[--shared <filename>]
-<filename> is the name of the file where the shared key is to be saved.
-```
+Execute the samples with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -206,7 +53,7 @@ Command line parameter descriptions:
 
 See the `LICENSE` file for details:
 
-> Copyright 2017-2018 ISARA Corporation
+> Copyright (C) 2017-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -219,3 +66,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.

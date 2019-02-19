@@ -1,4 +1,4 @@
-# Copyright 2016-2018 ISARA Corporation
+# Copyright (C) 2016-2019, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,11 @@ project (xmss_detach)
 include (../../find_toolkit.cmake)
 include (../../compiler_options.cmake)
 
-add_executable (xmss_detach main.c)
-target_link_libraries (xmss_detach iqr_toolkit m)
+include_directories (../../common)
+if (NOT TARGET isara_samples)
+    add_subdirectory(../../common common)
+endif ()
 
-install (TARGETS xmss_detach DESTINATION ${PROJECT_SOURCE_DIR})
+add_executable (xmss_detach main.c)
+add_dependencies (xmss_detach isara_samples)
+target_link_libraries (xmss_detach iqr_toolkit isara_samples)

@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 FrodoDH Sample
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 FrodoDH Sample
 
 ## Introduction to Key Establishment Schemes
 
@@ -60,55 +58,17 @@ file called `bob.c` is awesome!
 
 Build the sample application:
 
+Build the sample application in a `build` directory:
+
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `frododh` using default parameters.
-
-Execution and expected outputs:
-
-```
-$ ./frododh
-Running ./frododh with the following parameters...
-    Dump data to files: False
-    Variant: AES
-
-
-Alice and Bob's secrets match.
-```
-
-## frododh Usage Details
-
-Generates a shared secret for Alice and Bob.
-
-Command line format:
-
-```
-frododh [--dump] [--variant AES|cSHAKE]
-```
-
-Command line defaults:
-
-```
---variant AES
-```
-
-Command line parameter descriptions:
-
-```
-[--dump]
-A switch telling frododh to dump the public information and secrets to file. The
-filenames are:
-    alice_key.dat - Alice's public information.
-    bob_key.dat - Bob's public information.
-    alice_secret.dat - Secret derived by Alice.
-    bob_secret.dat - Secret derived by Bob.
-
-[--variant AES|cSHAKE]
-The variant of FrodoDH to use.
-```
+Execute the sample with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -119,7 +79,7 @@ The variant of FrodoDH to use.
 
 See the `LICENSE` file for details:
 
-> Copyright 2017-2018 ISARA Corporation
+> Copyright (C) 2017-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -132,3 +92,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.

@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's XMSS signature scheme.
  *
- * @copyright Copyright 2017-2018 ISARA Corporation
+ * @copyright Copyright (C) 2017-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Declare memset_s() if the platform supports it.
-#if !defined(__ANDROID__)
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
 #include <string.h>
 #include <time.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-// For SecureZeroMemory().
-#include <Windows.h>
-#endif
-
-#if defined(__FreeBSD__)
-// For explicit_bzero().
-#include <strings.h>
-#endif
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
@@ -43,13 +29,21 @@
 #include "iqr_rng.h"
 #include "iqr_watchdog.h"
 #include "iqr_xmss.h"
+#include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations
+// Document the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
-static void secure_memzero(void *b, size_t len);
+static const char *usage_msg =
+"xmss_generate_keys [--pub <filename>] [--priv <filename>] [--state <filename>]\n"
+"  [--height 10|16|20] [--strategy cpu|memory|full]\n"
+"    Defaults are: \n"
+"        --pub pub.key\n"
+"        --priv priv.key\n"
+"        --state priv.state\n"
+"        --height 10\n"
+"        --strategy full\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the generation of XMSS public and private keys for
@@ -94,7 +88,7 @@ static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rn
     fprintf(stdout, "Keys have been generated.\n");
 
     /* Get the size of the public key and export the buffer. */
-    ret = iqr_XMSSGetPublicKeySize(pub, &pub_raw_size);
+    ret = iqr_XMSSGetPublicKeySize(params, &pub_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSGetPublicKeySize(): %s\n", iqr_StrError(ret));
         goto end;
@@ -116,7 +110,7 @@ static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rn
     fprintf(stdout, "Public Key has been exported.\n");
 
     /* Get the size of the private key and export the buffer. */
-    ret = iqr_XMSSGetPrivateKeySize(priv, &priv_raw_size);
+    ret = iqr_XMSSGetPrivateKeySize(params, &priv_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSGetPrivateKeySize(): %s\n", iqr_StrError(ret));
         goto end;
@@ -138,7 +132,7 @@ static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rn
     fprintf(stdout, "Private Key has been exported.\n");
 
     /* Get the size of the state and export the buffer. */
-    ret = iqr_XMSSGetStateSize(state, &state_raw_size);
+    ret = iqr_XMSSGetStateSize(params, &state_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSGetStateSize(): %s\n", iqr_StrError(ret));
         goto end;
@@ -237,7 +231,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
-    /* This will allow us to give satisfactory randomness to the algorithm. */
+    /* This lets us give satisfactory randomness to the algorithm. */
     ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
@@ -265,50 +259,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "xmss_generate_keys [--pub <filename>] [--priv <filename>] [--state <filename>]\n"
-                    "  [--height 10|16|20] [--strategy bds|full]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --pub pub.key\n");
-    fprintf(stdout, "        --priv priv.key\n");
-    fprintf(stdout, "        --state priv.state\n");
-    fprintf(stdout, "        --height 10\n");
-    fprintf(stdout, "        --strategy full\n");
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -330,30 +280,17 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
         fprintf(stdout, "    height: INVALID\n");
     }
 
-    if (strategy == &IQR_XMSS_FULL_STRATEGY) {
+    if (strategy == &IQR_XMSS_FULL_TREE_STRATEGY) {
         fprintf(stdout, "    strategy: Full Tree\n");
-    } else if (strategy == &IQR_XMSS_BDS_STRATEGY) {
-        fprintf(stdout, "    strategy: BDS\n");
+    } else if (strategy == &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY) {
+        fprintf(stdout, "    strategy: Memory Constrained\n");
+    } else if (strategy == &IQR_XMSS_CPU_CONSTRAINED_STRATEGY) {
+        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
 
     fprintf(stdout, "\n");
-}
-
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-
-    return strncmp(p1, p2, max_param_size);
 }
 
 static iqr_retval parse_commandline(int argc, const char **argv, const char **pub, const char **priv, const char **state,
@@ -362,7 +299,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -388,18 +325,20 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             } else if  (paramcmp(argv[i], "20") == 0) {
                 *height = IQR_XMSS_HEIGHT_20;
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy bds|full] */
+            /* [--strategy cpu|memory|full] */
             i++;
-            if (paramcmp(argv[i], "bds") == 0) {
-                *strategy = &IQR_XMSS_BDS_STRATEGY;
+            if (paramcmp(argv[i], "cpu") == 0) {
+                *strategy = &IQR_XMSS_CPU_CONSTRAINED_STRATEGY;
+            } else if (paramcmp(argv[i], "memory") == 0) {
+                *strategy = &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
-                *strategy = &IQR_XMSS_FULL_STRATEGY;
+                *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         }
@@ -410,51 +349,18 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Secure memory wipe.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void secure_memzero(void *b, size_t len)
-{
-    /* You may need to substitute your platform's version of a secure memset()
-     * (one that won't be optimized out by the compiler). There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows
-     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
-     * explicit_bzero().
-     */
-#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
-    memset_s(b, len, 0, len);
-#elif defined(_WIN32) || defined(_WIN64)
-    SecureZeroMemory(b, len);
-#elif defined(__FreeBSD__)
-    explicit_bzero(b, len);
-#else
-    /* This fallback will not be optimized out, if the compiler has a conforming
-     * implementation of "volatile". It also won't take advantage of any faster
-     * intrinsics, so it may end up being slow.
-     *
-     * Implementation courtesy of this paper:
-     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
-     */
-    volatile unsigned char *ptr = b;
-    while (len--) {
-        *ptr++ = 0x00;
-    }
-#endif
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Executable entry point.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
     const char *pub = "pub.key";
     const char *priv = "priv.key";
     const char *state = "priv.state";
-    const iqr_XMSSTreeStrategy *strategy = &IQR_XMSS_FULL_STRATEGY;
+    const iqr_XMSSTreeStrategy *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
     iqr_XMSSHeight height =  IQR_XMSS_HEIGHT_10;
 
     iqr_Context *ctx = NULL;

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 ISARA Corporation
+# Copyright (C) 2016-2019, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,11 @@ project (newhopedh)
 include (../find_toolkit.cmake)
 include (../compiler_options.cmake)
 
-add_executable (newhopedh main.c alice.c bob.c comms.c)
-target_link_libraries (newhopedh iqr_toolkit m)
+include_directories(../common)
+if (NOT TARGET isara_samples)
+    add_subdirectory(../common common)
+endif ()
 
-install (TARGETS newhopedh DESTINATION ${PROJECT_SOURCE_DIR})
+add_executable (newhopedh main.c alice.c bob.c comms.c)
+add_dependencies(newhopedh isara_samples)
+target_link_libraries (newhopedh iqr_toolkit isara_samples)

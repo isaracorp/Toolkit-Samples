@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's NewHopeDH implementation.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,36 +21,30 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Declare memset_s() if the platform supports it.
-#if !defined(__ANDROID__)
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
 #include <string.h>
 #include <time.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-// For SecureZeroMemory().
-#include <Windows.h>
-#endif
-
-#if defined(__FreeBSD__)
-// For explicit_bzero().
-#include <strings.h>
-#endif
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
 #include "iqr_newhopedh.h"
 #include "iqr_retval.h"
 #include "iqr_rng.h"
+#include "isara_samples.h"
 
 #include "internal.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations.
+// Document the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void secure_memzero(void *b, size_t len);
+static const char *usage_msg =
+"newhopedh [--dump]\n"
+"        --dump Dumps the generated keys and secrets to file.\n"
+"               Filenames:\n"
+"                 Alice's key:    alice_key.dat\n"
+"                 Bob's key:      bob_key.dat\n"
+"                 Alice's secret: alice_secret.dat\n"
+"                 Bob's secret:   bob_secret.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the use of the NewHopeDH algorithm to generate a
@@ -183,49 +177,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 //---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "newhopedh [--dump]\n");
-    fprintf(stdout, "        --dump Dumps the generated keys and secrets to file.\n");
-    fprintf(stdout, "               Filenames:\n");
-    fprintf(stdout, "                 Alice's key:    alice_key.dat\n");
-    fprintf(stdout, "                 Bob's key:      bob_key.dat\n");
-    fprintf(stdout, "                 Alice's secret: alice_secret.dat\n");
-    fprintf(stdout, "                 Bob's secret:   bob_secret.dat\n");
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -242,20 +193,6 @@ static void preamble(const char *cmd, bool dump)
     fprintf(stdout, "\n");
 }
 
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
-
 static iqr_retval parse_commandline(int argc, const char **argv, bool *dump)
 {
     int i = 1;
@@ -264,45 +201,13 @@ static iqr_retval parse_commandline(int argc, const char **argv, bool *dump)
         if (paramcmp(argv[i], "--dump") == 0) {
             *dump = true;
         } else {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
         i++;
     }
+
     return IQR_OK;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Secure memory wipe.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void secure_memzero(void *b, size_t len)
-{
-    /* You may need to substitute your platform's version of a secure memset()
-     * (one that won't be optimized out by the compiler). There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows
-     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
-     * explicit_bzero().
-     */
-#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
-    memset_s(b, len, 0, len);
-#elif defined(_WIN32) || defined(_WIN64)
-    SecureZeroMemory(b, len);
-#elif defined(__FreeBSD__)
-    explicit_bzero(b, len);
-#else
-    /* This fallback will not be optimized out, if the compiler has a conforming
-     * implementation of "volatile". It also won't take advantage of any faster
-     * intrinsics, so it may end up being slow.
-     *
-     * Implementation courtesy of this paper:
-     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
-     */
-    volatile unsigned char *ptr = b;
-    while (len--) {
-        *ptr++ = 0x00;
-    }
-#endif
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -311,12 +216,13 @@ static void secure_memzero(void *b, size_t len)
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
+    bool dump = false;
+
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
-    bool dump = false;
 
     /* If the command line arguments were not sane, this function will return
      * an error.

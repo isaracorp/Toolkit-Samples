@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 RNG Sample
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2016-2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 RNG Sample
 
 ## Introduction to Random Number Generation
 
@@ -31,8 +29,8 @@ From NIST SP 800-90A Rev. 1:
 > considered when determining whether the RBG is appropriate for use by consuming
 > applications.
 
-HMAC-DRBG is built around the use of a BLAKE2b-256, BLAKE2b-512, SHA2-256,
-SHA2-384, SHA2-512, SHA3-256, or SHA3-512 hash function using the HMAC
+HMAC-DRBG is built around the use of a SHA2-256, SHA2-384, SHA2-512, SHA3-256,
+or SHA3-512 hash function using the HMAC
 construction. The toolkit's HMAC-DRBG RNG implementation can be initiated using
 any of these hash functions.
 
@@ -52,101 +50,17 @@ If the NIST vectors aren't used, the program follows the same flow and the
 user-provided data is used to seed and reseed the RNG. Normally the RNG would
 not be immediately reseeded but would be reseeded periodically with new entropy.
 
-Build the sample application:
+Build the sample application in a `build` directory:
 
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `rng` with default values for the parameters.
-
-Execution and expected outputs:
-
-```
-$ ./rng
-Running ./rng with the following parameters...
-    hash algorithm: IQR_HASHALGO_SHA2_256
-    seed: NIST HMAC-DRBG test vectors
-    reseed: NIST HMAC-DRBG test vectors
-    randomness output file: random.dat
-    randomness output byte count: 256
-
-RNG object has been created.
-RNG object has been seeded.
-RNG object has been reseeded.
-RNG data has been read.
-Successfully saved random.dat (256 bytes)
-Random data has been saved to disk.
-Successfully loaded random.dat (256 bytes)
-You're using the default NIST data and the output matches!
-```
-
-Execute `rng` with seed and reseed data specified by the user.
-
-Execution and expected outputs:
-
-```
-$ ./rng --seed seed.dat --reseed reseed.dat
-Running ./rng with the following parameters...
-    hash algorithm: IQR_HASHALGO_SHA2_256
-    seed source: seed.dat
-    reseed source: reseed.dat
-    randomness output file: random.dat
-    randomness output byte count: 256
-
-Successfully loaded seed.dat (48 bytes)
-Successfully loaded reseed.dat (32 bytes)
-RNG object has been created.
-RNG object has been seeded.
-RNG object has been reseeded.
-RNG data has been read.
-Successfully saved random.dat (256 bytes)
-Random data has been saved to disk.
-```
-
-## rng Usage Details
-
-Command line format:
-
-```
-rng
-  [--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|
-  shake128|shake256]
-  [--seed <filename>] [--reseed <filename>] [--output <filename>]
-  [--count <bytes>]
-```
-
-Command line defaults:
-
-```
---hash sha2-256
---output random.dat
---count 256
-```
-
-Command line parameter descriptions:
-
-```
-[--hash blake2b-256|blake2b-512|sha2-256|sha2-384|sha2-512|sha3-256|sha3-512|
-  shake128|shake256]
-The hash algorithm to use in the HMAC-DRBG. Uses SHAKE instead of HMAC-DRBG if
-shake128 or shake256 is specified.
-
-[--seed <filename>]
-Data with which the RNG will be seeded. The entire contents of the file
-will be read.
-
-[--reseed <filename>]
-Data with which the RNG will be reseeded. The entire contents of the file
-will be read.
-
-[--output <filename>]
-<filename> is the name of the file where the random numbers are to be saved.
-
-[--count <bytes>]
-The number of bytes to read from the random number generator.
-```
+Execute the samples with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -160,7 +74,7 @@ The number of bytes to read from the random number generator.
 
 See the `LICENSE` file for details:
 
-> Copyright 2016-2018 ISARA Corporation
+> Copyright (C) 2016-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -173,3 +87,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.

@@ -7,7 +7,7 @@
  * appears to keep her own state. It is done like this to show how the "Alice"
  * side of the transaction can be performed independent of Bob.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@
 
 #include "iqr_retval.h"
 #include "iqr_rng.h"
+#include "isara_samples.h"
 
 /* It is not suggested to make these global variables. It's not thread safe.
  * It would be better to pass this around as required. It is done this way to

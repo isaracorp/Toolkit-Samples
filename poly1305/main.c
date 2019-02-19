@@ -2,7 +2,7 @@
  *
  * @brief Perform ChaCha20-Poly1305-AEAD encryption using the toolkit.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,25 +20,24 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Declare memset_s() if the platform supports it.
-#if !defined(__ANDROID__)
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
 #include <string.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-// For SecureZeroMemory().
-#include <Windows.h>
-#endif
-
-#if defined(__FreeBSD__)
-// For explicit_bzero().
-#include <strings.h>
-#endif
 
 #include "iqr_context.h"
 #include "iqr_mac.h"
 #include "iqr_retval.h"
+#include "isara_samples.h"
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// Document the command-line arguments.
+//  --------------------------------------------------------------------------------------------------------------------------------
+
+static const char *usage_msg =
+"poly1305 [--key { string <key> | file <filename> }]\n"
+"  [--tag <filename>]  msg1 [msg2 ...]\n"
+"    Defaults are: \n"
+"        --key string \"****** ISARA-POLY1305-KEY ******\"\n"
+"        --tag tag.dat\n"
+"  The key must be 32 or more bytes.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Structure Declarations.
@@ -48,14 +47,6 @@ struct file_list {
     const char *filename;
     struct file_list *next;
 };
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
-static void secure_memzero(void *b, size_t len);
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases Poly1305 tag creation.
@@ -167,98 +158,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
-{
-    FILE *fp = fopen(fname, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    /* Obtain file size. */
-    fseek(fp , 0 , SEEK_END);
-    size_t tmp_size = (size_t)ftell(fp);
-    rewind(fp);
-
-    iqr_retval ret = IQR_OK;
-    uint8_t *tmp = NULL;
-    if (tmp_size != 0) {
-        /* calloc with a param of 0 could return a pointer or NULL depending on
-         * implementation, so skip all this when the size is 0 so we
-         * consistently return NULL with a size of 0. In some samples it's
-         * useful to take empty files as input so users can pass NULL or 0 for
-         * optional parameters.
-         */
-        tmp = calloc(1, tmp_size);
-        if (tmp == NULL) {
-            fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        size_t read_size = fread(tmp, 1, tmp_size, fp);
-        if (read_size != tmp_size) {
-            fprintf(stderr, "Failed on fread(): %s\n", strerror(errno));
-            free(tmp);
-            tmp = NULL;
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-    }
-
-    *data_size = tmp_size;
-    *data = tmp;
-
-    fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-//  --------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "poly1305 [--key { string <key> | file <filename> }]\n");
-    fprintf(stdout, "  [--tag <filename>]  msg1 [msg2 ...]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --key string \"****** ISARA-POLY1305-KEY ******\"\n");
-    fprintf(stdout, "        --tag tag.dat\n");
-    fprintf(stdout, "  The key must be %d or more bytes.\n", IQR_POLY1305_KEY_SIZE);
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -281,20 +180,6 @@ static void preamble(const char *cmd, const uint8_t *key, const char *key_file, 
     fprintf(stdout, "\n");
 }
 
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
-
 static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t **key, const char **key_file,
     struct file_list **files, const char **tag_file)
 {
@@ -302,7 +187,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t *
     while (1) {
         if (i == argc) {
             // We need at least one message file.
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -329,14 +214,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t *
         }
 
         if (i + 2 > argc) {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--key") == 0) {
             /* [--key { string <key> | file <filename> }] */
             i++;
             if (i + 2 > argc) {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
 
@@ -352,7 +237,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t *
                 *key = NULL;
                 *key_file = argv[i];
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--tag") == 0) {
@@ -360,44 +245,11 @@ static iqr_retval parse_commandline(int argc, const char **argv, const uint8_t *
             i++;
             *tag_file = argv[i];
         } else {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
         i++;
     }
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Secure memory wipe.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void secure_memzero(void *b, size_t len)
-{
-    /* You may need to substitute your platform's version of a secure memset()
-     * (one that won't be optimized out by the compiler). There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows
-     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
-     * explicit_bzero().
-     */
-#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
-    memset_s(b, len, 0, len);
-#elif defined(_WIN32) || defined(_WIN64)
-    SecureZeroMemory(b, len);
-#elif defined(__FreeBSD__)
-    explicit_bzero(b, len);
-#else
-    /* This fallback will not be optimized out, if the compiler has a conforming
-     * implementation of "volatile". It also won't take advantage of any faster
-     * intrinsics, so it may end up being slow.
-     *
-     * Implementation courtesy of this paper:
-     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
-     */
-    volatile unsigned char *ptr = b;
-    while (len--) {
-        *ptr++ = 0x00;
-    }
-#endif
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -406,14 +258,15 @@ static void secure_memzero(void *b, size_t len)
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
     const uint8_t *key = (const uint8_t *)"****** ISARA-POLY1305-KEY ******";
+    const char *tag_file = "tag.dat";
+
     const char *key_file = NULL;
     uint8_t *loaded_key = NULL;
     struct file_list *files = NULL;
-    const char *tag_file = "tag.dat";
 
     /* If the command line arguments were not sane, this function will return
      * an error.

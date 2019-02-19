@@ -2,7 +2,7 @@
  *
  * @brief Sign a message using the toolkit's HSS signature scheme.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,44 +18,40 @@
  */
 
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Declare memset_s() if the platform supports it.
-#if !defined(__ANDROID__)
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
 #include <string.h>
 #include <time.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-// For SecureZeroMemory().
-#include <Windows.h>
-#endif
-
-#if defined(__FreeBSD__)
-// For explicit_bzero().
-#include <strings.h>
-#endif
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
 #include "iqr_hss.h"
 #include "iqr_retval.h"
 #include "iqr_rng.h"
+#include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations.
+// Document the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
-static void secure_memzero(void *b, size_t len);
+static const char *usage_msg =
+"hss_sign [--sig <filename>] [--priv <filename>] [--state <filename>]\n"
+"  [--variant 2e30f|2e45f|2e65f|2e30s|2e45s|2e65s] [--strategy cpu|memory|full]\n"
+"  [--message <filename>]\n"
+"    Defaults are: \n"
+"        --sig sig.dat\n"
+"        --priv priv.key\n"
+"        --state priv.state\n"
+"        --strategy full\n"
+"        --variant 2e30f\n"
+"        --message message.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// This function showcases signing of a digest using the HSS signature scheme.
+// This function showcases signing a digest using the HSS signature scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_hss_sign(const iqr_Context *ctx, const iqr_RNG *rng, iqr_HSSWinternitz w, iqr_HSSHeight height,
+static iqr_retval showcase_hss_sign(const iqr_Context *ctx, const iqr_RNG *rng, const iqr_HSSVariant *variant,
     const iqr_HSSTreeStrategy *strategy, const uint8_t *digest, const char *priv_file, const char *state_file,
     const char *sig_file)
 {
@@ -72,10 +68,9 @@ static iqr_retval showcase_hss_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
     size_t state_raw_size = 0;
     uint8_t *state_raw = NULL;
 
-    uint32_t max_sigs = 0;
-    uint32_t remaining_sigs = 0;
+    uint64_t remaining_sigs = 0;
 
-    iqr_retval ret = iqr_HSSCreateParams(ctx, strategy, w, height, IQR_HSS_LEVEL_1, &params);
+    iqr_retval ret = iqr_HSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -133,8 +128,8 @@ static iqr_retval showcase_hss_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
     /* IMPORTANT: Save the state to disk prior to saving the signature. This
      * mirrors the real world usage pattern where you must persist the state
-     * prior to using the signature in order to avoid one-time-signature
-     * reuse if something goes wrong.
+     * prior to using the signature to avoid reusing one-time-signatures
+     * if something goes wrong.
      */
     ret = iqr_HSSExportState(state, state_raw, state_raw_size);
     if (ret != IQR_OK) {
@@ -156,13 +151,13 @@ static iqr_retval showcase_hss_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
 
     fprintf(stdout, "Signature and updated state have been saved to disk.\n");
 
-    ret = iqr_HSSGetSignatureCount(state, &max_sigs, &remaining_sigs);
+    ret = iqr_HSSGetSignatureCount(state, &remaining_sigs);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSGetMaximumSignatureCount(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    fprintf(stdout, "Number of signatures for this state: %d.\nRemaining signatures: %d\n", max_sigs, remaining_sigs);
+    fprintf(stdout, "Remaining signatures: %" PRIu64 ".\n", remaining_sigs);
 
     if (remaining_sigs == 0) {
         fprintf(stderr, "The private key cannot sign any more messages.\n");
@@ -187,8 +182,7 @@ end:
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// This next section of code is related to the toolkit, but is not specific to
-// HSS.
+// The next section is related to the toolkit, but is not specific to HSS.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -234,8 +228,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
         return ret;
     }
 
-    /* SHA2-512 produces a 64-byte digest, which is required by iqr_HSSSign. Any
-     * 64-byte digest is suitable for signing.
+    /* SHA2-512 produces a 64-byte digest. Any 64-byte digest is suitable for
+     * signing.
      */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (IQR_OK != ret) {
@@ -243,7 +237,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
         return ret;
     }
 
-    /* This will allow us to give satisfactory randomness to the algorithm. */
+    /* This lets us give satisfactory randomness to the algorithm. */
     ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
@@ -300,171 +294,39 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
-{
-    iqr_retval ret = IQR_OK;
-
-    FILE *fp = fopen(fname, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    /* Obtain file size. */
-    fseek(fp , 0 , SEEK_END);
-#if defined(_WIN32) || defined(_WIN64)
-    const int64_t tmp_size64 = (int64_t)_ftelli64(fp);
-
-    if (tmp_size64 < 0) {
-        fprintf(stderr, "Failed on _ftelli64(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    } else if ((uint64_t)tmp_size64 > (uint64_t)SIZE_MAX) {
-        /* On 32-bit systems, we cannot allocate enough memory for large key files. */
-        ret = IQR_ENOMEM;
-        goto end;
-    }
-
-    /* Due to a bug in GCC 7.2, it is necessary to make tmp_size volatile. Otherwise,
-     * the variable is removed by the compiler and tmp_size64 is used instead. This
-     * causes the calloc() call further down to raise a compiler warning. */
-    volatile size_t tmp_size = (size_t)tmp_size64;
-#else
-    const size_t tmp_size = (size_t)ftell(fp);
-#endif
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on ftell(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    rewind(fp);
-
-    if (tmp_size > 0) {
-        uint8_t *tmp = NULL;
-
-        /* calloc with a param of 0 could return a pointer or NULL depending on
-         * implementation, so skip all this when the size is 0 so we
-         * consistently return NULL with a size of 0. In some samples it's
-         * useful to take empty files as input so users can pass NULL or 0 for
-         * optional parameters.
-         */
-        tmp = calloc(1, tmp_size);
-        if (tmp == NULL) {
-            fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        size_t read_size = fread(tmp, 1, tmp_size, fp);
-        if (read_size != tmp_size) {
-            fprintf(stderr, "Failed on fread(): %s\n", strerror(errno));
-            free(tmp);
-            tmp = NULL;
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        *data_size = tmp_size;
-        *data = tmp;
-
-        fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
-    }
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "hss_sign [--sig <filename>] [--priv <filename>] [--state <filename>]\n"
-        "  [--winternitz 1|2|4|8] [--height 5|10|15|20|25] [--strategy bds|full]\n"
-        "  [--message <filename>]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --sig sig.dat\n");
-    fprintf(stdout, "        --priv priv.key\n");
-    fprintf(stdout, "        --state priv.state\n");
-    fprintf(stdout, "        --strategy full\n");
-    fprintf(stdout, "        --winternitz 4\n");
-    fprintf(stdout, "        --height 5\n");
-    fprintf(stdout, "        --message message.dat\n");
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *priv, const char *state, iqr_HSSWinternitz w,
-    iqr_HSSHeight height, const iqr_HSSTreeStrategy *strategy, const char *message)
+static void preamble(const char *cmd, const char *sig, const char *priv, const char *state, const iqr_HSSVariant *variant,
+    const iqr_HSSTreeStrategy *strategy, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
 
-    if (IQR_HSS_WINTERNITZ_1 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_1\n");
-    } else if (IQR_HSS_WINTERNITZ_2 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_2\n");
-    } else if (IQR_HSS_WINTERNITZ_4 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_4\n");
-    } else if (IQR_HSS_WINTERNITZ_8 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_8\n");
+    if (variant == &IQR_HSS_2E30F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30F (fast)\n");
+    } else if (variant == &IQR_HSS_2E30S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30S (small)\n");
+    } else if (variant == &IQR_HSS_2E45F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45F (fast)\n");
+    } else if (variant == &IQR_HSS_2E45S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45S (small)\n");
+    } else if (variant == &IQR_HSS_2E65F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65F (fast)\n");
+    } else if (variant == &IQR_HSS_2E65S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65S (small)\n");
     } else {
-        fprintf(stdout, "    winternitz value: INVALID\n");
+        fprintf(stdout, "    Variant: INVALID\n");
     }
 
-    if (IQR_HSS_HEIGHT_5 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_5\n");
-    } else if (IQR_HSS_HEIGHT_10 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_10\n");
-    } else if (IQR_HSS_HEIGHT_15 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_15\n");
-    } else if (IQR_HSS_HEIGHT_20 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_20\n");
-    } else if (IQR_HSS_HEIGHT_25 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_25\n");
-    } else {
-        fprintf(stdout, "    height: INVALID\n");
-    }
-
-    if (strategy == &IQR_HSS_FULL_STRATEGY) {
+    if (strategy == &IQR_HSS_FULL_TREE_STRATEGY) {
         fprintf(stdout, "    strategy: Full Tree\n");
-    } else if (strategy == &IQR_HSS_BDS_STRATEGY) {
-        fprintf(stdout, "    strategy: BDS\n");
+    } else if (strategy == &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY) {
+        fprintf(stdout, "    strategy: Memory Constrained\n");
+    } else if (strategy == &IQR_HSS_CPU_CONSTRAINED_STRATEGY) {
+        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
@@ -473,27 +335,13 @@ static void preamble(const char *cmd, const char *sig, const char *priv, const c
     fprintf(stdout, "\n");
 }
 
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
-
 static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **priv, const char **state,
-    iqr_HSSWinternitz *w, iqr_HSSHeight *height, const iqr_HSSTreeStrategy **strategy, const char **message)
+    const iqr_HSSVariant **variant, const iqr_HSSTreeStrategy **strategy, const char **message)
 {
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -509,36 +357,22 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             /* [--state <filename>] */
             i++;
             *state = argv[i];
-        } else if (paramcmp(argv[i], "--winternitz") == 0) {
-            /* [--winternitz 1|2|4|8] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
-            if (paramcmp(argv[i], "1") == 0) {
-                *w = IQR_HSS_WINTERNITZ_1;
-            } else if  (paramcmp(argv[i], "2") == 0) {
-                *w = IQR_HSS_WINTERNITZ_2;
-            } else if  (paramcmp(argv[i], "4") == 0) {
-                *w = IQR_HSS_WINTERNITZ_4;
-            } else if  (paramcmp(argv[i], "8") == 0) {
-                *w = IQR_HSS_WINTERNITZ_8;
+            if (paramcmp(argv[i], "2e30f") == 0) {
+                *variant = &IQR_HSS_2E30F;
+            } else if (paramcmp(argv[i], "2e30s") == 0) {
+                *variant = &IQR_HSS_2E30S;
+            } else if (paramcmp(argv[i], "2e45f") == 0) {
+                *variant = &IQR_HSS_2E45F;
+            } else if (paramcmp(argv[i], "2e45s") == 0) {
+                *variant = &IQR_HSS_2E45S;
+            } else if (paramcmp(argv[i], "2e65f") == 0) {
+                *variant = &IQR_HSS_2E65F;
+            } else if (paramcmp(argv[i], "2e65s") == 0) {
+                *variant = &IQR_HSS_2E65S;
             } else {
-                usage();
-                return IQR_EBADVALUE;
-            }
-        } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 5|10|15|20|25] */
-            i++;
-            if (paramcmp(argv[i], "5") == 0) {
-                *height = IQR_HSS_HEIGHT_5;
-            } else if  (paramcmp(argv[i], "10") == 0) {
-                *height = IQR_HSS_HEIGHT_10;
-            } else if  (paramcmp(argv[i], "15") == 0) {
-                *height = IQR_HSS_HEIGHT_15;
-            } else if  (paramcmp(argv[i], "20") == 0) {
-                *height = IQR_HSS_HEIGHT_20;
-            } else if  (paramcmp(argv[i], "25") == 0) {
-                *height = IQR_HSS_HEIGHT_25;
-            } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--message") == 0) {
@@ -546,14 +380,16 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
            i++;
            *message = argv[i];
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy bds|full] */
+            /* [--strategy cpu|memory|full] */
             i++;
-            if (paramcmp(argv[i], "bds") == 0) {
-                *strategy = &IQR_HSS_BDS_STRATEGY;
+            if (paramcmp(argv[i], "cpu") == 0) {
+                *strategy = &IQR_HSS_CPU_CONSTRAINED_STRATEGY;
+            } else if (paramcmp(argv[i], "memory") == 0) {
+                *strategy = &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
-                *strategy = &IQR_HSS_FULL_STRATEGY;
+                *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         }
@@ -564,54 +400,20 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Secure memory wipe.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void secure_memzero(void *b, size_t len)
-{
-    /* You may need to substitute your platform's version of a secure memset()
-     * (one that won't be optimized out by the compiler). There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows
-     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
-     * explicit_bzero().
-     */
-#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
-    memset_s(b, len, 0, len);
-#elif defined(_WIN32) || defined(_WIN64)
-    SecureZeroMemory(b, len);
-#elif defined(__FreeBSD__)
-    explicit_bzero(b, len);
-#else
-    /* This fallback will not be optimized out, if the compiler has a conforming
-     * implementation of "volatile". It also won't take advantage of any faster
-     * intrinsics, so it may end up being slow.
-     *
-     * Implementation courtesy of this paper:
-     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
-     */
-    volatile unsigned char *ptr = b;
-    while (len--) {
-        *ptr++ = 0x00;
-    }
-#endif
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Executable entry point.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      *  here.
      */
     const char *sig = "sig.dat";
     const char *priv = "priv.key";
     const char *state = "priv.state";
     const char *message = "message.dat";
-    const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_STRATEGY;
-    iqr_HSSWinternitz w = IQR_HSS_WINTERNITZ_4;
-    iqr_HSSHeight height =  IQR_HSS_HEIGHT_5;
+    const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E30F;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
@@ -620,13 +422,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &sig, &priv, &state, &w, &height, &strategy, &message);
+    iqr_retval ret = parse_commandline(argc, argv, &sig, &priv, &state, &variant, &strategy, &message);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], sig, priv, state, w, height, strategy, message);
+    preamble(argv[0], sig, priv, state, variant, strategy, message);
 
     /* IQR initialization that is not specific to HSS. */
     ret = init_toolkit(&ctx, &rng, message, &digest);
@@ -634,9 +436,9 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of HSS signing.
+    /* This function showcases HSS signing.
      */
-    ret = showcase_hss_sign(ctx, rng, w, height, strategy, digest, priv, state, sig);
+    ret = showcase_hss_sign(ctx, rng, variant, strategy, digest, priv, state, sig);
 
 cleanup:
     iqr_RNGDestroy(&rng);

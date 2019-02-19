@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's NTRUPrime key encapsulation mechanism.
  *
- * @copyright Copyright 2017-2018 ISARA Corporation
+ * @copyright Copyright (C) 2017-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,13 +29,19 @@
 #include "iqr_ntruprime.h"
 #include "iqr_retval.h"
 #include "iqr_rng.h"
+#include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations.
+// Document the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
+static const char *usage_msg =
+"ntruprime_encapsulate [--pub <filename>] [--ciphertext <filename>]\n"
+"    [--shared <filename>]\n"
+"    Default for the sample (when no option is specified):\n"
+"        --pub pub.key\n"
+"        --ciphertext ciphertext.dat\n"
+"        --shared shared.key\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases NTRUPrime encapsulation.
@@ -133,13 +139,16 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
     fprintf(stdout, "Hash functions have been registered in the context.\n");
 
-    /* Create a HMAC DRBG object. */
+    /* Create an HMAC DRBG object. */
     ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_512, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
+    /* The seed should be initialized from a guaranteed entropy source. This is
+     * only an example; DO NOT INITIALIZE THE SEED LIKE THIS.
+     */
     time_t seed = time(NULL);
 
     ret = iqr_RNGInitialize(*rng, (void *) &seed, sizeof(seed));
@@ -158,112 +167,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // generic utility functions. This section has little value to the developer
 // trying to learn how to use the toolkit.
 // ---------------------------------------------------------------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-static iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
-{
-    FILE *fp = fopen(fname, "rb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    /* Obtain file size. */
-    fseek(fp , 0 , SEEK_END);
-    size_t tmp_size = (size_t)ftell(fp);
-    rewind(fp);
-
-    iqr_retval ret = IQR_OK;
-    uint8_t *tmp = NULL;
-    if (tmp_size != 0) {
-        /* calloc() with a param of 0 could return a pointer or NULL depending
-         * on implementation, so skip all this when the size is 0 so we
-         * consistently return NULL with a size of 0.
-         *
-         * In some samples it's useful to take empty files as input so users
-         * can pass NULL or 0 for optional parameters.
-         */
-        tmp = calloc(1, tmp_size);
-        if (tmp == NULL) {
-            fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-
-        size_t read_size = fread(tmp, 1, tmp_size, fp);;
-        if (read_size != tmp_size) {
-            fprintf(stderr, "Failed on fread(): %s\n", strerror(errno));
-            free(tmp);
-            tmp = NULL;
-            ret = IQR_EBADVALUE;
-            goto end;
-        }
-    }
-
-    *data_size = tmp_size;
-    *data = tmp;
-
-    fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "ntruprime_encapsulate [--pub <filename>] [--ciphertext <filename>]\n [--shared <filename>]\n");
-    fprintf(stdout, "    Default for the sample (when no option is specified):\n");
-    fprintf(stdout, "        --pub pub.key\n");
-    fprintf(stdout, "        --ciphertext ciphertext.dat\n");
-    fprintf(stdout, "        --shared shared.key\n");
-}
-
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match, non-zero otherwise.
- * Parameters are expected to be less than 32 characters in length.
- */
-static int paramcmp(const char *p1 , const char *p2)
-{
-    const size_t max_param_size = 32;
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
@@ -296,11 +199,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             i++;
             *sharedkey_file = argv[i];
         } else {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
         i++;
     }
+
     return IQR_OK;
 }
 
@@ -310,16 +214,16 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
 
 int main(int argc, const char **argv)
 {
-    iqr_Context * ctx = NULL;
-    iqr_RNG *rng = NULL;
-    iqr_NTRUPrimeParams *parameters = NULL;
-
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
     const char *public_key_file = "pub.key";
     const char *ciphertext_file = "ciphertext.dat";
     const char *sharedkey_file = "shared.key";
+
+    iqr_Context * ctx = NULL;
+    iqr_RNG *rng = NULL;
+    iqr_NTRUPrimeParams *parameters = NULL;
 
     /* If the command line arguments were not sane, this function will return
      * an error.

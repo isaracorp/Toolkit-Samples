@@ -1,4 +1,4 @@
-# Copyright 2016-2018 ISARA Corporation
+# Copyright (C) 2016-2019, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,11 @@ project (kdf_rfc5869)
 include (../find_toolkit.cmake)
 include (../compiler_options.cmake)
 
-add_executable (kdf_rfc5869 main.c)
-target_link_libraries (kdf_rfc5869 iqr_toolkit m)
+include_directories(../common)
+if (NOT TARGET isara_samples)
+    add_subdirectory(../common common)
+endif ()
 
-install (TARGETS kdf_rfc5869 DESTINATION ${PROJECT_SOURCE_DIR})
+add_executable (kdf_rfc5869 main.c)
+add_dependencies(kdf_rfc5869 isara_samples)
+target_link_libraries (kdf_rfc5869 iqr_toolkit isara_samples)

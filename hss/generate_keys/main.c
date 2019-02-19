@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's HSS signature scheme.
  *
- * @copyright Copyright 2016-2018 ISARA Corporation
+ * @copyright Copyright (C) 2016-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Declare memset_s() if the platform supports it.
-#if !defined(__ANDROID__)
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
 #include <string.h>
 #include <time.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-// For SecureZeroMemory().
-#include <Windows.h>
-#endif
-
-#if defined(__FreeBSD__)
-// For explicit_bzero().
-#include <strings.h>
-#endif
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
@@ -43,13 +29,21 @@
 #include "iqr_retval.h"
 #include "iqr_rng.h"
 #include "iqr_watchdog.h"
+#include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations
+// Document the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
-static void secure_memzero(void *b, size_t len);
+static const char *usage_msg =
+"hss_generate_keys [--pub <filename>] [--priv <filename>]\n"
+"  [--variant 2e30f|2e45f|2e65f|2e30s|2e45s|2e65s] [--strategy cpu|memory|full]\n"
+"    Defaults are: \n"
+"        --pub pub.key\n"
+"        --priv priv.key\n"
+"        --state priv.state\n"
+"        --strategy full\n"
+"        --variant 2e30f\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the generation of HSS public and private keys for
@@ -61,7 +55,7 @@ static void secure_memzero(void *b, size_t len);
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval showcase_hss_keygen(const iqr_Context *ctx, const iqr_RNG *rng, const char *pub_file, const char *priv_file,
-    const char *state_file, const iqr_HSSTreeStrategy *strategy, iqr_HSSWinternitz w, iqr_HSSHeight height)
+    const char *state_file, const iqr_HSSTreeStrategy *strategy, const iqr_HSSVariant *variant)
 {
     iqr_HSSParams *params = NULL;
     iqr_HSSPrivateKey *priv = NULL;
@@ -77,7 +71,7 @@ static iqr_retval showcase_hss_keygen(const iqr_Context *ctx, const iqr_RNG *rng
     size_t state_raw_size = 0;
     uint8_t *state_raw = NULL;
 
-    iqr_retval ret = iqr_HSSCreateParams(ctx, strategy, w, height, IQR_HSS_LEVEL_1, &params);
+    iqr_retval ret = iqr_HSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -94,7 +88,7 @@ static iqr_retval showcase_hss_keygen(const iqr_Context *ctx, const iqr_RNG *rng
     fprintf(stdout, "Keys have been generated.\n");
 
     /* Get the size of the public key and export the buffer. */
-    ret = iqr_HSSGetPublicKeySize(pub, &pub_raw_size);
+    ret = iqr_HSSGetPublicKeySize(params, &pub_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSGetPublicKeySize(): %s\n", iqr_StrError(ret));
         goto end;
@@ -116,7 +110,7 @@ static iqr_retval showcase_hss_keygen(const iqr_Context *ctx, const iqr_RNG *rng
     fprintf(stdout, "Public Key has been exported.\n");
 
     /* Get the size of the private key and export the buffer. */
-    ret = iqr_HSSGetPrivateKeySize(priv, &priv_raw_size);
+    ret = iqr_HSSGetPrivateKeySize(params, &priv_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSGetPrivateKeySize(): %s\n", iqr_StrError(ret));
         goto end;
@@ -138,7 +132,7 @@ static iqr_retval showcase_hss_keygen(const iqr_Context *ctx, const iqr_RNG *rng
     fprintf(stdout, "Private Key has been exported.\n");
 
     /* Get the size of the state and export the buffer. */
-    ret = iqr_HSSGetStateSize(state, &state_raw_size);
+    ret = iqr_HSSGetStateSize(params, &state_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSGetStateSize(): %s\n", iqr_StrError(ret));
         goto end;
@@ -238,7 +232,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
-    /* This will allow us to give satisfactory randomness to the algorithm. */
+    /* This lets us give satisfactory randomness to the algorithm. */
     ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
@@ -266,93 +260,39 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-
-    fprintf(stdout, "hss_generate_keys [--pub <filename>] [--priv <filename>] [--winternitz 1|2|4|8]\n"
-                    "  [--height 5|10|15|20|25] [--strategy bds|full]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --pub pub.key\n");
-    fprintf(stdout, "        --priv priv.key\n");
-    fprintf(stdout, "        --state priv.state\n");
-    fprintf(stdout, "        --strategy full\n");
-    fprintf(stdout, "        --winternitz 4\n");
-    fprintf(stdout, "        --height 5\n");
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *pub, const char *priv, const char *state, iqr_HSSWinternitz w,
-    iqr_HSSHeight height, const iqr_HSSTreeStrategy *strategy)
+static void preamble(const char *cmd, const char *pub, const char *priv, const char *state, const iqr_HSSVariant *variant,
+    const iqr_HSSTreeStrategy *strategy)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
 
-    if (IQR_HSS_WINTERNITZ_1 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_1\n");
-    } else if (IQR_HSS_WINTERNITZ_2 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_2\n");
-    } else if (IQR_HSS_WINTERNITZ_4 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_4\n");
-    } else if (IQR_HSS_WINTERNITZ_8 == w) {
-        fprintf(stdout, "    winternitz value: IQR_HSS_WINTERNITZ_8\n");
+    if (variant == &IQR_HSS_2E30F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30F (fast)\n");
+    } else if (variant == &IQR_HSS_2E30S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30S (small)\n");
+    } else if (variant == &IQR_HSS_2E45F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45F (fast)\n");
+    } else if (variant == &IQR_HSS_2E45S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45S (small)\n");
+    } else if (variant == &IQR_HSS_2E65F) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65F (fast)\n");
+    } else if (variant == &IQR_HSS_2E65S) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65S (small)\n");
     } else {
-        fprintf(stdout, "    winternitz value: INVALID\n");
+        fprintf(stdout, "    Variant: INVALID\n");
     }
 
-    if (IQR_HSS_HEIGHT_5 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_5\n");
-    } else if (IQR_HSS_HEIGHT_10 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_10\n");
-    } else if (IQR_HSS_HEIGHT_15 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_15\n");
-    } else if (IQR_HSS_HEIGHT_20 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_20\n");
-    } else if (IQR_HSS_HEIGHT_25 == height) {
-        fprintf(stdout, "    height: IQR_HSS_HEIGHT_25\n");
-    } else {
-        fprintf(stdout, "    height: INVALID\n");
-    }
-
-    if (strategy == &IQR_HSS_FULL_STRATEGY) {
+    if (strategy == &IQR_HSS_FULL_TREE_STRATEGY) {
         fprintf(stdout, "    strategy: Full Tree\n");
-    } else if (strategy == &IQR_HSS_BDS_STRATEGY) {
-        fprintf(stdout, "    strategy: BDS\n");
+    } else if (strategy == &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY) {
+        fprintf(stdout, "    strategy: Memory Constrained\n");
+    } else if (strategy == &IQR_HSS_CPU_CONSTRAINED_STRATEGY) {
+        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
@@ -361,27 +301,13 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
     fprintf(stdout, "\n");
 }
 
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
-
 static iqr_retval parse_commandline(int argc, const char **argv, const char **pub, const char **priv, const char **state,
-    iqr_HSSWinternitz *w, iqr_HSSHeight *height, const iqr_HSSTreeStrategy **strategy)
+    const iqr_HSSVariant **variant, const iqr_HSSTreeStrategy **strategy)
 {
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -397,47 +323,35 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             /* [--state <filename>] */
             i++;
             *state = argv[i];
-        } else if (paramcmp(argv[i], "--winternitz") == 0) {
-            /* [--winternitz 1|2|4|8] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
-            if (paramcmp(argv[i], "1") == 0) {
-                *w = IQR_HSS_WINTERNITZ_1;
-            } else if  (paramcmp(argv[i], "2") == 0) {
-                *w = IQR_HSS_WINTERNITZ_2;
-            } else if  (paramcmp(argv[i], "4") == 0) {
-                *w = IQR_HSS_WINTERNITZ_4;
-            } else if  (paramcmp(argv[i], "8") == 0) {
-                *w = IQR_HSS_WINTERNITZ_8;
+            if (paramcmp(argv[i], "2e30s") == 0) {
+                *variant = &IQR_HSS_2E30S;
+            } else if (paramcmp(argv[i], "2e30f") == 0) {
+                *variant = &IQR_HSS_2E30F;
+            } else if (paramcmp(argv[i], "2e45s") == 0) {
+                *variant = &IQR_HSS_2E45S;
+            } else if (paramcmp(argv[i], "2e45f") == 0) {
+                *variant = &IQR_HSS_2E45F;
+            } else if (paramcmp(argv[i], "2e65s") == 0) {
+                *variant = &IQR_HSS_2E65S;
+            } else if (paramcmp(argv[i], "2e65f") == 0) {
+                *variant = &IQR_HSS_2E65F;
             } else {
-                usage();
-                return IQR_EBADVALUE;
-            }
-        } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 5|10|15|20] */
-            i++;
-            if (paramcmp(argv[i], "5") == 0) {
-                *height = IQR_HSS_HEIGHT_5;
-            } else if  (paramcmp(argv[i], "10") == 0) {
-                *height = IQR_HSS_HEIGHT_10;
-            } else if  (paramcmp(argv[i], "15") == 0) {
-                *height = IQR_HSS_HEIGHT_15;
-            } else if  (paramcmp(argv[i], "20") == 0) {
-                *height = IQR_HSS_HEIGHT_20;
-            } else if  (paramcmp(argv[i], "25") == 0) {
-                *height = IQR_HSS_HEIGHT_25;
-            } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy bds|full] */
+            /* [--strategy cpu|memory|full] */
             i++;
-            if (paramcmp(argv[i], "bds") == 0) {
-                *strategy = &IQR_HSS_BDS_STRATEGY;
+            if (paramcmp(argv[i], "cpu") == 0) {
+                *strategy = &IQR_HSS_CPU_CONSTRAINED_STRATEGY;
+            } else if (paramcmp(argv[i], "memory") == 0) {
+                *strategy = &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
-                *strategy = &IQR_HSS_FULL_STRATEGY;
+                *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         }
@@ -447,53 +361,19 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Secure memory wipe.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void secure_memzero(void *b, size_t len)
-{
-    /* You may need to substitute your platform's version of a secure memset()
-     * (one that won't be optimized out by the compiler). There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows
-     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
-     * explicit_bzero().
-     */
-#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
-    memset_s(b, len, 0, len);
-#elif defined(_WIN32) || defined(_WIN64)
-    SecureZeroMemory(b, len);
-#elif defined(__FreeBSD__)
-    explicit_bzero(b, len);
-#else
-    /* This fallback will not be optimized out, if the compiler has a conforming
-     * implementation of "volatile". It also won't take advantage of any faster
-     * intrinsics, so it may end up being slow.
-     *
-     * Implementation courtesy of this paper:
-     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
-     */
-    volatile unsigned char *ptr = b;
-    while (len--) {
-        *ptr++ = 0x00;
-    }
-#endif
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Executable entry point.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
     const char *pub = "pub.key";
     const char *priv = "priv.key";
     const char *state = "priv.state";
-    const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_STRATEGY;
-    iqr_HSSWinternitz w = IQR_HSS_WINTERNITZ_4;
-    iqr_HSSHeight h =  IQR_HSS_HEIGHT_5;
+    const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E30F;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
@@ -501,13 +381,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &pub, &priv, &state, &w, &h, &strategy);
+    iqr_retval ret = parse_commandline(argc, argv, &pub, &priv, &state, &variant, &strategy);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], pub, priv, state, w, h, strategy);
+    preamble(argv[0], pub, priv, state, variant, strategy);
 
     /* IQR initialization that is not specific to HSS. */
     ret = init_toolkit(&ctx, &rng);
@@ -517,7 +397,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of HSS key generation.
      */
-    ret = showcase_hss_keygen(ctx, rng, pub, priv, state, strategy, w, h);
+    ret = showcase_hss_keygen(ctx, rng, pub, priv, state, strategy, variant);
 
 cleanup:
     /* Clean up. */

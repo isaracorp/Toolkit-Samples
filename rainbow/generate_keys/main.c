@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's Rainbow signature scheme.
  *
- * @copyright Copyright 2017-2018 ISARA Corporation
+ * @copyright Copyright (C) 2017-2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,22 +20,8 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-// Declare memset_s() if the platform supports it.
-#if !defined(__ANDROID__)
-#define __STDC_WANT_LIB_EXT1__ 1
-#endif
 #include <string.h>
 #include <time.h>
-
-#if defined(_WIN32) || defined(_WIN64)
-// For SecureZeroMemory().
-#include <Windows.h>
-#endif
-
-#if defined(__FreeBSD__)
-// For explicit_bzero().
-#include <strings.h>
-#endif
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
@@ -43,13 +29,19 @@
 #include "iqr_retval.h"
 #include "iqr_rng.h"
 #include "iqr_watchdog.h"
+#include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Function Declarations
+// Document the command-line arguments.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
-static void secure_memzero(void *b, size_t len);
+static const char *usage_msg =
+"rainbow_generate_keys [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--pub <filename>]\n"
+"  [--priv <filename>]\n"
+"    Defaults are: \n"
+"        --security IIIb\n"
+"        --pub pub.key\n"
+"        --priv priv.key\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the generation of Rainbow public and private keys for
@@ -207,7 +199,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
-    /* This will allow us to give satisfactory randomness to the algorithm. */
+    /* This lets us give satisfactory randomness to the algorithm. */
     ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_384, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
@@ -235,48 +227,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Generic POSIX file stream I/O operations.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
-{
-    FILE *fp = fopen(fname, "wb");
-    if (fp == NULL) {
-        fprintf(stderr, "Failed to open %s: %s\n", fname, strerror(errno));
-        return IQR_EBADVALUE;
-    }
-
-    iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
-        fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
-        ret = IQR_EBADVALUE;
-        goto end;
-    }
-
-    fprintf(stdout, "Successfully saved %s (%zu bytes)\n", fname, data_size);
-
-end:
-    fclose(fp);
-    fp = NULL;
-    return ret;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
-// Tell the user about the command-line arguments.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void usage(void)
-{
-    fprintf(stdout, "rainbow_generate_keys [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--pub <filename>]\n"
-                    "  [--priv <filename>]\n");
-    fprintf(stdout, "    Defaults are: \n");
-    fprintf(stdout, "        --security IIIb\n");
-    fprintf(stdout, "        --pub pub.key\n");
-    fprintf(stdout, "        --priv priv.key\n");
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
@@ -301,27 +251,13 @@ static void preamble(const char *cmd, const iqr_RainbowVariant *variant, const c
     fprintf(stdout, "\n");
 }
 
-/* Tests if two parameters match.
- * Returns 0 if the two parameter match.
- * Non-zero otherwise.
- *
- * Parameters are expected to be less than 32 characters in length
- */
-static int paramcmp(const char *p1 , const char *p2) {
-    const size_t max_param_size = 32;  // Arbitrary, but reasonable.
-    if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {
-        return 1;
-    }
-    return strncmp(p1, p2, max_param_size);
-}
-
 static iqr_retval parse_commandline(int argc, const char **argv, const iqr_RainbowVariant **variant, const char **pub,
     const char **priv)
 {
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
-            usage();
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
 
@@ -341,7 +277,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
             } else if  (paramcmp(argv[i], "VIb") == 0) {
                 *variant = &IQR_RAINBOW_GF31_84_56_56;
             } else {
-                usage();
+                fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--pub") == 0) {
@@ -360,51 +296,17 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// Secure memory wipe.
-// ---------------------------------------------------------------------------------------------------------------------------------
-
-static void secure_memzero(void *b, size_t len)
-{
-    /* You may need to substitute your platform's version of a secure memset()
-     * (one that won't be optimized out by the compiler). There isn't a secure,
-     * portable memset() available before C11 which provides memset_s(). Windows
-     * provides SecureZeroMemory() for this purpose, and FreeBSD provides
-     * explicit_bzero().
-     */
-#if defined(__STDC_LIB_EXT1__) || (defined(__APPLE__) && defined(__MACH__))
-    memset_s(b, len, 0, len);
-#elif defined(_WIN32) || defined(_WIN64)
-    SecureZeroMemory(b, len);
-#elif defined(__FreeBSD__)
-    explicit_bzero(b, len);
-#else
-    /* This fallback will not be optimized out, if the compiler has a conforming
-     * implementation of "volatile". It also won't take advantage of any faster
-     * intrinsics, so it may end up being slow.
-     *
-     * Implementation courtesy of this paper:
-     * http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1381.pdf
-     */
-    volatile unsigned char *ptr = b;
-    while (len--) {
-        *ptr++ = 0x00;
-    }
-#endif
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------
 // Executable entry point.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage() message if you make changes
+    /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
+    const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF31_64_32_48;
     const char *pub = "pub.key";
     const char *priv = "priv.key";
-
-    const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF31_64_32_48;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;

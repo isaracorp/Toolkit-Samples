@@ -1,6 +1,4 @@
-# ISARA Radiate Security Solution Suite 1.5 Dilithium Samples
-ISARA Corporation <info@isara.com>
-v1.5 2018-09: Copyright (C) 2017-2018 ISARA Corporation, All Rights Reserved.
+# ISARA Radiate(TM) Crypto Suite 2.0 Dilithium Samples
 
 ## Introduction to Signature Schemes
 
@@ -43,178 +41,17 @@ Wonderland by Lewis Carroll. (It can be freely obtained from
 We downloaded the plaintext version and saved it as `message.dat` in the same
 directory that contained the compiled executables of the samples.
 
-Build the sample application:
+Build the sample application in a `build` directory:
 
 ```
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ .
+$ mkdir build
+$ cd build
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
 $ make
 ```
 
-Execute `dilithium_generate_keys` using default parameters.
-
-Execution and expected outputs:
-
-```
-$ ./dilithium_generate_keys
-Running ./dilithium_generate_keys with the following parameters...
-    security level: 128 bits
-    public key file: pub.key
-    private key file: priv.key
-
-Keys have been generated.
-Public Key has been exported.
-Private Key has been exported.
-Successfully saved pub.key (1472 bytes)
-Successfully saved priv.key (15896 bytes)
-Public and private keys have been saved to disk.
-```
-
-Execute `dilithium_sign` using default parameters.
-
-Execution and expected output:
-
-```
-$ ./dilithium_sign
-Running ./dilithium_sign with the following parameters...
-    security level: 128 bits
-    signature file: sig.dat
-    private key file: priv.key
-    message data file: message.dat
-
-Successfully loaded priv.key (15896 bytes)
-Private key has been imported.
-Successfully loaded message.dat (60422 bytes)
-Signature has been created.
-Successfully saved sig.dat (2701 bytes)
-Signature has been saved to disk.
-```
-
-Execute `dilithium_verify` using default parameters.
-
-Execution and expected output:
-
-```
-$ ./dilithium_verify
-Running ./dilithium_verify with the following parameters...
-    security level: 128 bits
-    signature file: sig.dat
-    public key file: pub.key
-    message data file: message.dat
-
-Successfully loaded pub.key (1472 bytes)
-Successfully loaded message.dat (60422 bytes)
-Successfully loaded sig.dat (2701 bytes)
-Public key has been loaded successfully!
-Dilithium verified the signature successfully!
-```
-
-## Sample Applications Usage Details
-
-### dilithium_generate_key
-
-Generates a new private key and public key and saves them to two separate
-files.
-
-Command line format:
-
-```
-dilithium_generate_keys [--security 128|160] [--pub <filename>]
-  [--priv <filename>]
-```
-
-Command line defaults:
-
-```
---security 128
---pub pub.key
---priv priv.key
-```
-
-Command line parameter descriptions:
-
-```
-[--security 128|160]
-The desired security level.
-
-[--pub <filename>]
-<filename> is the name of the file where the public key is to be saved.
-
-[--priv <filename>]
-<filename> is the name of the file where the private key is to be saved.
-```
-
-### dilithium_sign
-
-Creates the digest of a message, signs the digest and saves the signature to a
-file.
-
-Command line format:
-
-```
-dilithium_sign [--security 128|160] [--sig filename] [--priv <filename>]
-  [--message <filename>]
-```
-
-Command line defaults:
-
-```
---security 128
---sig sig.dat
---priv priv.key
---message message.dat
-```
-
-Command line parameter descriptions:
-
-```
-[--security 128|160]
-The desired security level.
-
-[--sig <filename>]
-<filename> is the name of the file where the signature is to be saved.
-
-[--priv <filename>]
-<filename> is the name of the file where the private key is stored.
-
-[--message <filename>]
-<filename> is the name of the file where the message is stored.
-```
-
-### dilithium_verify
-
-Creates the digest of a message and verifies the signature against the digest.
-
-Command line format:
-
-```
-dilithium_verify [--security 128|160] [--sig <filename>] [--pub <filename>]
-  [--message <filename>]
-```
-
-Command line defaults:
-
-```
---security 128
---sig sig.dat
---pub pub.key
---message message.dat
-```
-
-Command line parameter descriptions:
-
-```
-[--security 128|160]
-The desired security level.
-
-[--sig <filename>]
-<filename> is the name of the file where the signature is stored.
-
-[--pub <filename>]
-<filename> is the name of the file where the public key is stored.
-
-[--message <filename>]
-<filename> is the name of the file where the message is stored.
-```
+Execute the samples with no arguments to use the default parameters, or use
+`--help` to list the available options.
 
 ## Further Reading
 
@@ -224,7 +61,7 @@ The desired security level.
 
 See the `LICENSE` file for details:
 
-> Copyright 2017-2018 ISARA Corporation
+> Copyright (C) 2017-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -237,3 +74,7 @@ See the `LICENSE` file for details:
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 > See the License for the specific language governing permissions and
 > limitations under the License.
+
+### Trademarks
+
+ISARA Radiate(TM) is a trademark of ISARA Corporation.
