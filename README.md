@@ -8,18 +8,35 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
 * `aead_chacha20_poly1305` &mdash; Encrypt/decrypt using ChaCha20/Poly1305 for
   authenticated encryption.
 * `chacha20` &mdash; Encrypt/decrypt using ChaCha20.
+* `classicmceliece` &mdash; Generate keys, encapsulate and decapsulate data
+  using the Classic McEliece KEM.
 * `dilithium` &mdash; Generate Dilithium keys, sign a file's data with a
   Dilithium key, and verify a Dilithium signature.
+* `frododh` &mdash; Agree on a shared secret using Frodo, a relative of the
+  NewHope scheme.
+* `frodokem` &mdsh; Generate keys, encapsulate and decapsulate data using
+  FrodoKEM.
 * `hash` &mdash; Hash a file's data using SHA2-256, SHA2-384, SHA2-512,
   SHA3-256, or SHA3-512.
 * `hmac` &mdash; Get the HMAC tag for a file's data using any of the available
   hash algorithms.
 * `hss` &mdash; Generate keys, sign a file's data, detach signatures from a
   private key's state, and verify a signature using the HSS algorithm.
+* `kdf_concatenation`, `kdf_pbkdf2`, and `kdf_rfc5869` &mdash; Derive a key
+  (some pseudorandom data) using the specified key derivation function.
+* `kyber` &mdash; Generate keys, encapsulate and decapsulate data using
+  Kyber.
+* `newhopedh` &mdash; Agree on a shared secret using the NewHopeDH scheme.
+* `ntruprime` &mdash; Generate keys, encapsulate and decapsulate data
+  using NTRUPrime.
 * `poly1305` &mdash; Get the Poly1305 tag for a file's data.
 * `rainbow` &mdash; Generate keys, sign a file's data, and verify a signature
   using the Rainbow algorithm.
 * `rng` &mdash; Generate pseudorandom bytes using HMAC-DRBG.
+* `sidh` &mdash; Agree on a shared secret using Supersingular Isogeny
+  Diffie-Hellman.
+* `sike` &mdash; Generate keys, encapsulate and decapsulate data using
+  Supersingular Isogeny Key Encapsulation.
 * `sphincs` &mdash; Generate keys, sign a file's data, and verify a signature
   using the SPHINCS+ algorithm.
 * `version` &mdash; Display the library's version information.
@@ -92,13 +109,13 @@ document.
 See the `LICENSE` file for details:
 
 > Copyright (C) 2016-2019, ISARA Corporation
-> 
+>
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
 > You may obtain a copy of the License at
-> 
+>
 > http://www.apache.org/licenses/LICENSE-2.0
-> 
+>
 > Unless required by applicable law or agreed to in writing, software
 > distributed under the License is distributed on an "AS IS" BASIS,
 > WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
