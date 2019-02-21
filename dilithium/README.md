@@ -1,4 +1,4 @@
-# ISARA Radiate(TM) Crypto Suite 2.0 Dilithium Samples
+# ISARA Radiate™ Quantum-safe Toolkit 2.0 Dilithium Samples
 
 ## Introduction to Signature Schemes
 
@@ -61,7 +61,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright (C) 2017-2019, ISARA Corporation
+> Copyright © 2017-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -77,4 +77,4 @@ See the `LICENSE` file for details:
 
 ### Trademarks
 
-ISARA Radiate(TM) is a trademark of ISARA Corporation.
+ISARA Radiate™ is a trademark of ISARA Corporation.

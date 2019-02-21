@@ -1,4 +1,4 @@
-# ISARA Radiate(TM) Crypto Suite 2.0 HMAC Sample
+# ISARA Radiate™ Quantum-safe Toolkit 2.0 HMAC Sample
 
 ## Introduction to Message Authentication Codes
 
@@ -49,7 +49,7 @@ Execute `hmac` with a single input file to MAC, using default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright (C) 2016-2019, ISARA Corporation
+> Copyright © 2016-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -65,4 +65,4 @@ See the `LICENSE` file for details:
 
 ### Trademarks
 
-ISARA Radiate(TM) is a trademark of ISARA Corporation.
+ISARA Radiate™ is a trademark of ISARA Corporation.

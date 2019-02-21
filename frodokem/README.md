@@ -1,6 +1,6 @@
-# ISARA Radiate(TM) Crypto Suite 2.0 FrodoKEM Samples
+# ISARA Radiate™ Quantum-safe Toolkit 2.0 FrodoKEM Samples
 ISARA Corporation <info@isara.com>
-v1.6 2018-12: Copyright (C) 2016-2019, ISARA Corporation, All Rights Reserved.
+v1.6 2018-12: Copyright © 2016-2019, ISARA Corporation, All Rights Reserved.
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -58,7 +58,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright (C) 2016-2019, ISARA Corporation
+> Copyright © 2016-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -74,4 +74,4 @@ See the `LICENSE` file for details:
 
 ### Trademarks
 
-ISARA Radiate(TM) is a trademark of ISARA Corporation.
+ISARA Radiate™ is a trademark of ISARA Corporation.

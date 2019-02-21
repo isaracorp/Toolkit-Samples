@@ -1,4 +1,4 @@
-# ISARA Radiate(TM) Crypto Suite 2.0 XMSS^MT^ Samples
+# ISARA Radiate™ Quantum-safe Toolkit 2.0 XMSS<sup>MT</sup> Samples
 
 ## Introduction to Signature Schemes
 
@@ -17,7 +17,7 @@ Generally speaking, keys only need to be generated once, an unlimited number
 of messages can be signed, and each message and signature can be verified
 an unlimited number of times.
 
-### How XMSS^MT^ Differs from the General Case
+### How XMSS<sup>MT</sup> Differs from the General Case
 
 1.  The signer generates a public and private key pair. The private key's
     state is also initialized.
@@ -34,7 +34,7 @@ In step 4, the private key state must be saved due to its dynamic nature.  If
 the signer does not save it after signing, the signer risks using the one time
 signature data multiple times which would destroy the security of the scheme.
 
-For XMSS^MT^, keys only need to be generated once, however, only a limited
+For XMSS<sup>MT</sup>, keys only need to be generated once, however, only a limited
 number of messages may be signed depending on the variant that
 is chosen by the signer during key generation. This variant
 also affects private key size and signature size. Each message and signature
@@ -46,7 +46,7 @@ specification that is referred to in `iqr_xmssmt.h`.
 ## Sample Applications
 
 We have created small sample applications that demonstrate how to use the
-toolkit's XMSS^MT^ implementation:
+toolkit's XMSS<sup>MT</sup> implementation:
 
 * `xmssmt_generate_keys` takes care of step 1.
 * `xmssmt_sign` takes care of step 3.
@@ -90,7 +90,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright (C) 2017-2019, ISARA Corporation
+> Copyright © 2017-2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
@@ -106,4 +106,4 @@ See the `LICENSE` file for details:
 
 ### Trademarks
 
-ISARA Radiate(TM) is a trademark of ISARA Corporation.
+ISARA Radiate™ is a trademark of ISARA Corporation.
