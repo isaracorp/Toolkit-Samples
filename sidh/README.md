@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 SIDH Sample
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 SIDH Sample
 
 ## Introduction to Key Establishment Schemes
 

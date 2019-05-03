@@ -38,13 +38,13 @@
 static const char *usage_msg =
 "xmssmt_generate_keys [--pub <filename>] [--priv <filename>]"
 "  [--state <filename>]\n"
-"  [--variant 20_2|20_4|40_2|40_4|40_8|60_3|60_6|60_12]\n"
+"  [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d]\n"
 "  [--strategy cpu|memory|full]\n"
 "    Defaults are: \n"
 "        --pub pub.key\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
-"        --variant 20_4\n"
+"        --variant 2e20_4d\n"
 "        --strategy full\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -272,22 +272,22 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
 
-    if (&IQR_XMSSMT_20_2 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_20_2\n");
-    } else if (&IQR_XMSSMT_20_4 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_20_4\n");
-    } else if (&IQR_XMSSMT_40_2 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_40_2\n");
-    } else if (&IQR_XMSSMT_40_4 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_40_4\n");
-    } else if (&IQR_XMSSMT_40_8 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_40_8\n");
-    } else if (&IQR_XMSSMT_60_3 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_60_3\n");
-    } else if (&IQR_XMSSMT_60_6 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_60_6\n");
-    } else if (&IQR_XMSSMT_60_12 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSSMT_60_12\n");
+    if (&IQR_XMSSMT_2E20_2D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E20_2D\n");
+    } else if (&IQR_XMSSMT_2E20_4D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E20_4D\n");
+    } else if (&IQR_XMSSMT_2E40_2D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E40_2D\n");
+    } else if (&IQR_XMSSMT_2E40_4D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E40_4D\n");
+    } else if (&IQR_XMSSMT_2E40_8D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E40_8D\n");
+    } else if (&IQR_XMSSMT_2E60_3D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E60_3D\n");
+    } else if (&IQR_XMSSMT_2E60_6D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E60_6D\n");
+    } else if (&IQR_XMSSMT_2E60_12D == variant) {
+        fprintf(stdout, "    variant: IQR_XMSSMT_2E60_12D\n");
     } else {
         fprintf(stdout, "    variant: INVALID\n");
     }
@@ -328,24 +328,24 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             i++;
             *state = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant 20_2|20_4|40_2|40_4|40_8|60_3|60_6|60_12] */
+            /* [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d] */
             i++;
-            if  (paramcmp(argv[i], "20_2") == 0) {
-                *variant = &IQR_XMSSMT_20_2;
-            } else if  (paramcmp(argv[i], "20_4") == 0) {
-                *variant = &IQR_XMSSMT_20_4;
-            } else if  (paramcmp(argv[i], "40_2") == 0) {
-                *variant = &IQR_XMSSMT_40_2;
-            } else if  (paramcmp(argv[i], "40_4") == 0) {
-                *variant = &IQR_XMSSMT_40_4;
-            } else if  (paramcmp(argv[i], "40_8") == 0) {
-                *variant = &IQR_XMSSMT_40_8;
-            } else if  (paramcmp(argv[i], "60_3") == 0) {
-                *variant = &IQR_XMSSMT_60_3;
-            } else if  (paramcmp(argv[i], "60_6") == 0) {
-                *variant = &IQR_XMSSMT_60_6;
-            } else if  (paramcmp(argv[i], "60_12") == 0) {
-                *variant = &IQR_XMSSMT_60_12;
+            if  (paramcmp(argv[i], "2e20_2d") == 0) {
+                *variant = &IQR_XMSSMT_2E20_2D;
+            } else if  (paramcmp(argv[i], "2e20_4d") == 0) {
+                *variant = &IQR_XMSSMT_2E20_4D;
+            } else if  (paramcmp(argv[i], "2e40_2d") == 0) {
+                *variant = &IQR_XMSSMT_2E40_2D;
+            } else if  (paramcmp(argv[i], "2e40_4d") == 0) {
+                *variant = &IQR_XMSSMT_2E40_4D;
+            } else if  (paramcmp(argv[i], "2e40_8d") == 0) {
+                *variant = &IQR_XMSSMT_2E40_8D;
+            } else if  (paramcmp(argv[i], "2e60_3d") == 0) {
+                *variant = &IQR_XMSSMT_2E60_3D;
+            } else if  (paramcmp(argv[i], "2e60_6d") == 0) {
+                *variant = &IQR_XMSSMT_2E60_6D;
+            } else if  (paramcmp(argv[i], "2e60_12d") == 0) {
+                *variant = &IQR_XMSSMT_2E60_12D;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -384,7 +384,7 @@ int main(int argc, const char **argv)
     const char *priv = "priv.key";
     const char *state = "priv.state";
     const iqr_XMSSMTTreeStrategy *strategy = &IQR_XMSSMT_FULL_TREE_STRATEGY;
-    const iqr_XMSSMTVariant *variant = &IQR_XMSSMT_20_4;
+    const iqr_XMSSMTVariant *variant = &IQR_XMSSMT_2E20_4D;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;

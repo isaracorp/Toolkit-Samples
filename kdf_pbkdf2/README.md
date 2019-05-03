@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 RFC 2898 PBKDF2 Sample
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 RFC 2898 PBKDF2 Sample
 
 ## Introduction to Key Derivation Functions
 

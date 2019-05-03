@@ -33,12 +33,12 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"xmss_verify [--sig <filename>] [--pub <filename>] [--height 10|16|20]\n"
+"xmss_verify [--sig <filename>] [--pub <filename>] [--variant 10|16|20]\n"
 "  [--message <filename>]\n"
 "    Defaults are: \n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
-"        --height 10\n"
+"        --variant 10\n"
 "        --message message.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ static const char *usage_msg =
 // digest.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_xmss_verify(const iqr_Context *ctx, const iqr_XMSSHeight height, const uint8_t *digest,
+static iqr_retval showcase_xmss_verify(const iqr_Context *ctx, const iqr_XMSSVariant *variant, const uint8_t *digest,
     const char *pub_file, const char *sig_file)
 {
     iqr_XMSSParams *params = NULL;
@@ -59,7 +59,7 @@ static iqr_retval showcase_xmss_verify(const iqr_Context *ctx, const iqr_XMSSHei
     uint8_t *sig = NULL;
 
     /* The tree strategy chosen will have no effect on verification. */
-    iqr_retval ret = iqr_XMSSCreateParams(ctx, &IQR_XMSS_VERIFY_ONLY_STRATEGY, height, &params);
+    iqr_retval ret = iqr_XMSSCreateParams(ctx, &IQR_XMSS_VERIFY_ONLY_STRATEGY, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -202,21 +202,21 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSHeight height,
+static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSVariant *variant,
     const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
 
-    if (IQR_XMSS_HEIGHT_10 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_10\n");
-    } else if (IQR_XMSS_HEIGHT_16 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_16\n");
-    } else if (IQR_XMSS_HEIGHT_20 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_20\n");
+    if (&IQR_XMSS_2E10 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
+    } else if (&IQR_XMSS_2E16 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
+    } else if (&IQR_XMSS_2E20 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
-        fprintf(stdout, "    height: INVALID\n");
+        fprintf(stdout, "    variant: INVALID\n");
     }
 
     fprintf(stdout, "    message data file: %s\n", message);
@@ -224,7 +224,7 @@ static void preamble(const char *cmd, const char *sig, const char *pub, const iq
 }
 
 static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **pub,
-    iqr_XMSSHeight *height, const char **message)
+    const iqr_XMSSVariant **variant, const char **message)
 {
     int i = 1;
     while (i != argc) {
@@ -241,15 +241,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             /* [--pub <filename>] */
             i++;
             *pub = argv[i];
-        } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 10|16|20] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 10|16|20] */
             i++;
             if (paramcmp(argv[i], "10") == 0) {
-                *height = IQR_XMSS_HEIGHT_10;
+                *variant = &IQR_XMSS_2E10;
             } else if  (paramcmp(argv[i], "16") == 0) {
-                *height = IQR_XMSS_HEIGHT_16;
+                *variant = &IQR_XMSS_2E16;
             } else if  (paramcmp(argv[i], "20") == 0) {
-                *height = IQR_XMSS_HEIGHT_20;
+                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -276,7 +276,7 @@ int main(int argc, const char **argv)
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
-    iqr_XMSSHeight height =  IQR_XMSS_HEIGHT_10;
+    const iqr_XMSSVariant *variant = &IQR_XMSS_2E10;
 
     iqr_Context *ctx = NULL;
     uint8_t *digest = NULL;
@@ -284,13 +284,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &sig, &pub, &height, &message);
+    iqr_retval ret = parse_commandline(argc, argv, &sig, &pub, &variant, &message);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], sig, pub, height, message);
+    preamble(argv[0], sig, pub, variant, message);
 
     /* IQR initialization that is not specific to XMSS. */
     ret = init_toolkit(&ctx, message, &digest);
@@ -300,7 +300,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of XMSS signature verification.
      */
-    ret = showcase_xmss_verify(ctx, height, digest, pub, sig);
+    ret = showcase_xmss_verify(ctx, variant, digest, pub, sig);
 
 cleanup:
     iqr_DestroyContext(&ctx);

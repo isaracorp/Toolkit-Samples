@@ -37,12 +37,12 @@
 
 static const char *usage_msg =
 "xmss_generate_keys [--pub <filename>] [--priv <filename>] [--state <filename>]\n"
-"  [--height 10|16|20] [--strategy cpu|memory|full]\n"
+"  [--variant 10|16|20] [--strategy cpu|memory|full]\n"
 "    Defaults are: \n"
 "        --pub pub.key\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
-"        --height 10\n"
+"        --variant 10\n"
 "        --strategy full\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ static const char *usage_msg =
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rng, const char *pub_file, const char *priv_file,
-    const char *state_file, const iqr_XMSSTreeStrategy *strategy, const iqr_XMSSHeight height)
+    const char *state_file, const iqr_XMSSTreeStrategy *strategy, const iqr_XMSSVariant *variant)
 {
     iqr_XMSSParams *params = NULL;
     iqr_XMSSPrivateKey *priv = NULL;
@@ -71,7 +71,7 @@ static iqr_retval showcase_xmss_keygen(const iqr_Context *ctx, const iqr_RNG *rn
     size_t state_raw_size = 0;
     uint8_t *state_raw = NULL;
 
-    iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, height, &params);
+    iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -196,7 +196,7 @@ end:
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // Provides a cheap progress indicator for key generation, which is a long-
-// running task for large XMSS tree heights.
+// running task for large XMSS tree variants.
 static iqr_retval progress_watchdog(void *watchdog_data)
 {
     (void)watchdog_data;  // Not used.
@@ -262,7 +262,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *pub, const char *priv, const char *state, const iqr_XMSSHeight height,
+static void preamble(const char *cmd, const char *pub, const char *priv, const char *state, const iqr_XMSSVariant *variant,
     const iqr_XMSSTreeStrategy *strategy)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
@@ -270,14 +270,14 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
 
-    if (IQR_XMSS_HEIGHT_10 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_10\n");
-    } else if (IQR_XMSS_HEIGHT_16 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_16\n");
-    } else if (IQR_XMSS_HEIGHT_20 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_20\n");
+    if (&IQR_XMSS_2E10 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
+    } else if (&IQR_XMSS_2E16 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
+    } else if (&IQR_XMSS_2E20 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
-        fprintf(stdout, "    height: INVALID\n");
+        fprintf(stdout, "    variant: INVALID\n");
     }
 
     if (strategy == &IQR_XMSS_FULL_TREE_STRATEGY) {
@@ -294,7 +294,7 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
 }
 
 static iqr_retval parse_commandline(int argc, const char **argv, const char **pub, const char **priv, const char **state,
-    iqr_XMSSHeight *height, const iqr_XMSSTreeStrategy **strategy)
+    const iqr_XMSSVariant **variant, const iqr_XMSSTreeStrategy **strategy)
 {
     int i = 1;
     while (i != argc) {
@@ -315,15 +315,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             /* [--state <filename>] */
             i++;
             *state = argv[i];
-        } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 10|16|20] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 10|16|20] */
             i++;
             if (paramcmp(argv[i], "10") == 0) {
-                *height = IQR_XMSS_HEIGHT_10;
+                *variant = &IQR_XMSS_2E10;
             } else if  (paramcmp(argv[i], "16") == 0) {
-                *height = IQR_XMSS_HEIGHT_16;
+                *variant = &IQR_XMSS_2E16;
             } else if  (paramcmp(argv[i], "20") == 0) {
-                *height = IQR_XMSS_HEIGHT_20;
+                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -361,7 +361,7 @@ int main(int argc, const char **argv)
     const char *priv = "priv.key";
     const char *state = "priv.state";
     const iqr_XMSSTreeStrategy *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
-    iqr_XMSSHeight height =  IQR_XMSS_HEIGHT_10;
+    const iqr_XMSSVariant *variant =  &IQR_XMSS_2E10;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
@@ -369,13 +369,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &pub, &priv, &state, &height, &strategy);
+    iqr_retval ret = parse_commandline(argc, argv, &pub, &priv, &state, &variant, &strategy);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], pub, priv, state, height, strategy);
+    preamble(argv[0], pub, priv, state, variant, strategy);
 
     /* IQR initialization that is not specific to XMSS. */
     ret = init_toolkit(&ctx, &rng);
@@ -385,7 +385,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of XMSS key generation.
      */
-    ret = showcase_xmss_keygen(ctx, rng, pub, priv, state, strategy, height);
+    ret = showcase_xmss_keygen(ctx, rng, pub, priv, state, strategy, variant);
 
 cleanup:
     /* Clean up. */

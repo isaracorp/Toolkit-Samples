@@ -47,6 +47,7 @@ set (
     hss/generate_keys
     hss/sign
     hss/verify
+    hss/verify_from_sig
     kdf_concatenation
     kdf_pbkdf2
     kdf_rfc5869
@@ -74,10 +75,12 @@ set (
     xmss/generate_keys
     xmss/sign
     xmss/verify
+    xmss/verify_from_public
     xmssmt/detach
     xmssmt/generate_keys
     xmssmt/sign
     xmssmt/verify
+    xmssmt/verify_from_public
 )
 
 foreach(sample ${samples})

@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,13 +38,13 @@
 
 static const char *usage_msg =
 "xmss_detach [--priv <filename>] [--state <filename>]\n"
-"    [--detached-state <filename>] [--num-sigs <number>] [--height 10|16|20]\n"
+"    [--detached-state <filename>] [--num-sigs <number>] [--variant 10|16|20]\n"
 "    [--strategy cpu|memory|full]\n"
 "    Defaults are: \n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
 "        --strategy full\n"
-"        --height 10\n"
+"        --variant 10\n"
 "        --detached-state detached.state\n"
 "        --num-sigs 1\n";
 
@@ -51,7 +52,7 @@ static const char *usage_msg =
 // This function showcases state detachment using the XMSS signature scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_xmss_detach(const iqr_Context *ctx, iqr_XMSSHeight height, const iqr_XMSSTreeStrategy *strategy,
+static iqr_retval showcase_xmss_detach(const iqr_Context *ctx, const iqr_XMSSVariant *variant, const iqr_XMSSTreeStrategy *strategy,
     const char *priv_file, const char *state_file, uint32_t num_signatures, const char *detached_state_file)
 {
     iqr_XMSSParams *params = NULL;
@@ -68,11 +69,10 @@ static iqr_retval showcase_xmss_detach(const iqr_Context *ctx, iqr_XMSSHeight he
     size_t detached_state_raw_size = 0;
     uint8_t *detached_state_raw = NULL;
 
-    uint32_t max_sigs = 0;
-    uint32_t remaining_sigs = 0;
-    uint32_t detached_remaining_sigs = 0;
+    uint64_t remaining_sigs = 0;
+    uint64_t detached_remaining_sigs = 0;
 
-    iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, height, &params);
+    iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -112,20 +112,20 @@ static iqr_retval showcase_xmss_detach(const iqr_Context *ctx, iqr_XMSSHeight he
         goto end;
     }
 
-    ret = iqr_XMSSGetSignatureCount(state, &max_sigs, &remaining_sigs);
+    ret = iqr_XMSSGetSignatureCount(state, &remaining_sigs);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSGetSignatureCount() using the original state: %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    ret = iqr_XMSSGetSignatureCount(detached_state, &max_sigs, &detached_remaining_sigs);
+    ret = iqr_XMSSGetSignatureCount(detached_state, &detached_remaining_sigs);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSGetSignatureCount() using the detached state: %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    fprintf(stdout, "Original state has %u signatures remaining.\n", remaining_sigs);
-    fprintf(stdout, "Detached state has %u signatures remaining.\n", detached_remaining_sigs);
+    fprintf(stdout, "Original state has %" PRIu64 " signatures remaining.\n", remaining_sigs);
+    fprintf(stdout, "Detached state has %" PRIu64 " signatures remaining.\n", detached_remaining_sigs);
 
     /* Export the updated original state. */
     ret = iqr_XMSSExportState(state, state_raw, state_raw_size);
@@ -221,7 +221,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *priv, const char *state, iqr_XMSSHeight height,
+static void preamble(const char *cmd, const char *priv, const char *state, const iqr_XMSSVariant *variant,
     const iqr_XMSSTreeStrategy *strategy, uint32_t num_sigs, const char *detached_state)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
@@ -230,14 +230,14 @@ static void preamble(const char *cmd, const char *priv, const char *state, iqr_X
     fprintf(stdout, "    private key detached state file: %s\n", detached_state);
     fprintf(stdout, "    detaching %u signatures\n", num_sigs);
 
-    if (IQR_XMSS_HEIGHT_10 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_10\n");
-    } else if (IQR_XMSS_HEIGHT_16 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_16\n");
-    } else if (IQR_XMSS_HEIGHT_20 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_20\n");
+    if (&IQR_XMSS_2E10 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
+    } else if (&IQR_XMSS_2E16 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
+    } else if (&IQR_XMSS_2E20 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
-        fprintf(stdout, "    height: INVALID\n");
+        fprintf(stdout, "    variant: INVALID\n");
     }
 
     if (strategy == &IQR_XMSS_FULL_TREE_STRATEGY) {
@@ -253,8 +253,9 @@ static void preamble(const char *cmd, const char *priv, const char *state, iqr_X
     fprintf(stdout, "\n");
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, const char **priv, const char **state, iqr_XMSSHeight *height,
-    const iqr_XMSSTreeStrategy **strategy, uint32_t *num_signatures, const char **detached_state)
+static iqr_retval parse_commandline(int argc, const char **argv, const char **priv, const char **state,
+    const iqr_XMSSVariant **variant, const iqr_XMSSTreeStrategy **strategy, uint32_t *num_signatures,
+    const char **detached_state)
 {
     int i = 1;
     while (i != argc) {
@@ -275,15 +276,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
             /* [--detached-state <filename>] */
             i++;
             *detached_state = argv[i];
-        } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 10|16|20] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 10|16|20] */
             i++;
             if  (paramcmp(argv[i], "10") == 0) {
-                *height = IQR_XMSS_HEIGHT_10;
+                *variant = &IQR_XMSS_2E10;
             } else if  (paramcmp(argv[i], "16") == 0) {
-                *height = IQR_XMSS_HEIGHT_16;
+                *variant = &IQR_XMSS_2E16;
             } else if  (paramcmp(argv[i], "20") == 0) {
-                *height = IQR_XMSS_HEIGHT_20;
+                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -332,7 +333,7 @@ int main(int argc, const char **argv)
     const char *state = "priv.state";
     const char *detached_state = "detached.state";
     const iqr_XMSSTreeStrategy *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
-    iqr_XMSSHeight height = IQR_XMSS_HEIGHT_10;
+    const iqr_XMSSVariant *variant = &IQR_XMSS_2E10;
     uint32_t num_sigs = 1;
 
     iqr_Context *ctx = NULL;
@@ -340,13 +341,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &priv, &state, &height, &strategy, &num_sigs, &detached_state);
+    iqr_retval ret = parse_commandline(argc, argv, &priv, &state, &variant, &strategy, &num_sigs, &detached_state);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], priv, state, height, strategy, num_sigs, detached_state);
+    preamble(argv[0], priv, state, variant, strategy, num_sigs, detached_state);
 
     /* IQR initialization that is not specific to XMSS. */
     ret = init_toolkit(&ctx);
@@ -356,7 +357,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of XMSS signing.
      */
-    ret = showcase_xmss_detach(ctx, height, strategy, priv, state, num_sigs, detached_state);
+    ret = showcase_xmss_detach(ctx, variant, strategy, priv, state, num_sigs, detached_state);
 
 cleanup:
     iqr_DestroyContext(&ctx);

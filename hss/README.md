@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 HSS Samples
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 HSS Samples
 
 ## Introduction to Signature Schemes
 
@@ -57,8 +57,10 @@ toolkit's HSS implementation:
 done with the private key.  The rest of the steps are left up to the underlying
 system.
 
-There's also an `hss_detach` sample showing you how to detach parts of a
-private key so they can be distributed between processes.
+There's also an `hss_detach` sample showing you how to detach parts of a private
+key so they can be distributed between processes, and an `hss_verify_from_sig`
+sample showing you how to retrieve parameters from an existing signature for
+verification.
 
 Here is the simplest way to use the samples:
 

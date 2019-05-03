@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 NTRUPrime KEM Samples
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 NTRUPrime KEM Samples
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 

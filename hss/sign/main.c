@@ -37,9 +37,13 @@
 
 static const char *usage_msg =
 "hss_sign [--sig <filename>] [--priv <filename>] [--state <filename>]\n"
-"  [--variant 2e30f|2e45f|2e65f|2e30s|2e45s|2e65s] [--strategy cpu|memory|full]\n"
+"  [--variant 2e20f|2e25f|2e30f|2e45f|2e65f|2e20s|2e25s|2e30s|2e45s|2e65s]\n"
+"  [--strategy cpu|memory|full]\n"
 "  [--message <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"  The 'f' variants are Fast, the 's' variants are Small.\n"
+"\n"
+"  Defaults are: \n"
 "        --sig sig.dat\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
@@ -131,14 +135,21 @@ static iqr_retval showcase_hss_sign(const iqr_Context *ctx, const iqr_RNG *rng, 
      * prior to using the signature to avoid reusing one-time-signatures
      * if something goes wrong.
      */
-    ret = iqr_HSSExportState(state, state_raw, state_raw_size);
+    size_t export_state_size = 0;
+    ret = iqr_HSSGetStateSize(params, &export_state_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_HSSGetStateSize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    ret = iqr_HSSExportState(state, state_raw, export_state_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HSSExportState(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
     /* Save the updated state. */
-    ret = save_data(state_file, state_raw, state_raw_size);
+    ret = save_data(state_file, state_raw, export_state_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -305,18 +316,26 @@ static void preamble(const char *cmd, const char *sig, const char *priv, const c
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
 
-    if (variant == &IQR_HSS_2E30F) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30F (fast)\n");
-    } else if (variant == &IQR_HSS_2E30S) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30S (small)\n");
-    } else if (variant == &IQR_HSS_2E45F) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45F (fast)\n");
-    } else if (variant == &IQR_HSS_2E45S) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45S (small)\n");
-    } else if (variant == &IQR_HSS_2E65F) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65F (fast)\n");
-    } else if (variant == &IQR_HSS_2E65S) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65S (small)\n");
+    if (variant == &IQR_HSS_2E20_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E20_FAST\n");
+    } else if (variant == &IQR_HSS_2E20_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E20_SMALL\n");
+    } else if (variant == &IQR_HSS_2E25_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E25_FAST\n");
+    } else if (variant == &IQR_HSS_2E25_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E25_SMALL\n");
+    } else if (variant == &IQR_HSS_2E30_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30_FAST\n");
+    } else if (variant == &IQR_HSS_2E30_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30_SMALL\n");
+    } else if (variant == &IQR_HSS_2E45_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45_FAST\n");
+    } else if (variant == &IQR_HSS_2E45_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45_SMALL\n");
+    } else if (variant == &IQR_HSS_2E65_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65_FAST\n");
+    } else if (variant == &IQR_HSS_2E65_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65_SMALL\n");
     } else {
         fprintf(stdout, "    Variant: INVALID\n");
     }
@@ -359,18 +378,26 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             *state = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
-            if (paramcmp(argv[i], "2e30f") == 0) {
-                *variant = &IQR_HSS_2E30F;
+            if (paramcmp(argv[i], "2e20f") == 0) {
+                *variant = &IQR_HSS_2E20_FAST;
+            } else if (paramcmp(argv[i], "2e20s") == 0) {
+                *variant = &IQR_HSS_2E20_SMALL;
+            } else if (paramcmp(argv[i], "2e25f") == 0) {
+                *variant = &IQR_HSS_2E25_FAST;
+            } else if (paramcmp(argv[i], "2e25s") == 0) {
+                *variant = &IQR_HSS_2E25_SMALL;
+            } else if (paramcmp(argv[i], "2e30f") == 0) {
+                *variant = &IQR_HSS_2E30_FAST;
             } else if (paramcmp(argv[i], "2e30s") == 0) {
-                *variant = &IQR_HSS_2E30S;
+                *variant = &IQR_HSS_2E30_SMALL;
             } else if (paramcmp(argv[i], "2e45f") == 0) {
-                *variant = &IQR_HSS_2E45F;
+                *variant = &IQR_HSS_2E45_FAST;
             } else if (paramcmp(argv[i], "2e45s") == 0) {
-                *variant = &IQR_HSS_2E45S;
+                *variant = &IQR_HSS_2E45_SMALL;
             } else if (paramcmp(argv[i], "2e65f") == 0) {
-                *variant = &IQR_HSS_2E65F;
+                *variant = &IQR_HSS_2E65_FAST;
             } else if (paramcmp(argv[i], "2e65s") == 0) {
-                *variant = &IQR_HSS_2E65S;
+                *variant = &IQR_HSS_2E65_SMALL;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -413,7 +440,7 @@ int main(int argc, const char **argv)
     const char *state = "priv.state";
     const char *message = "message.dat";
     const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
-    const iqr_HSSVariant *variant = &IQR_HSS_2E30F;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E30_FAST;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;

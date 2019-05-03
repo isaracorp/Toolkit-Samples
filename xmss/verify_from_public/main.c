@@ -1,8 +1,9 @@
 /** @file main.c
  *
- * @brief Verify a signature using the toolkit's HSS signature scheme.
+ * @brief Get parameters from a public key, then verify using the toolkit's
+ * XMSS signature scheme.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +25,8 @@
 
 #include "iqr_context.h"
 #include "iqr_hash.h"
-#include "iqr_hss.h"
 #include "iqr_retval.h"
+#include "iqr_xmss.h"
 #include "isara_samples.h"
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -33,28 +34,23 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"hss_verify [--sig <filename>] [--pub <filename>]\n"
-"  [--variant 2e20f|2e25f|2e30f|2e45f|2e65f|2e20s|2e25s|2e30s|2e45s|2e65s]\n"
-"  [--message <filename>]\n"
-"\n"
-"  The 'f' variants are Fast, the 's' variants are Small.\n"
-"\n"
-"  Defaults are: \n"
+"xmss_verify_from_public [--sig <filename>] [--pub <filename>]\n"
+"    [--message <filename>]\n"
+"    Defaults are: \n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
-"        --variant 2e30f\n"
 "        --message message.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// This function showcases the verification of an HSS signature against a
-// digest.
+// This function showcases getting parameters from a public key, then verifying
+// an XMSS signature against a digest.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_hss_verify(const iqr_Context *ctx, const iqr_HSSVariant *variant, const uint8_t *digest,
-    const char *pub_file, const char *sig_file)
+static iqr_retval showcase_xmss_verify_from_public(const iqr_Context *ctx, const uint8_t *digest, const char *pub_file,
+    const char *sig_file)
 {
-    iqr_HSSParams *params = NULL;
-    iqr_HSSPublicKey *pub = NULL;
+    iqr_XMSSParams *params = NULL;
+    iqr_XMSSPublicKey *pub = NULL;
 
     size_t pub_raw_size = 0;
     uint8_t *pub_raw = NULL;
@@ -62,54 +58,58 @@ static iqr_retval showcase_hss_verify(const iqr_Context *ctx, const iqr_HSSVaria
     size_t sig_size = 0;
     uint8_t *sig = NULL;
 
-    /* The tree strategy chosen will have no effect on verification. */
-    iqr_retval ret = iqr_HSSCreateParams(ctx, &IQR_HSS_VERIFY_ONLY_STRATEGY, variant, &params);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_HSSCreateParams(): %s\n", iqr_StrError(ret));
-        goto end;
-    }
-
-    /* Load the public key and signature from disk. */
-    ret = load_data(pub_file, &pub_raw, &pub_raw_size);
+    /* Load the public key from disk. */
+    iqr_retval ret = load_data(pub_file, &pub_raw, &pub_raw_size);
     if (ret != IQR_OK) {
         goto end;
     }
 
-    ret = load_data(sig_file, &sig, &sig_size);
+    /* This will automatically use the VERIFY ONLY strategy. */
+    ret = iqr_XMSSCreateParamsFromPublicKeyBuffer(ctx, pub_raw, pub_raw_size, &params);
     if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_XMSSCreateParamsFromPublicKeyBuffer(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
     /* Import the public key data and create a public key object. */
-    ret = iqr_HSSImportPublicKey(params, pub_raw, pub_raw_size, &pub);
+    ret = iqr_XMSSImportPublicKey(params, pub_raw, pub_raw_size, &pub);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_HSSImportPublicKey(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_XMSSImportPublicKey(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
     fprintf(stdout, "Public key has been loaded successfully!\n");
 
-    ret = iqr_HSSVerify(pub, digest, IQR_SHA2_512_DIGEST_SIZE, sig, sig_size);
-    if (ret == IQR_OK) {
-        fprintf(stdout, "HSS verified the signature successfully!\n");
-    } else {
-        fprintf(stderr, "Failed on iqr_HSSVerify(): %s\n", iqr_StrError(ret));
+    /* Load the signature from disk. */
+    ret = load_data(sig_file, &sig, &sig_size);
+    if (ret != IQR_OK) {
+        goto end;
     }
 
-    iqr_HSSDestroyPublicKey(&pub);
+    /* Sign and verify require a 64-byte message. Here, SHA2-512 is used because
+     * it produces a 64-byte digest (any 64-byte digest will work).
+     */
+    ret = iqr_XMSSVerify(pub, digest, IQR_SHA2_512_DIGEST_SIZE, sig, sig_size);
+    if (ret == IQR_OK) {
+        fprintf(stdout, "XMSS verified the signature successfully!\n");
+    } else {
+        fprintf(stderr, "Failed on iqr_XMSSVerify(): %s\n", iqr_StrError(ret));
+    }
 
 end:
+    iqr_XMSSDestroyPublicKey(&pub);
+
     free(pub_raw);
     free(sig);
 
-    iqr_HSSDestroyParams(&params);
+    iqr_XMSSDestroyParams(&params);
 
     return ret;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This next section of code is related to the toolkit, but is not specific to
-// HSS.
+// XMSS.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -125,8 +125,8 @@ static iqr_retval create_digest(const iqr_Context *ctx, uint8_t *data, size_t da
         return ret;
     }
 
-    /* The HSS scheme will sign a digest of the message, so we need a digest
-     * of our message.  This will give us that digest.
+    /* XMSS will sign a digest of the message, so we need a digest of our
+     * message. This will give us that digest.
      */
     ret = iqr_HashMessage(hash, data, data_size, out_digest, IQR_SHA2_512_DIGEST_SIZE);
     if (ret != IQR_OK) {
@@ -136,6 +136,7 @@ static iqr_retval create_digest(const iqr_Context *ctx, uint8_t *data, size_t da
     }
 
     iqr_HashDestroy(&hash);
+
     return IQR_OK;
 }
 
@@ -158,7 +159,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
         return ret;
     }
 
-    /* SHA2-512 is used on the message before signing in the hss_sign sample. */
+    /* SHA2-512 produces a 64-byte digest, which is required by iqr_XMSSVerify.
+     */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -201,43 +203,16 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_HSSVariant *variant,
-    const char *message)
+static void preamble(const char *cmd, const char *sig, const char *pub, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
-
-    if (variant == &IQR_HSS_2E20_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E20_FAST\n");
-    } else if (variant == &IQR_HSS_2E20_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E20_SMALL\n");
-    } else if (variant == &IQR_HSS_2E25_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E25_FAST\n");
-    } else if (variant == &IQR_HSS_2E25_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E25_SMALL\n");
-    } else if (variant == &IQR_HSS_2E30_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_FAST\n");
-    } else if (variant == &IQR_HSS_2E30_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_SMALL\n");
-    } else if (variant == &IQR_HSS_2E45_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_FAST\n");
-    } else if (variant == &IQR_HSS_2E45_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_SMALL\n");
-    } else if (variant == &IQR_HSS_2E65_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_FAST\n");
-    } else if (variant == &IQR_HSS_2E65_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_SMALL\n");
-    } else {
-        fprintf(stdout, "    Variant: INVALID\n");
-    }
-
     fprintf(stdout, "    message data file: %s\n", message);
     fprintf(stdout, "\n");
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **pub, const iqr_HSSVariant **variant,
-    const char **message)
+static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **pub, const char **message)
 {
     int i = 1;
     while (i != argc) {
@@ -254,40 +229,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             /* [--pub <filename>] */
             i++;
             *pub = argv[i];
-        } else if (paramcmp(argv[i], "--variant") == 0) {
-            i++;
-            if (paramcmp(argv[i], "2e20f") == 0) {
-                *variant = &IQR_HSS_2E20_FAST;
-            } else if (paramcmp(argv[i], "2e20s") == 0) {
-                *variant = &IQR_HSS_2E20_SMALL;
-            } else if (paramcmp(argv[i], "2e25f") == 0) {
-                *variant = &IQR_HSS_2E25_FAST;
-            } else if (paramcmp(argv[i], "2e25s") == 0) {
-                *variant = &IQR_HSS_2E25_SMALL;
-            } else if (paramcmp(argv[i], "2e30f") == 0) {
-                *variant = &IQR_HSS_2E30_FAST;
-            } else if (paramcmp(argv[i], "2e30s") == 0) {
-                *variant = &IQR_HSS_2E30_SMALL;
-            } else if (paramcmp(argv[i], "2e45f") == 0) {
-                *variant = &IQR_HSS_2E45_FAST;
-            } else if (paramcmp(argv[i], "2e45s") == 0) {
-                *variant = &IQR_HSS_2E45_SMALL;
-            } else if (paramcmp(argv[i], "2e65f") == 0) {
-                *variant = &IQR_HSS_2E65_FAST;
-            } else if (paramcmp(argv[i], "2e65s") == 0) {
-                *variant = &IQR_HSS_2E65_SMALL;
-            } else {
-                fprintf(stdout, "%s", usage_msg);
-                return IQR_EBADVALUE;
-            }
         } else if (paramcmp(argv[i], "--message") == 0) {
            /* [--message <filename>] */
            i++;
            *message = argv[i];
         }
-
         i++;
     }
+
     return IQR_OK;
 }
 
@@ -302,7 +251,6 @@ int main(int argc, const char **argv)
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
-    const iqr_HSSVariant *variant = &IQR_HSS_2E30_FAST;
 
     iqr_Context *ctx = NULL;
     uint8_t *digest = NULL;
@@ -310,23 +258,23 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &sig, &pub, &variant, &message);
+    iqr_retval ret = parse_commandline(argc, argv, &sig, &pub, &message);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], sig, pub, variant, message);
+    preamble(argv[0], sig, pub, message);
 
-    /* IQR initialization that is not specific to HSS. */
+    /* IQR initialization that is not specific to XMSS. */
     ret = init_toolkit(&ctx, message, &digest);
     if (ret != IQR_OK) {
         goto cleanup;
     }
 
-    /* This function showcases the usage of HSS signature verification.
+    /* This function showcases the usage of XMSS signature verification.
      */
-    ret = showcase_hss_verify(ctx, variant, digest, pub, sig);
+    ret = showcase_xmss_verify_from_public(ctx, digest, pub, sig);
 
 cleanup:
     iqr_DestroyContext(&ctx);

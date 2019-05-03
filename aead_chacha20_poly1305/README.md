@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 ChaCha20/Poly1305 Sample
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 ChaCha20/Poly1305 Sample
 
 ## Introduction to Message Authentication Codes
 

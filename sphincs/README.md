@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 SPHINCS+ Samples
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 SPHINCS+ Samples
 
 ## Introduction to Signature Schemes
 

@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 RNG Sample
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 RNG Sample
 
 ## Introduction to Random Number Generation
 

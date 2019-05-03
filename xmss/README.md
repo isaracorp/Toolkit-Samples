@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 XMSS Samples
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 XMSS Samples
 
 ## Introduction to Signature Schemes
 
@@ -57,7 +57,9 @@ done with the private key.  The rest of the steps are left up to the underlying
 system.
 
 There's also an `xmss_detach` sample showing you how to detach parts of a
-private key so they can be distributed between processes.
+private key so they can be distributed between processes, and an
+`xmss_verify_from_public` sample showing you how to retrieve parameters from an
+existing public key for verification.
 
 Here is the simplest way to use the samples:
 

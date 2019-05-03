@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,12 +37,12 @@
 
 static const char *usage_msg =
 "xmss_sign [--sig filename] [--priv <filename>] [--state <filename>]\n"
-"  [--height 10|16|20] [--strategy cpu|memory|full] [--message <filename>]\n"
+"  [--variant 10|16|20] [--strategy cpu|memory|full] [--message <filename>]\n"
 "    Defaults are: \n"
 "        --sig sig.dat\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
-"        --height 10\n"
+"        --variant 10\n"
 "        --strategy full\n"
 "        --message message.dat\n";
 
@@ -49,7 +50,7 @@ static const char *usage_msg =
 // This function showcases signing of a digest using the XMSS signature scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng, const iqr_XMSSHeight height,
+static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng, const iqr_XMSSVariant *variant,
     const iqr_XMSSTreeStrategy *strategy, const uint8_t *digest, const char *priv_file, const char *state_file,
     const char *sig_file)
 {
@@ -66,10 +67,9 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
     size_t state_raw_size = 0;
     uint8_t *state_raw = NULL;
 
-    uint32_t max_sigs = 0;
-    uint32_t remaining_sigs = 0;
+    uint64_t remaining_sigs = 0;
 
-    iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, height, &params);
+    iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSCreateParams(): %s\n", iqr_StrError(ret));
         goto end;
@@ -103,14 +103,13 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
 
     fprintf(stdout, "Private key state has been imported.\n");
 
-    ret = iqr_XMSSGetSignatureCount(state, &max_sigs, &remaining_sigs);
+    ret = iqr_XMSSGetSignatureCount(state, &remaining_sigs);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSGetSignatureCount(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    fprintf(stdout, "Number of signatures for this private key: %u.\n", max_sigs);
-    fprintf(stdout, "Number of remaining signatures for this private key: %u\n", remaining_sigs);
+    fprintf(stdout, "Number of remaining signatures for this private key: %" PRIu64 "\n", remaining_sigs);
 
     if (remaining_sigs == 0) {
         fprintf(stderr, "The private key cannot sign any more messages.\n");
@@ -181,13 +180,13 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
 
     fprintf(stdout, "Signature and updated state have been saved to disk.\n");
 
-    ret = iqr_XMSSGetSignatureCount(state, &max_sigs, &remaining_sigs);
+    ret = iqr_XMSSGetSignatureCount(state, &remaining_sigs);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSGetMaximumSignatureCount(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    fprintf(stdout, "Number of signatures for this state: %u.\nRemaining signatures: %u.\n", max_sigs, remaining_sigs);
+    fprintf(stdout, "Number of remaining signatures: %" PRIu64 ".\n", remaining_sigs);
 
     if (remaining_sigs == 0) {
         fprintf(stderr, "The private key cannot sign any more messages.\n");
@@ -328,7 +327,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *priv, const char *state, const iqr_XMSSHeight height,
+static void preamble(const char *cmd, const char *sig, const char *priv, const char *state, const iqr_XMSSVariant *variant,
     const iqr_XMSSTreeStrategy *strategy, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
@@ -336,14 +335,14 @@ static void preamble(const char *cmd, const char *sig, const char *priv, const c
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
 
-    if (IQR_XMSS_HEIGHT_10 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_10\n");
-    } else if (IQR_XMSS_HEIGHT_16 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_16\n");
-    } else if (IQR_XMSS_HEIGHT_20 == height) {
-        fprintf(stdout, "    height: IQR_XMSS_HEIGHT_20\n");
+    if (&IQR_XMSS_2E10 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
+    } else if (&IQR_XMSS_2E16 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
+    } else if (&IQR_XMSS_2E20 == variant) {
+        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
-        fprintf(stdout, "    height: INVALID\n");
+        fprintf(stdout, "    variant: INVALID\n");
     }
 
     if (strategy == &IQR_XMSS_FULL_TREE_STRATEGY) {
@@ -361,7 +360,7 @@ static void preamble(const char *cmd, const char *sig, const char *priv, const c
 }
 
 static iqr_retval parse_commandline(int argc, const char **argv, const char **sig, const char **priv, const char **state,
-    iqr_XMSSHeight *height, const iqr_XMSSTreeStrategy **strategy, const char **message)
+    const iqr_XMSSVariant **variant, const iqr_XMSSTreeStrategy **strategy, const char **message)
 {
     int i = 1;
     while (i != argc) {
@@ -382,15 +381,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             /* [--state <filename>] */
             i++;
             *state = argv[i];
-        } else if (paramcmp(argv[i], "--height") == 0) {
-            /* [--height 10|16|20] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 10|16|20] */
             i++;
             if (paramcmp(argv[i], "10") == 0) {
-                *height = IQR_XMSS_HEIGHT_10;
+                *variant = &IQR_XMSS_2E10;
             } else if  (paramcmp(argv[i], "16") == 0) {
-                *height = IQR_XMSS_HEIGHT_16;
+                *variant = &IQR_XMSS_2E16;
             } else if  (paramcmp(argv[i], "20") == 0) {
-                *height = IQR_XMSS_HEIGHT_20;
+                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -433,7 +432,7 @@ int main(int argc, const char **argv)
     const char *state = "priv.state";
     const char *message = "message.dat";
     const iqr_XMSSTreeStrategy *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
-    iqr_XMSSHeight height =  IQR_XMSS_HEIGHT_10;
+    const iqr_XMSSVariant *variant =  &IQR_XMSS_2E10;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
@@ -442,13 +441,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &sig, &priv, &state, &height, &strategy, &message);
+    iqr_retval ret = parse_commandline(argc, argv, &sig, &priv, &state, &variant, &strategy, &message);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Make sure the user understands what we are about to do. */
-    preamble(argv[0], sig, priv, state, height, strategy, message);
+    preamble(argv[0], sig, priv, state, variant, strategy, message);
 
     /* IQR initialization that is not specific to XMSS. */
     ret = init_toolkit(&ctx, &rng, message, &digest);
@@ -458,7 +457,7 @@ int main(int argc, const char **argv)
 
     /* This function showcases the usage of XMSS signing.
      */
-    ret = showcase_xmss_sign(ctx, rng, height, strategy, digest, priv, state, sig);
+    ret = showcase_xmss_sign(ctx, rng, variant, strategy, digest, priv, state, sig);
 
 cleanup:
     iqr_RNGDestroy(&rng);

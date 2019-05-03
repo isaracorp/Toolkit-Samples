@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 Version Sample
+# ISARA Radiate™ Quantum-Safe Toolkit 2.0 Version Sample
 
 ## Getting Started
 
