@@ -1,8 +1,8 @@
 /** @file main.c
  *
- * @brief Demonstrate the toolkit's FrodoDH implementation.
+ * @brief Demonstrate the toolkit's Samwise implementation.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2019, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@
 #include <time.h>
 
 #include "iqr_context.h"
-#include "iqr_frododh.h"
+#include "iqr_samwise.h"
 #include "iqr_hash.h"
 #include "iqr_retval.h"
 #include "iqr_rng.h"
@@ -38,20 +38,20 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"frododh [--dump] [--variant AES|SHAKE]\n"
+"samwise [--dump] [--variant AES|ChaCha20]\n"
 "        --dump Dumps the generated keys and secrets to file.\n"
 "               Filenames:\n"
 "                 Alice's key:    alice_key.dat\n"
 "                 Bob's key:      bob_key.dat\n"
 "                 Alice's secret: alice_secret.dat\n"
 "                 Bob's secret:   bob_secret.dat\n"
-"        --variant The variant of FrodoDH to use.\n"
+"        --variant The variant of Samwise to use.\n"
 "               Valid values are:\n"
 "                 * AES\n"
-"                 * SHAKE\n";
+"                 * ChaCha20\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
-// This function showcases the use of the FrodoDH algorithm to generate a
+// This function showcases the use of the Samwise algorithm to generate a
 // shared secret.
 //
 // This function assumes that all the parameters have already been validated.
@@ -59,7 +59,7 @@ static const char *usage_msg =
 // failure.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_frododh(const iqr_Context *ctx, const iqr_RNG *rng, bool dump, const iqr_FrodoDHVariant *variant)
+static iqr_retval showcase_samwise(const iqr_Context *ctx, const iqr_RNG *rng, bool dump, const iqr_SamwiseVariant *variant)
 {
     iqr_retval ret = init_comms();
     if (ret != IQR_OK) {
@@ -78,12 +78,12 @@ static iqr_retval showcase_frododh(const iqr_Context *ctx, const iqr_RNG *rng, b
         return ret;
     }
 
-    uint8_t alice_secret[IQR_FRODODH_SECRET_SIZE] = { 0 };
-    uint8_t bob_secret[IQR_FRODODH_SECRET_SIZE] = { 0 };
+    uint8_t alice_secret[IQR_SAMWISE_SECRET_SIZE] = { 0 };
+    uint8_t bob_secret[IQR_SAMWISE_SECRET_SIZE] = { 0 };
 
     /* Alice must start the transfer. Bob cannot go first since, as the
      * responder, he needs information from Alice. For more information on how
-     * the FrodoDH data protocol works see the README.md.
+     * the Samwise data protocol works see the README.md.
      */
     ret = alice_start(rng, dump);
     if (ret != IQR_OK) {
@@ -136,7 +136,7 @@ end:
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This next section of code is related to the toolkit, but is not specific to
-// FrodoDH.
+// Samwise.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
@@ -186,7 +186,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, bool dump, const iqr_FrodoDHVariant *variant)
+static void preamble(const char *cmd, bool dump, const iqr_SamwiseVariant *variant)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    Dump data to files: ");
@@ -197,10 +197,10 @@ static void preamble(const char *cmd, bool dump, const iqr_FrodoDHVariant *varia
     }
 
     fprintf(stdout, "    Variant: ");
-    if (variant == &IQR_FRODODH_976_AES) {
+    if (variant == &IQR_SAMWISE_976_AES) {
         fprintf(stdout, "AES\n");
-    } else if (variant == &IQR_FRODODH_976_SHAKE) {
-        fprintf(stdout, "SHAKE\n");
+    } else if (variant == &IQR_SAMWISE_976_CHACHA20) {
+        fprintf(stdout, "ChaCha20\n");
     } else {
         fprintf(stdout, "Invalid\n");
     }
@@ -208,7 +208,7 @@ static void preamble(const char *cmd, bool dump, const iqr_FrodoDHVariant *varia
     fprintf(stdout, "\n");
 }
 
-static iqr_retval parse_commandline(int argc, const char **argv, bool *dump, const iqr_FrodoDHVariant **variant)
+static iqr_retval parse_commandline(int argc, const char **argv, bool *dump, const iqr_SamwiseVariant **variant)
 {
     int i = 1;
 
@@ -218,9 +218,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, bool *dump, con
         } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
             if (paramcmp(argv[i], "AES") == 0) {
-                *variant = &IQR_FRODODH_976_AES;
-            } else if (paramcmp(argv[i], "SHAKE") == 0) {
-                *variant = &IQR_FRODODH_976_SHAKE;
+                *variant = &IQR_SAMWISE_976_AES;
+            } else if (paramcmp(argv[i], "ChaCha20") == 0) {
+                *variant = &IQR_SAMWISE_976_CHACHA20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -244,7 +244,7 @@ int main(int argc, const char **argv)
     /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
-    const iqr_FrodoDHVariant *variant = &IQR_FRODODH_976_AES;
+    const iqr_SamwiseVariant *variant = &IQR_SAMWISE_976_AES;
     bool dump = false;
 
     iqr_Context *ctx = NULL;
@@ -261,14 +261,14 @@ int main(int argc, const char **argv)
     /* Make sure the user understands what we are about to do. */
     preamble(argv[0], dump, variant);
 
-    /* IQR initialization that is not specific to FrodoDH. */
+    /* IQR initialization that is not specific to Samwise. */
     ret = init_toolkit(&ctx, &rng);
     if (ret != IQR_OK) {
         goto cleanup;
     }
 
-    /* This function showcases the usage of FrodoDH. */
-    ret = showcase_frododh(ctx, rng, dump, variant);
+    /* This function showcases the usage of Samwise. */
+    ret = showcase_samwise(ctx, rng, dump, variant);
 
 cleanup:
     /* Clean up. */

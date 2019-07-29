@@ -35,8 +35,10 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"sphincs_generate_keys [--variant 192f|192s|256f|256s] [--pub <filename>]\n"
-"  [--priv <filename>]\n"
+"sphincs_generate_keys\n"
+"  [--variant shake192f|shake192s|shake256f|shake256s|sha192f|sha192s|sha256f\n"
+"    |sha256s]\n"
+"  [--pub <filename>] [--priv <filename>]\n"
 "    Defaults for the sample are: \n"
 "        --variant 192f\n"
 "        --pub pub.key\n"
@@ -169,6 +171,12 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
+    ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
+    if (IQR_OK != ret) {
+        fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
+        return ret;
+    }
+
     /* This lets us give satisfactory randomness to the algorithm. */
     ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA3_512, rng);
     if (ret != IQR_OK) {
@@ -209,9 +217,18 @@ static void preamble(const char *cmd, const iqr_SPHINCSVariant *variant, const c
         fprintf(stdout, "    Variant: SHAKE-256-192 (small)\n");
     } else if (variant == &IQR_SPHINCS_SHAKE_256_256F) {
         fprintf(stdout, "    Variant: SHAKE-256-256 (fast)\n");
-    } else {
+    } else if (variant ==  &IQR_SPHINCS_SHAKE_256_256F) {
         fprintf(stdout, "    Variant: SHAKE-256-256 (small)\n");
+    } else if (variant ==  &IQR_SPHINCS_SHA2_256_192F) {
+        fprintf(stdout, "    Variant: SHA-256-192 (fast)\n");
+    } else if (variant ==  &IQR_SPHINCS_SHA2_256_192S) {
+        fprintf(stdout, "    Variant: SHA-256-192 (small)\n");
+    } else if (variant ==  &IQR_SPHINCS_SHA2_256_256F) {
+        fprintf(stdout, "    Variant: SHA-256-256 (fast)\n");
+    } else if (variant ==  &IQR_SPHINCS_SHA2_256_256S) {
+        fprintf(stdout, "    Variant: SHA-256-256 (small)\n");
     }
+
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "\n");
@@ -226,14 +243,22 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_SPHIN
         if (paramcmp(argv[i], "--variant") == 0) {
             /* [--variant 192f|192s|256f|256s] */
             i++;
-            if (paramcmp(argv[i], "192f") == 0) {
+            if (paramcmp(argv[i], "shake192f") == 0) {
                 *variant = &IQR_SPHINCS_SHAKE_256_192F;
-            } else if (paramcmp(argv[i], "192s") == 0) {
+            } else if (paramcmp(argv[i], "shake192s") == 0) {
                 *variant = &IQR_SPHINCS_SHAKE_256_192S;
-            } else if (paramcmp(argv[i], "256f") == 0) {
+            } else if (paramcmp(argv[i], "shake256f") == 0) {
                 *variant = &IQR_SPHINCS_SHAKE_256_256F;
-            } else if (paramcmp(argv[i], "256s") == 0) {
+            } else if (paramcmp(argv[i], "shake256s") == 0) {
                 *variant = &IQR_SPHINCS_SHAKE_256_256S;
+            } else if (paramcmp(argv[i], "sha192f") == 0) {
+                *variant = &IQR_SPHINCS_SHA2_256_192F;
+            } else if (paramcmp(argv[i], "sha192s") == 0) {
+                *variant = &IQR_SPHINCS_SHA2_256_192S;
+            } else if (paramcmp(argv[i], "sha256f") == 0) {
+                *variant = &IQR_SPHINCS_SHA2_256_256F;
+            } else if (paramcmp(argv[i], "sha256s") == 0) {
+                *variant = &IQR_SPHINCS_SHA2_256_256S;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;

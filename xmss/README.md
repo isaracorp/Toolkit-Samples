@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Toolkit 2.0 XMSS Samples
+# ISARA Radiate™ Quantum-Safe Library 2.0 XMSS Samples
 
 ## Introduction to Signature Schemes
 
@@ -40,8 +40,8 @@ the signer during key generation.  This height parameter also affects private
 key size and signature size.  Each message and signature can be verified an
 unlimited number of times.
 
-For a more in-depth discussion about these issues, see the
-specification that is referred to in `iqr_xmss.h`.
+For a more in-depth discussion about these issues, see RFC 8391,
+[XMSS: eXtended Merkle Signature Scheme](https://tools.ietf.org/html/rfc8391).
 
 ## Sample Applications
 
@@ -70,12 +70,25 @@ Wonderland by Lewis Carroll. (It can be freely obtained from
 We downloaded the plaintext version and saved it as `message.dat` in the same
 directory that contained the compiled executables of the samples.
 
-Build the sample application in a `build` directory:
+**NOTE**
+Before building the samples, copy one of the CPU-specific versions of the
+toolkit libraries into a `lib` directory. For example, to build the samples
+for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
+
+The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
+determine the location of the toolkit to build against. CMake requires that
+environment variables are set on the same line as the CMake command, or are
+exported environment variables in order to be read properly. If
+`IQR_TOOLKIT_ROOT` is a relative path, it must be relative to the directory
+where you're running the `cmake` command.
+
+Assuming you've got the Toolkit installed in `/path/to/toolkit`, build the
+sample application in a `build` directory:
 
 ```
 $ mkdir build
 $ cd build
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..
 $ make
 ```
 

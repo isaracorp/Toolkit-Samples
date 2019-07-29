@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Toolkit 2.0 Rainbow Samples
+# ISARA Radiate™ Quantum-Safe Library 2.0 Rainbow Samples
 
 ## Introduction to Signature Schemes
 
@@ -37,14 +37,25 @@ Wonderland by Lewis Carroll. (It can be freely obtained from
 We downloaded the plaintext version and saved it as `message.dat` in the same
 directory that contained the compiled executables of the samples.
 
-Build the sample application:
+**NOTE**
+Before building the samples, copy one of the CPU-specific versions of the
+toolkit libraries into a `lib` directory. For example, to build the samples
+for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
 
-Build the sample application in a `build` directory:
+The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
+determine the location of the toolkit to build against. CMake requires that
+environment variables are set on the same line as the CMake command, or are
+exported environment variables in order to be read properly. If
+`IQR_TOOLKIT_ROOT` is a relative path, it must be relative to the directory
+where you're running the `cmake` command.
+
+Assuming you've got the Toolkit installed in `/path/to/toolkit`, build the
+sample application in a `build` directory:
 
 ```
 $ mkdir build
 $ cd build
-$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..
+$ cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..
 $ make
 ```
 

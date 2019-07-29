@@ -63,6 +63,7 @@ set (
     rainbow/sign
     rainbow/verify
     rng
+    samwise
     sidh
     sike/decapsulate
     sike/encapsulate

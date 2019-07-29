@@ -36,10 +36,10 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"rainbow_generate_keys [--security IIIb|IIIc|IVa|Vc|VIa|VIb] [--pub <filename>]\n"
+"rainbow_generate_keys [--security IIIc|Vc] [--pub <filename>]\n"
 "  [--priv <filename>]\n"
 "    Defaults are: \n"
-"        --security IIIb\n"
+"        --security IIIc\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n";
 
@@ -233,18 +233,10 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 static void preamble(const char *cmd, const iqr_RainbowVariant *variant, const char *pub, const char *priv)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    if (variant == &IQR_RAINBOW_GF31_64_32_48) {
-        fprintf(stdout, "    security level: IIIb. parameter set: (GF(31), 64, 32, 48)\n");
-    } else if (variant == &IQR_RAINBOW_GF256_68_36_36) {
+    if (variant == &IQR_RAINBOW_GF256_68_36_36) {
         fprintf(stdout, "    security level: IIIc. parameter set: (GF(256), 68, 36, 36)\n");
-    } else if (variant == &IQR_RAINBOW_GF16_56_48_48) {
-        fprintf(stdout, "    security level: IVa. parameter set: (GF(16), 56, 48, 48)\n");
     } else if (variant == &IQR_RAINBOW_GF256_92_48_48) {
         fprintf(stdout, "    security level: Vc. parameter set: (GF(256), 92, 48, 48)\n");
-    } else if (variant == &IQR_RAINBOW_GF16_76_64_64) {
-        fprintf(stdout, "    security level: VIa. parameter set: (GF(16), 76, 64, 64)\n");
-    } else if (variant == &IQR_RAINBOW_GF31_84_56_56) {
-        fprintf(stdout, "    security level: VIb. parameter set: (GF(31), 84, 56, 56)\n");
     }
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
@@ -264,18 +256,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
         if (paramcmp(argv[i], "--security") == 0) {
             /* [--security IIIb|IIIc|IVa|Vc|VIa|VIb] */
             i++;
-            if  (paramcmp(argv[i], "IIIb") == 0) {
-                *variant = &IQR_RAINBOW_GF31_64_32_48;
-            } else if  (paramcmp(argv[i], "IIIc") == 0) {
+            if  (paramcmp(argv[i], "IIIc") == 0) {
                 *variant = &IQR_RAINBOW_GF256_68_36_36;
-            } else if  (paramcmp(argv[i], "IVa") == 0) {
-                *variant = &IQR_RAINBOW_GF16_56_48_48;
             } else if  (paramcmp(argv[i], "Vc") == 0) {
                 *variant = &IQR_RAINBOW_GF256_92_48_48;
-            } else if  (paramcmp(argv[i], "VIa") == 0) {
-                *variant = &IQR_RAINBOW_GF16_76_64_64;
-            } else if  (paramcmp(argv[i], "VIb") == 0) {
-                *variant = &IQR_RAINBOW_GF31_84_56_56;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -304,7 +288,7 @@ int main(int argc, const char **argv)
     /* Default values.  Please adjust the usage message if you make changes
      * here.
      */
-    const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF31_64_32_48;
+    const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF256_68_36_36;
     const char *pub = "pub.key";
     const char *priv = "priv.key";
 

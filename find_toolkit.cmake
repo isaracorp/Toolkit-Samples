@@ -28,22 +28,12 @@ endif ()
 include_directories ("${IQR_TOOLKIT_ROOT}/include")
 link_directories ("${IQR_TOOLKIT_ROOT}/lib")
 
-# Find out which Edition we've got.
+# Find the toolkit.
 find_file (TOOLKIT_EDITION_LIB
     NAMES libiqr_toolkit.so libiqr_toolkit.a
     PATHS "${IQR_TOOLKIT_ROOT}/lib")
-find_file (SIGNATURE_EDITION_LIB
-    NAMES libiqr_toolkit_signature.so libiqr_toolkit_signature.a
-    PATHS "${IQR_TOOLKIT_ROOT}/lib")
-find_file (FIPS140_EDITION_LIB
-    NAMES libiqr_toolkit_fips140.so
-    PATHS "${IQR_TOOLKIT_ROOT}/lib")
 if (TOOLKIT_EDITION_LIB)
     set (IQR_TOOLKIT_LIB iqr_toolkit)
-elseif (SIGNATURE_EDITION_LIB)
-    set (IQR_TOOLKIT_LIB iqr_toolkit_signature)
-elseif (FIPS140_EDITION_LIB)
-    set (IQR_TOOLKIT_LIB iqr_toolkit_fips140)
 else ()
     message (ERROR "Unable to find the ISARA Radiate toolkit library.")
     set (IQR_TOOLKIT_LIB iqr_toolkit)

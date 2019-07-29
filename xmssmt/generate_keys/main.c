@@ -36,7 +36,7 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"xmssmt_generate_keys [--pub <filename>] [--priv <filename>]"
+"xmssmt_generate_keys [--pub <filename>] [--priv <filename>]\n"
 "  [--state <filename>]\n"
 "  [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d]\n"
 "  [--strategy cpu|memory|full]\n"
@@ -311,6 +311,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
+            fprintf(stdout, "Invalid arguments.\n");
             fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
@@ -364,6 +365,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
+        } else {
+            fprintf(stdout, "Unknown argument: %s\n", argv[i]);
+            fprintf(stdout, "%s", usage_msg);
+            return IQR_EBADVALUE;
         }
         i++;
     }

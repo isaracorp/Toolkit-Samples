@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 NewHopeDH Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0 Samwise Sample
 
 ## Introduction to Key Establishment Schemes
 
@@ -20,7 +20,7 @@ procedure.
 Steps 2-4 for Alice and 5-7 for Bob can be done simultaneously since the
 calculations are done independent of the other.
 
-### How NewHopeDH Differs from the General Case
+### How Samwise Differs from the General Case
 
 1.  Alice chooses a public parameter (seed).
 2.  Alice chooses a secret value.
@@ -40,14 +40,14 @@ receiving Alice's public value. In this scenario Alice is the initiator and Bob
 is the responder. Initiator and responder are the names used in the code to
 differentiate the two sides.
 
-All NewHopeDH shared secrets are ephemeral. Unlike the general Diffie-Hellman it
+All Samwise shared secrets are ephemeral. Unlike the general Diffie-Hellman it
 is not possible to reuse the public information to regenerate the secret key.
 Doing so weakens the security of the establishment.
 
 ## Getting Started
 
 We have created a small sample application that demonstrates how to use the
-toolkit's NewHopeDH implementation. The application is structured in a way that
+toolkit's Samwise implementation. The application is structured in a way that
 isolates the roles played by Alice and Bob by simulating a communication
 channel.
 
@@ -55,6 +55,8 @@ To view the code necessary for Alice view `alice.c`, for Bob it is `bob.c`.
 These filenames were chosen since Alice and Bob are common cryptographic terms
 and a simple client/server model doesn't work for all cases here. Also having a
 file called `bob.c` is awesome!
+
+Build the sample application:
 
 **NOTE**
 Before building the samples, copy one of the CPU-specific versions of the
@@ -83,14 +85,14 @@ Execute the sample with no arguments to use the default parameters, or use
 
 ## Further Reading
 
-* See `iqr_newhopedh.h` in the toolkit's `include` directory.
+* See `iqr_samwise.h` in the toolkit's `include` directory.
 * [Alice primer](http://www.gutenberg.org/ebooks/11.txt.utf-8)
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2019, ISARA Corporation
+> Copyright © 2019, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

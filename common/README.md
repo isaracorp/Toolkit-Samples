@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Toolkit 2.0 Sample Library
+# ISARA Radiate™ Quantum-Safe Library 2.0 Sample Library
 
 ## Common Sample Library
 

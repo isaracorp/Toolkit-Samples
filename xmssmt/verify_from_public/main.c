@@ -218,6 +218,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
     int i = 1;
     while (i != argc) {
         if (i + 2 > argc) {
+            fprintf(stdout, "Invalid arguments.\n");
             fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
@@ -234,6 +235,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
            /* [--message <filename>] */
            i++;
            *message = argv[i];
+        } else {
+            fprintf(stderr, "Unknown argument: %s", argv[i]);
+            fprintf(stdout, "%s", usage_msg);
+            return IQR_EBADVALUE;
         }
         i++;
     }

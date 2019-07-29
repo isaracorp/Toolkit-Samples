@@ -35,7 +35,7 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"frodokem_decapsulate [--variant AES|cSHAKE] [--priv <filename>]\n"
+"frodokem_decapsulate [--variant AES|SHAKE] [--priv <filename>]\n"
 "  [--ciphertext <filename>] [--shared <filename>]\n"
 "    Default for the sample (when no option is specified):\n"
 "        --variant AES\n"
@@ -180,7 +180,7 @@ static void preamble(const char *cmd, const iqr_FrodoKEMVariant *variant, const 
     if (variant == &IQR_FRODOKEM_976_AES) {
         fprintf(stdout, "    variant: AES\n");
     } else {
-        fprintf(stdout, "    variant: cSHAKE\n");
+        fprintf(stdout, "    variant: SHAKE\n");
     }
 }
 
@@ -203,12 +203,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Frodo
             i++;
             *sharedkey_file = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant AES|cSHAKE] */
+            /* [--variant AES|SHAKE] */
             i++;
             if (paramcmp(argv[i], "AES") == 0) {
                 *variant = &IQR_FRODOKEM_976_AES;
-            } else if  (paramcmp(argv[i], "cSHAKE") == 0) {
-                *variant = &IQR_FRODOKEM_976_CSHAKE;
+            } else if  (paramcmp(argv[i], "SHAKE") == 0) {
+                *variant = &IQR_FRODOKEM_976_SHAKE;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
