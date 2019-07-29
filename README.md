@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-safe Toolkit 2.0 Samples
+# ISARA Radiate™ Quantum-safe Library 2.0 Samples
 
 ## Samples
 
@@ -33,6 +33,8 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
 * `rainbow` &mdash; Generate keys, sign a file's data, and verify a signature
   using the Rainbow algorithm.
 * `rng` &mdash; Generate pseudorandom bytes using HMAC-DRBG.
+* `samwise` &mdash; Agree on a shared secret using an optimized variant of
+  Frodo.
 * `sidh` &mdash; Agree on a shared secret using Supersingular Isogeny
   Diffie-Hellman.
 * `sike` &mdash; Generate keys, encapsulate and decapsulate data using
@@ -59,11 +61,11 @@ exported environment variables in order to be read properly. If
 `IQR_TOOLKIT_ROOT` is a relative path, it must be relative to the directory
 where you're running the `cmake` command.
 
-1. Install the toolkit somewhere, e.g. `/path/to/toolkitroot/`.
+1. Install the toolkit somewhere, e.g. `/path/to/toolkit/`.
 2. `cd` to the `samples` directory, such as `/path/to/toolkit/samples/`.
 3. Use `mkdir` to make a `build` directory; `cd` into the `build` directory.
-3. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..` or
-   `IQR_TOOLKIT_ROOT=/path/to/toolkitroot cmake ..` The `..` in there refers to
+3. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..` or
+   `IQR_TOOLKIT_ROOT=/path/to/toolkit cmake ..` The `..` in there refers to
    the parent of your `build` directory, so it'll pick up the `CMakeLists.txt`
    in the main `samples` directory.
 4. Run make: `make`
@@ -78,12 +80,12 @@ binaries.
 
 To build individual samples:
 
-1. Install the toolkit somewhere, e.g. `/path/to/toolkitroot/`.
+1. Install the toolkit somewhere, e.g. `/path/to/toolkit/`.
 2. `cd` to the specific `samples` directory, such as
    `/path/to/toolkit/samples/hash`.
 3. Use `mkdir` to make a `build` directory; `cd` into the `build` directory.
-3. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkitroot/ ..` or
-   `IQR_TOOLKIT_ROOT=/path/to/toolkitroot cmake ..` The `..` in there refers to
+3. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..` or
+   `IQR_TOOLKIT_ROOT=/path/to/toolkit cmake ..` The `..` in there refers to
    the parent of your `build` directory, so it'll pick up the `CMakeLists.txt`
    in the specific `samples` directory (the one in `hash` in this case).
 4. Run make: `make`
@@ -103,6 +105,14 @@ Execute the samples with no arguments to use the default parameters, or use
 For information about reporting security issues, please read the
 [SECURITY](https://github.com/isaracorp/Toolkit-Samples/blob/master/SECURITY.md)
 document.
+
+## Documentation
+
+You can read the toolkit documentation online at ISARA's website:
+
+* [Developer's Guide](https://www.isara.com/toolkit/2/doc/guide/guide.html)
+* [Library Reference](https://www.isara.com/toolkit/2/doc/library/index.html)
+* [README](https://www.isara.com/toolkit/2/README.html)
 
 ## License
 
