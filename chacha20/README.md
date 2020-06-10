@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 ChaCha20 Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0a ChaCha20 Sample
 
 ## Introduction to Symmetric-Key Cryptography
 

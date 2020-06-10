@@ -1,4 +1,4 @@
-= ISARA Radiate™ Quantum-Safe Library 2.0 ClassicMcEliece KEM
+= ISARA Radiate™ Quantum-Safe Library 2.0a ClassicMcEliece KEM
 Samples =
 
 ## Introduction Key Encapsulation Mechanisms (KEM)

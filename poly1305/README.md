@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 Poly1305 MAC Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0a Poly1305 MAC Sample
 
 ## Introduction to Message Authentication Codes
 

@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 RFC 5869 KDF Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0a RFC 5869 KDF Sample
 
 ## Introduction to Key Derivation Functions
 

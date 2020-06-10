@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 Dilithium Samples
+# ISARA Radiate™ Quantum-Safe Library 2.0a Dilithium Samples
 
 ## Introduction to Signature Schemes
 

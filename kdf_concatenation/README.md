@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 Concatenation KDF Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0a Concatenation KDF Sample
 
 ## Introduction to Key Derivation Functions
 

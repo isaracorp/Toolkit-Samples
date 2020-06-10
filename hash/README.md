@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 Hash Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0a Hash Sample
 
 ## Introduction to Hashing Algorithms
 

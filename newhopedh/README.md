@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 NewHopeDH Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0a NewHopeDH Sample
 
 ## Introduction to Key Establishment Schemes
 

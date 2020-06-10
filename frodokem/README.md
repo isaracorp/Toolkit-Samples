@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 FrodoKEM Samples
+# ISARA Radiate™ Quantum-Safe Library 2.0a FrodoKEM Samples
 ISARA Corporation <info@isara.com>
 v1.6 2018-12: Copyright © 2016-2019, ISARA Corporation, All Rights Reserved.
 

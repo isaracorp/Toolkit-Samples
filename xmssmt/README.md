@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 XMSS<sup>MT</sup> Samples
+# ISARA Radiate™ Quantum-Safe Library 2.0a XMSS<sup>MT</sup> Samples
 
 ## Introduction to Signature Schemes
 

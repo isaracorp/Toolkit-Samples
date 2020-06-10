@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 Kyber KEM Samples
+# ISARA Radiate™ Quantum-Safe Library 2.0a Kyber KEM Samples
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 

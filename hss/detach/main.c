@@ -39,7 +39,7 @@
 static const char *usage_msg =
 "hss_detach [--priv <filename>] [--state <filename>]\n"
 "  [--detached-state <filename>] [--num-sigs <number>]\n"
-"  [--variant 2e20f|2e25f|2e30f|2e45f|2e65f|2e20s|2e25s|2e30s|2e45s|2e65s]\n"
+"  [--variant 2e20f|2e25f|2e20s|2e25s]\n"
 "  [--strategy cpu|memory|full]\n"
 "\n"
 "  The 'f' variants are Fast, the 's' variants are Small.\n"
@@ -48,7 +48,7 @@ static const char *usage_msg =
 "        --priv priv.key\n"
 "        --state priv.state\n"
 "        --strategy full\n"
-"        --variant 2e30f\n"
+"        --variant 2e20f\n"
 "        --detached-state detached.state\n"
 "        --num-sigs 1\n";
 
@@ -242,18 +242,6 @@ static void preamble(const char *cmd, const char *priv, const char *state, const
         fprintf(stdout, "    Variant: IQR_HSS_2E25_FAST\n");
     } else if (variant == &IQR_HSS_2E25_SMALL) {
         fprintf(stdout, "    Variant: IQR_HSS_2E25_SMALL\n");
-    } else if (variant == &IQR_HSS_2E30_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_FAST\n");
-    } else if (variant == &IQR_HSS_2E30_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_SMALL\n");
-    } else if (variant == &IQR_HSS_2E45_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_FAST\n");
-    } else if (variant == &IQR_HSS_2E45_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_SMALL\n");
-    } else if (variant == &IQR_HSS_2E65_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_FAST\n");
-    } else if (variant == &IQR_HSS_2E65_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_SMALL\n");
     } else {
         fprintf(stdout, "    Variant: INVALID\n");
     }
@@ -303,18 +291,6 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
                 *variant = &IQR_HSS_2E25_FAST;
             } else if (paramcmp(argv[i], "2e25s") == 0) {
                 *variant = &IQR_HSS_2E25_SMALL;
-            } else if (paramcmp(argv[i], "2e30f") == 0) {
-                *variant = &IQR_HSS_2E30_FAST;
-            } else if (paramcmp(argv[i], "2e30s") == 0) {
-                *variant = &IQR_HSS_2E30_SMALL;
-            } else if (paramcmp(argv[i], "2e45f") == 0) {
-                *variant = &IQR_HSS_2E45_FAST;
-            } else if (paramcmp(argv[i], "2e45s") == 0) {
-                *variant = &IQR_HSS_2E45_SMALL;
-            } else if (paramcmp(argv[i], "2e65f") == 0) {
-                *variant = &IQR_HSS_2E65_FAST;
-            } else if (paramcmp(argv[i], "2e65s") == 0) {
-                *variant = &IQR_HSS_2E65_SMALL;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -363,7 +339,7 @@ int main(int argc, const char **argv)
     const char *state = "priv.state";
     const char *detached_state = "detached.state";
     const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
-    const iqr_HSSVariant *variant = &IQR_HSS_2E30_FAST;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E20_FAST;
     uint32_t num_sigs = 1;
 
     iqr_Context *ctx = NULL;

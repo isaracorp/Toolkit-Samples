@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 Rainbow Samples
+# ISARA Radiate™ Quantum-Safe Library 2.0a Rainbow Samples
 
 ## Introduction to Signature Schemes
 

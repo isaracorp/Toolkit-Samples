@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0 HMAC Sample
+# ISARA Radiate™ Quantum-Safe Library 2.0a HMAC Sample
 
 ## Introduction to Message Authentication Codes
 
