@@ -2,7 +2,7 @@
  *
  * @brief Produce random numbers using the toolkit's RNG schemes.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,11 +36,13 @@ static const char *usage_msg =
 "rng [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]\n"
 "  [--seed <filename>] [--reseed <filename>] [--output <filename>]\n"
 "  [--count <bytes>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --hash sha2-256\n"
 "        --output random.dat\n"
 "        --count 256\n"
-"  Uses HMAC-DRBG with the specified hash.\n";
+"\n"
+"    Uses the HMAC-DRBG PRNG with the specified hash.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases random number generation.
@@ -74,7 +76,7 @@ static iqr_retval showcase_rng(iqr_Context *ctx, iqr_HashAlgorithmType hash, con
     fprintf(stdout, "RNG object has been seeded.\n");
 
     if (reseed_size > 0) {
-        /** We reseed right away to follow the flow of the NIST test vectors.
+        /* We reseed right away to follow the flow of the NIST test vectors.
          * In real life you would reseed as more randomness becomes available.
          * In this sample the user can avoid a reseed by providing an empty
          * reseed file.
@@ -134,7 +136,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash, co
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, hash, cb);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -189,7 +191,8 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const char *se
 /* Parse a parameter string which is supposed to be a positive integer
  * and return the value or -1 if the string is not properly formatted.
  */
-static int32_t get_positive_int_param(const char *p) {
+static int32_t get_positive_int_param(const char *p)
+{
     char *end = NULL;
     errno = 0;
     const long l = strtol(p, &end, 10);
@@ -198,7 +201,7 @@ static int32_t get_positive_int_param(const char *p) {
         return -1;
     }
     // Check that the string contained only a number and nothing else.
-    if (end == NULL || end == p || *end != '\0' ) {
+    if (end == NULL || end == p || *end != '\0') {
         return -1;
     }
     if (l < 0 || l > INT_MAX) {
@@ -217,8 +220,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             return IQR_EBADVALUE;
         }
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]
-             */
+            /* [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512] */
             i++;
             if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash = IQR_HASHALGO_SHA2_256;
@@ -253,14 +255,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
             *output = argv[i];
         } else if (paramcmp(argv[i], "--count") == 0) {
             i++;
-            int32_t sz  = get_positive_int_param(argv[i]);
+            int32_t sz = get_positive_int_param(argv[i]);
             if (sz <= 0) {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
             *count = (size_t)sz;
         } else {
-                fprintf(stdout, "%s", usage_msg);
+            fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
         }
         i++;
@@ -299,7 +301,7 @@ static const uint8_t default_expected_data[] = {
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     iqr_HashAlgorithmType hash = IQR_HASHALGO_SHA2_256;
@@ -354,8 +356,7 @@ int main(int argc, const char **argv)
         reseed_data = loaded_reseed_data;
     }
 
-    /** This function showcases the usage of random number generation.
-     */
+    /* This function showcases the usage of random number generation. */
     ret = showcase_rng(ctx, hash, seed_data, seed_size, reseed_data, reseed_size, output, count);
     if (ret != IQR_OK) {
         goto cleanup;
@@ -363,7 +364,7 @@ int main(int argc, const char **argv)
 
     if (seed_data == default_seed_data && reseed_data == default_reseed_data && hash == IQR_HASHALGO_SHA2_256 &&
         count == default_count) {
-        /** The user has decided to use the default seed/reseed data, which
+        /* The user has decided to use the default seed/reseed data, which
          * we've chosen as the NIST test vectors. So for fun we've decided to
          * verify the output against the expected NIST output and prove that it
          * works.

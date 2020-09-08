@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0a RNG Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 RNG Sample
 
 ## Introduction to Random Number Generation
 
@@ -42,18 +42,13 @@ toolkit's HMAC-DRBG RNG implementation.
 If the seed and reseed input parameters aren't provided, the sample will use
 NIST test vectors to seed and reseed the RNG. To follow the NIST test
 specifications, reseeding happens immediately after seeding and the random
-data is read in two chunks and both are written to the output file.  If the
+data is read in two chunks and both are written to the output file. If the
 NIST vectors are used, the second chunk is compared against the NIST expected
 data vector.
 
 If the NIST vectors aren't used, the program follows the same flow and the
 user-provided data is used to seed and reseed the RNG. Normally the RNG would
 not be immediately reseeded but would be reseeded periodically with new entropy.
-
-**NOTE**
-Before building the samples, copy one of the CPU-specific versions of the
-toolkit libraries into a `lib` directory. For example, to build the samples
-for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
@@ -87,7 +82,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2019, ISARA Corporation
+> Copyright © 2016-2020, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

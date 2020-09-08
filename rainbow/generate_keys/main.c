@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's Rainbow signature scheme.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,11 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"rainbow_generate_keys [--security IIIc|Vc] [--pub <filename>]\n"
+"rainbow_generate_keys [--variant IIIc|Vc] [--pub <filename>]\n"
 "  [--priv <filename>]\n"
-"    Defaults are: \n"
-"        --security IIIc\n"
+"\n"
+"    Defaults:\n"
+"        --variant IIIc\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n";
 
@@ -109,7 +110,7 @@ static iqr_retval showcase_rainbow_keygen(const iqr_Context *ctx, const iqr_RNG 
     }
 
     priv_raw = calloc(1, priv_raw_size);
-    if (pub_raw == NULL) {
+    if (priv_raw == NULL) {
         fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
         ret = IQR_ENOMEM;
         goto end;
@@ -172,7 +173,7 @@ static iqr_retval progress_watchdog(void *watchdog_data)
 // Initialize the toolkit and the algorithms required by HSS.
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
@@ -186,7 +187,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_384, &IQR_HASH_DEFAULT_SHA2_384);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -200,7 +201,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     }
 
     /* This lets us give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_384, rng);
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_384, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
@@ -234,9 +235,9 @@ static void preamble(const char *cmd, const iqr_RainbowVariant *variant, const c
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     if (variant == &IQR_RAINBOW_GF256_68_36_36) {
-        fprintf(stdout, "    security level: IIIc. parameter set: (GF(256), 68, 36, 36)\n");
+        fprintf(stdout, "    variant: IIIc. parameter set: (GF(256), 68, 36, 36)\n");
     } else if (variant == &IQR_RAINBOW_GF256_92_48_48) {
-        fprintf(stdout, "    security level: Vc. parameter set: (GF(256), 92, 48, 48)\n");
+        fprintf(stdout, "    variant: Vc. parameter set: (GF(256), 92, 48, 48)\n");
     }
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
@@ -253,12 +254,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
             return IQR_EBADVALUE;
         }
 
-        if (paramcmp(argv[i], "--security") == 0) {
-            /* [--security IIIb|IIIc|IVa|Vc|VIa|VIb] */
+        if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant IIIc|Vc] */
             i++;
-            if  (paramcmp(argv[i], "IIIc") == 0) {
+            if (paramcmp(argv[i], "IIIc") == 0) {
                 *variant = &IQR_RAINBOW_GF256_68_36_36;
-            } else if  (paramcmp(argv[i], "Vc") == 0) {
+            } else if (paramcmp(argv[i], "Vc") == 0) {
                 *variant = &IQR_RAINBOW_GF256_92_48_48;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -285,7 +286,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF256_68_36_36;
@@ -312,8 +313,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of Rainbow key generation.
-     */
+    /* This function showcases the usage of Rainbow key generation. */
     ret = showcase_rainbow_keygen(ctx, rng, variant, pub, priv);
 
 cleanup:

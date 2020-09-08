@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's NTRUPrime key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,11 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"ntruprime_decapsulate [--priv <filename>] [--ciphertext <filename>]\n"
-"    [--shared <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
+"ntruprime_decapsulate [--variant 653|761|857] [--priv <filename>] [--ciphertext <filename>]\n"
+"  [--shared <filename>]\n"
+"\n"
+"    Defaults:\n"
+"        --variant 761\n"
 "        --priv priv.key\n"
 "        --ciphertext ciphertext.dat\n"
 "        --shared shared.key\n";
@@ -90,7 +92,7 @@ static iqr_retval showcase_ntruprime_decapsulation(const iqr_NTRUPrimeParams *pa
     fprintf(stdout, "NTRUPrime decapsulation completed.\n");
 
 end:
-    if (privkey_dat!= NULL) {
+    if (privkey_dat != NULL) {
         /* (Private) Keys are private, sensitive data, be sure to clear memory
          * containing them when you're done.
          */
@@ -107,10 +109,11 @@ end:
 // This function showcases the creation of NTRUPrime parameter structure.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_ntruprime_params_creation(const iqr_Context *ctx, iqr_NTRUPrimeParams **params)
+static iqr_retval showcase_ntruprime_params_creation(const iqr_Context *ctx, const iqr_NTRUPrimeVariant *variant,
+    iqr_NTRUPrimeParams **params)
 {
     /* Create NTRUPrime parameters. */
-    iqr_retval ret = iqr_NTRUPrimeCreateParams(ctx, params);
+    iqr_retval ret = iqr_NTRUPrimeCreateParams(ctx, variant, params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_NTRUPrimeCreateParams(): %s\n", iqr_StrError(ret));
         return ret;
@@ -138,7 +141,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 
     fprintf(stdout, "The context has been created.\n");
 
-    /* Globally register the hashing functions. */
+    /* Register the hashing functions with the Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -160,17 +163,25 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *priv, const char *cipher, const char *sharedkey)
+static void preamble(const char *cmd, const iqr_NTRUPrimeVariant *variant, const char *priv, const char *cipher,
+    const char *sharedkey)
 {
     fprintf(stdout, "Running %s with the following parameters:\n", cmd);
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    ciphertext file: %s\n", cipher);
     fprintf(stdout, "    shared key file: %s\n", sharedkey);
+    if (variant == &IQR_SNTRUP_653) {
+        fprintf(stdout, "    variant: IQR_SNTRUP_653\n");
+    } else if (variant == &IQR_SNTRUP_761) {
+        fprintf(stdout, "    variant: IQR_SNTRUP_761\n");
+    } else {
+        fprintf(stdout, "    variant: IQR_SNTRUP_857\n");
+    }
 }
 
 /* Parse the command line options. */
-static iqr_retval parse_commandline(int argc, const char **argv, const char **private_key_file, const char **ciphertext_file,
-    const char **sharedkey_file)
+static iqr_retval parse_commandline(int argc, const char **argv, const iqr_NTRUPrimeVariant **variant,
+    const char **private_key_file, const char **ciphertext_file, const char **sharedkey_file)
 {
     int i = 1;
     while (i != argc) {
@@ -186,6 +197,19 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
             /* [--shared <filename>] */
             i++;
             *sharedkey_file = argv[i];
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 653|761|857] */
+            i++;
+            if (paramcmp(argv[i], "653") == 0) {
+                *variant = &IQR_SNTRUP_653;
+            } else if (paramcmp(argv[i], "761") == 0) {
+                *variant = &IQR_SNTRUP_761;
+            } else if (paramcmp(argv[i], "857") == 0) {
+                *variant = &IQR_SNTRUP_857;
+            } else {
+                fprintf(stdout, "%s", usage_msg);
+                return IQR_EBADVALUE;
+            }
         } else {
             fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
@@ -202,9 +226,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
+    const iqr_NTRUPrimeVariant *variant = &IQR_SNTRUP_761;
     const char *private_key_file = "priv.key";
     const char *ciphertext_file = "ciphertext.dat";
     const char *sharedkey_file = "shared.key";
@@ -215,13 +240,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &private_key_file, &ciphertext_file, &sharedkey_file);
+    iqr_retval ret = parse_commandline(argc, argv, &variant, &private_key_file, &ciphertext_file, &sharedkey_file);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Show the parameters for the program. */
-    preamble(argv[0], private_key_file, ciphertext_file, sharedkey_file);
+    preamble(argv[0], variant, private_key_file, ciphertext_file, sharedkey_file);
 
     /* IQR toolkit initialization. */
     ret = init_toolkit(&ctx);
@@ -230,7 +255,7 @@ int main(int argc, const char **argv)
     }
 
     /* Showcase the creation of NTRUPrime parameter structure. */
-    ret = showcase_ntruprime_params_creation(ctx, &parameters);
+    ret = showcase_ntruprime_params_creation(ctx, variant, &parameters);
     if (ret != IQR_OK) {
         goto cleanup;
     }

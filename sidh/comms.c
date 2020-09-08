@@ -9,7 +9,7 @@
  * understand the data flow of SIDH. Again, don't read this file! You're
  * going to read it anyway aren't you...
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,17 +48,17 @@ struct com_buf {
     size_t size;
 };
 
-static struct com_buf gross_global_bufs[NUM_TRANSACTIONS];
+static struct com_buf simulated_network_bufs[NUM_TRANSACTIONS];
 
 iqr_retval init_comms(void)
 {
     for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-        gross_global_bufs[i].data = calloc(1, MAX_PAYLOAD_BYTES);
-        if (gross_global_bufs[i].data == NULL) {
+        simulated_network_bufs[i].data = calloc(1, MAX_PAYLOAD_BYTES);
+        if (simulated_network_bufs[i].data == NULL) {
             fprintf(stderr, "MEMORY ERROR!!!. ret=%d\n", errno);
             return IQR_ENOMEM;
         }
-        gross_global_bufs[i].size = 0;
+        simulated_network_bufs[i].size = 0;
     }
     return IQR_OK;
 }
@@ -66,7 +66,7 @@ iqr_retval init_comms(void)
 void cleanup_comms(void)
 {
     for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-        free(gross_global_bufs[i].data);
+        free(simulated_network_bufs[i].data);
     }
 }
 
@@ -77,8 +77,8 @@ iqr_retval send_to_alice(uint8_t *buf, size_t size)
         return IQR_EBADVALUE;
     }
 
-    memcpy(gross_global_bufs[BOB_KEY_INDEX].data, buf, size);
-    gross_global_bufs[BOB_KEY_INDEX].size = size;
+    memcpy(simulated_network_bufs[BOB_KEY_INDEX].data, buf, size);
+    simulated_network_bufs[BOB_KEY_INDEX].size = size;
     return IQR_OK;
 }
 
@@ -89,8 +89,8 @@ iqr_retval send_to_bob(uint8_t *buf, size_t size)
         return IQR_EBADVALUE;
     }
 
-    memcpy(gross_global_bufs[ALICE_KEY_INDEX].data, buf, size);
-    gross_global_bufs[ALICE_KEY_INDEX].size = size;
+    memcpy(simulated_network_bufs[ALICE_KEY_INDEX].data, buf, size);
+    simulated_network_bufs[ALICE_KEY_INDEX].size = size;
     return IQR_OK;
 }
 
@@ -101,8 +101,8 @@ iqr_retval receive_from_alice(uint8_t *buf, size_t *size)
         return IQR_EBADVALUE;
     }
 
-    memcpy(buf, gross_global_bufs[ALICE_KEY_INDEX].data, gross_global_bufs[ALICE_KEY_INDEX].size);
-    *size = gross_global_bufs[ALICE_KEY_INDEX].size;
+    memcpy(buf, simulated_network_bufs[ALICE_KEY_INDEX].data, simulated_network_bufs[ALICE_KEY_INDEX].size);
+    *size = simulated_network_bufs[ALICE_KEY_INDEX].size;
     return IQR_OK;
 }
 
@@ -113,7 +113,7 @@ iqr_retval receive_from_bob(uint8_t *buf, size_t *size)
         return IQR_EBADVALUE;
     }
 
-    memcpy(buf, gross_global_bufs[BOB_KEY_INDEX].data, gross_global_bufs[BOB_KEY_INDEX].size);
-    *size = gross_global_bufs[BOB_KEY_INDEX].size;
+    memcpy(buf, simulated_network_bufs[BOB_KEY_INDEX].data, simulated_network_bufs[BOB_KEY_INDEX].size);
+    *size = simulated_network_bufs[BOB_KEY_INDEX].size;
     return IQR_OK;
 }

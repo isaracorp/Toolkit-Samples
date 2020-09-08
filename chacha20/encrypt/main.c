@@ -2,7 +2,7 @@
  *
  * @brief Perform encryption using the toolkit's ChaCha20 scheme.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,8 @@ static const char *usage_msg =
 "chacha20_encrypt [--key <filename>] [--nonce <filename>]\n"
 "  [--initial_counter <counter>] [--plaintext <filename>]\n"
 "  [--ciphertext <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --key key.dat\n"
 "        --nonce nonce.dat\n"
 "        --initial_counter 0\n"
@@ -89,8 +90,8 @@ end:
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *key, const char *nonce, uint32_t counter,
-    const char *plaintext, const char *ciphertext)
+static void preamble(const char *cmd, const char *key, const char *nonce, uint32_t counter, const char *plaintext,
+    const char *ciphertext)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    key file: %s\n", key);
@@ -104,7 +105,8 @@ static void preamble(const char *cmd, const char *key, const char *nonce, uint32
 /* Parse a parameter string which is supposed to be a positive integer
  * and return the value or -1 if the string is not properly formatted.
  */
-static int32_t get_positive_int_param(const char *p) {
+static int32_t get_positive_int_param(const char *p)
+{
     char *end = NULL;
     errno = 0;
     const long l = strtol(p, &end, 10);
@@ -113,7 +115,7 @@ static int32_t get_positive_int_param(const char *p) {
         return -1;
     }
     // Check that the string contained only a number and nothing else.
-    if (end == NULL || end == p || *end != '\0' ) {
+    if (end == NULL || end == p || *end != '\0') {
         return -1;
     }
     if (l < 0 || l > INT_MAX) {
@@ -171,7 +173,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **ke
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const char *key = "key.dat";
@@ -215,8 +217,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /** This function showcases the usage of ChaCha20 encryption.
-     */
+    /* This function showcases the usage of ChaCha20 encryption. */
     ret = showcase_chacha20_encrypt(key_data, key_size, nonce_data, nonce_size, counter, plaintext_data, plaintext_size,
         ciphertext);
 

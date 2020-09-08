@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's Rainbow signature scheme.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,16 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"rainbow_verify [--security IIIc|Vc] [--sig <filename>]\n"
+"rainbow_verify [--variant IIIc|Vc] [--sig <filename>]\n"
 "  [--pub <filename>] [--message <filename>]\n"
-"    Defaults are: \n"
-"        --security IIIb\n"
+"\n"
+"    Defaults:\n"
+"        --variant IIIb\n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
-"        --message message.dat\n";
+"        --message message.dat\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the verification of a Rainbow signature against a
@@ -118,7 +121,7 @@ end:
 
 static iqr_retval init_toolkit(iqr_Context **ctx)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
@@ -138,7 +141,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
         return ret;
     }
 
-
     return IQR_OK;
 }
 
@@ -156,9 +158,9 @@ static void preamble(const char *cmd, const iqr_RainbowVariant *variant, const c
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     if (variant == &IQR_RAINBOW_GF256_68_36_36) {
-        fprintf(stdout, "    security level: IIIc. parameter set: (GF(256), 68, 36, 36)\n");
+        fprintf(stdout, "    variant: IIIc. parameter set: (GF(256), 68, 36, 36)\n");
     } else if (variant == &IQR_RAINBOW_GF256_92_48_48) {
-        fprintf(stdout, "    security level: Vc. parameter set: (GF(256), 92, 48, 48)\n");
+        fprintf(stdout, "    variant: Vc. parameter set: (GF(256), 92, 48, 48)\n");
     }
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
@@ -176,12 +178,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
             return IQR_EBADVALUE;
         }
 
-        if (paramcmp(argv[i], "--security") == 0) {
-            /* [--security IIIb|IIIc|IVa|Vc|VIa|VIb] */
+        if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant IIIc|Vc] */
             i++;
-            if  (paramcmp(argv[i], "IIIc") == 0) {
+            if (paramcmp(argv[i], "IIIc") == 0) {
                 *variant = &IQR_RAINBOW_GF256_68_36_36;
-            } else if  (paramcmp(argv[i], "Vc") == 0) {
+            } else if (paramcmp(argv[i], "Vc") == 0) {
                 *variant = &IQR_RAINBOW_GF256_92_48_48;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -196,9 +198,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
             i++;
             *pub = argv[i];
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message = argv[i];
         }
         i++;
     }
@@ -211,8 +213,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Rainb
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     * here. */
+    /* Default values. Please adjust the usage message if you make changes
+     * here.
+     */
     const iqr_RainbowVariant *variant = &IQR_RAINBOW_GF256_68_36_36;
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
@@ -237,8 +240,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of Rainbow signature verification.
-     */
+    /* This function showcases the usage of Rainbow signature verification. */
     ret = showcase_rainbow_verify(ctx, variant, pub, message, sig);
 
 cleanup:

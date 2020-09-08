@@ -1,9 +1,9 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0a Hash Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 Hash Sample
 
 ## Introduction to Hashing Algorithms
 
 Hashing algorithms are one-way functions that take data as input and return
-a small fixed-sized buffer of data.  The one-way property means that given the
+a small fixed-sized buffer of data. The one-way property means that given the
 input and output of the hashing algorithm it would be difficult to create a
 different input that would get the hashing algorithm to produce the exact same
 output.
@@ -14,7 +14,7 @@ functions.
 ## Getting Started
 
 We have created a small sample application that demonstrates how to use the
-toolkit's hash implementation:
+toolkit's hash implementation.
 
 Here is the simplest way to use the sample:
 
@@ -24,11 +24,6 @@ Wonderland by Lewis Carroll. (It can be freely obtained from
 [Project Gutenberg](http://www.gutenberg.org/ebooks/11.txt.utf-8).)
 We downloaded the plaintext version and saved it as `message.dat` in the same
 directory that contained the compiled executable of the sample.
-
-**NOTE**
-Before building the samples, copy one of the CPU-specific versions of the
-toolkit libraries into a `lib` directory. For example, to build the samples
-for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
@@ -62,7 +57,7 @@ Execute the sample with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2019, ISARA Corporation
+> Copyright © 2016-2020, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

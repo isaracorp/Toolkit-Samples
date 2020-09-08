@@ -3,7 +3,7 @@
  * @brief Get parameters from a public key, then verify a signature using the
  * toolkit's XMSS^MT signature scheme.
  *
- * @copyright Copyright (C) 2019, ISARA Corporation
+ * @copyright Copyright (C) 2019-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,8 @@
 static const char *usage_msg =
 "xmssmt_verify_from_public [--sig <filename>] [--pub <filename>]\n"
 "  [--message <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
 "        --message message.dat\n";
@@ -145,14 +146,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
     uint8_t *message_raw = NULL;
     size_t message_raw_size = 0;
 
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -232,9 +233,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             i++;
             *pub = argv[i];
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message = argv[i];
         } else {
             fprintf(stderr, "Unknown argument: %s", argv[i]);
             fprintf(stdout, "%s", usage_msg);
@@ -252,8 +253,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     * here. */
+    /* Default values. Please adjust the usage message if you make changes
+     * here.
+     */
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
@@ -278,8 +280,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of XMSS^MT signature verification.
-     */
+    /* This function showcases the usage of XMSS^MT signature verification. */
     ret = showcase_xmssmt_verify_from_public(ctx, digest, pub, sig);
 
 cleanup:

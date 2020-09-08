@@ -1,4 +1,4 @@
-# Copyright (C) 2019, ISARA Corporation
+# Copyright (C) 2019-2020, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,4 +31,4 @@ endif ()
 
 add_executable (sphincs_sign main.c)
 add_dependencies(sphincs_sign isara_samples)
-target_link_libraries (sphincs_sign iqr_toolkit isara_samples)
+target_link_libraries (sphincs_sign ${IQR_TOOLKIT_LIB} isara_samples)

@@ -2,7 +2,7 @@
  *
  * @brief Perform ChaCha20-Poly1305-AEAD encryption using the toolkit.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@
 #include "isara_samples.h"
 
 /* RFC 8439 specifies that data is padded with zero-bytes so the length is a
- * 16 byte multiple. */
+ * 16 byte multiple.
+ */
 #define PAD_TO_LENGTH 16
 /* RFC 8439 specifies that lengths are written out at 8 bytes. */
 #define LENGTH_BYTES 8
@@ -49,7 +50,8 @@ static const char *usage_msg =
 "aead_chacha20_poly1305_encrypt [--key <filename>] [--nonce <filename>]\n"
 "  [--plaintext <filename>] [--aad <filename>]\n"
 "  [--ciphertext <filename>] [--tag <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --key key.dat\n"
 "        --nonce nonce.dat\n"
 "        --plaintext message.dat\n"
@@ -72,8 +74,8 @@ static iqr_retval append_length(iqr_MAC *poly1305_obj, size_t length);
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval showcase_AEAD_chacha20_poly1305_encrypt(const iqr_Context *ctx, const uint8_t *key_data, size_t key_size,
-    const uint8_t *nonce_data, size_t nonce_size, const uint8_t *plaintext_data, size_t plaintext_size,
-    const uint8_t *aad_data, size_t aad_size, const char *ciphertext_file, const char *tag_file)
+    const uint8_t *nonce_data, size_t nonce_size, const uint8_t *plaintext_data, size_t plaintext_size, const uint8_t *aad_data,
+    size_t aad_size, const char *ciphertext_file, const char *tag_file)
 {
     iqr_MAC *poly1305_obj = NULL;
     size_t ciphertext_size = 0;
@@ -266,8 +268,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *key, const char *nonce,
-    const char *plaintext, const char *aad, const char *ciphertext, const char *tag)
+static void preamble(const char *cmd, const char *key, const char *nonce, const char *plaintext, const char *aad,
+    const char *ciphertext, const char *tag)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    key file: %s\n", key);
@@ -328,7 +330,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **ke
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const char *key = "key.dat";

@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's SIDH implementation.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,14 +38,16 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"sidh [variant p503|p751] [--dump]\n"
-"        --variant p751\n"
-"        --dump Dumps the generated keys and secrets to file.\n"
-"               Filenames:\n"
-"                 Alice's key:    alice_key.dat\n"
-"                 Bob's key:      bob_key.dat\n"
-"                 Alice's secret: alice_secret.dat\n"
-"                 Bob's secret:   bob_secret.dat\n";
+"sidh [--variant p434|p503|p610|p751] [--dump]\n"
+"\n"
+"    The --dump option dumps the generated keys and secrets to file:\n"
+"        Alice's key:    alice_key.dat\n"
+"        Bob's key:      bob_key.dat\n"
+"        Alice's secret: alice_secret.dat\n"
+"        Bob's secret:   bob_secret.dat\n"
+"\n"
+"    Defaults:\n"
+"        --variant p751\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the use of SIDH to generate a shared secret.
@@ -140,14 +142,14 @@ end:
 
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_ContextCreate(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -155,7 +157,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     }
 
     /* This lets us give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
@@ -179,7 +181,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // These functions are designed to help the end user understand how to use
 // this sample and hold little value to the developer trying to learn how to
 // use the toolkit.
-//---------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
@@ -188,10 +190,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 static void preamble(const char *cmd, const iqr_SIDHVariant *variant, bool dump)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    if (variant == &IQR_SIDH_P751) {
-        fprintf(stdout, "    variant: p751\n");
-    } else {
+    if (variant == &IQR_SIDH_P434) {
+        fprintf(stdout, "    variant: p434\n");
+    } else if (variant == &IQR_SIDH_P503) {
         fprintf(stdout, "    variant: p503\n");
+    } else if (variant == &IQR_SIDH_P610) {
+        fprintf(stdout, "    variant: p610\n");
+    } else {
+        fprintf(stdout, "    variant: p751\n");
     }
     fprintf(stdout, "    Dump data to files: ");
     if (dump) {
@@ -211,11 +217,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_SIDHV
         if (paramcmp(argv[i], "--dump") == 0) {
             *dump = true;
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant p503|p751] */
+            /* [--variant p434|p503|p610|p751] */
             i++;
-            if (paramcmp(argv[i], "p503") == 0) {
+            if (paramcmp(argv[i], "p434") == 0) {
+                *variant = &IQR_SIDH_P434;
+            } else if (paramcmp(argv[i], "p503") == 0) {
                 *variant = &IQR_SIDH_P503;
-            } else if  (paramcmp(argv[i], "p751") == 0) {
+            } else if (paramcmp(argv[i], "p610") == 0) {
+                *variant = &IQR_SIDH_P610;
+            } else if (paramcmp(argv[i], "p751") == 0) {
                 *variant = &IQR_SIDH_P751;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -236,7 +246,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_SIDHV
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     bool dump = false;

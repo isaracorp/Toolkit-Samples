@@ -2,7 +2,7 @@
  *
  * @brief Common header for the sample.
  *
- * @copyright Copyright (C) 2019, ISARA Corporation
+ * @copyright Copyright (C) 2019-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,4 +53,4 @@ iqr_retval receive_from_alice(uint8_t *buf, size_t size);
 iqr_retval receive_from_bob(uint8_t *buf, size_t size);
 void cleanup_comms(void);
 
-#endif
+#endif /* INTERNAL_H */

@@ -2,7 +2,7 @@
  *
  * @brief Sign a message using the toolkit's XMSS^MT signature scheme.
  *
- * @copyright Copyright (C) 2018-2019, ISARA Corporation
+ * @copyright Copyright (C) 2018-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,13 +39,17 @@ static const char *usage_msg =
 "xmssmt_sign [--sig filename] [--priv <filename>] [--state <filename>]\n"
 "  [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d]\n"
 "  [--strategy cpu|memory|full] [--message <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --sig sig.dat\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
 "        --variant 2e20_4d\n"
 "        --strategy full\n"
-"        --message message.dat\n";
+"        --message message.dat\n"
+"\n"
+"    The --strategy and --variant must match the --strategy and --variant\n"
+"    specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases signing of a digest using the XMSS^MT signature scheme.
@@ -245,14 +249,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
     uint8_t *message_raw = NULL;
     size_t message_raw_size = 0;
 
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -269,7 +273,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
     }
 
     /* This will let us give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
@@ -328,8 +332,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *priv, const char *state,
-    const iqr_XMSSMTVariant *variant, const iqr_XMSSMTTreeStrategy *strategy, const char *message)
+static void preamble(const char *cmd, const char *sig, const char *priv, const char *state, const iqr_XMSSMTVariant *variant,
+    const iqr_XMSSMTTreeStrategy *strategy, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
@@ -396,30 +400,30 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
         } else if (paramcmp(argv[i], "--variant") == 0) {
             /* [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d] */
             i++;
-            if  (paramcmp(argv[i], "2e20_2d") == 0) {
+            if (paramcmp(argv[i], "2e20_2d") == 0) {
                 *variant = &IQR_XMSSMT_2E20_2D;
-            } else if  (paramcmp(argv[i], "2e20_4d") == 0) {
+            } else if (paramcmp(argv[i], "2e20_4d") == 0) {
                 *variant = &IQR_XMSSMT_2E20_4D;
-            } else if  (paramcmp(argv[i], "2e40_2d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_2d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_2D;
-            } else if  (paramcmp(argv[i], "2e40_4d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_4d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_4D;
-            } else if  (paramcmp(argv[i], "2e40_8d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_8d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_8D;
-            } else if  (paramcmp(argv[i], "2e60_3d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_3d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_3D;
-            } else if  (paramcmp(argv[i], "2e60_6d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_6d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_6D;
-            } else if  (paramcmp(argv[i], "2e60_12d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_12d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_12D;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message = argv[i];
         } else if (paramcmp(argv[i], "--strategy") == 0) {
             /* [--strategy cpu|memory|full] */
             i++;
@@ -451,8 +455,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     *  here.
+    /* Default values. Please adjust the usage message if you make changes here.
      */
     const char *sig = "sig.dat";
     const char *priv = "priv.key";
@@ -482,8 +485,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of XMSS^MT signing.
-     */
+    /* This function showcases the usage of XMSS^MT signing. */
     ret = showcase_xmssmt_sign(ctx, rng, variant, strategy, digest, priv, state, sig);
 
 cleanup:

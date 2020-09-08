@@ -2,7 +2,7 @@
  *
  * @brief Detach a portion of the XMSS state into a separate file.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,15 +38,19 @@
 
 static const char *usage_msg =
 "xmss_detach [--priv <filename>] [--state <filename>]\n"
-"    [--detached-state <filename>] [--num-sigs <number>] [--variant 10|16|20]\n"
-"    [--strategy cpu|memory|full]\n"
-"    Defaults are: \n"
+"  [--detached-state <filename>] [--num-sigs <number>] [--variant 10|16|20]\n"
+"  [--strategy cpu|memory|full]\n"
+"\n"
+"    Defaults:\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
 "        --strategy full\n"
 "        --variant 10\n"
 "        --detached-state detached.state\n"
-"        --num-sigs 1\n";
+"        --num-sigs 1\n"
+"\n"
+"    The --strategy and --variant must match the --strategy and --variant\n"
+"    specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases state detachment using the XMSS signature scheme.
@@ -194,14 +198,14 @@ end:
 
 static iqr_retval init_toolkit(iqr_Context **ctx)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -279,11 +283,11 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
         } else if (paramcmp(argv[i], "--variant") == 0) {
             /* [--variant 10|16|20] */
             i++;
-            if  (paramcmp(argv[i], "10") == 0) {
+            if (paramcmp(argv[i], "10") == 0) {
                 *variant = &IQR_XMSS_2E10;
-            } else if  (paramcmp(argv[i], "16") == 0) {
+            } else if (paramcmp(argv[i], "16") == 0) {
                 *variant = &IQR_XMSS_2E16;
-            } else if  (paramcmp(argv[i], "20") == 0) {
+            } else if (paramcmp(argv[i], "20") == 0) {
                 *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -326,8 +330,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     *  here.
+    /* Default values. Please adjust the usage message if you make changes here.
      */
     const char *priv = "priv.key";
     const char *state = "priv.state";
@@ -355,8 +358,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of XMSS signing.
-     */
+    /* This function showcases the usage of XMSS signing. */
     ret = showcase_xmss_detach(ctx, variant, strategy, priv, state, num_sigs, detached_state);
 
 cleanup:

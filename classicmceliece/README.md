@@ -1,4 +1,4 @@
-= ISARA Radiate™ Quantum-Safe Library 2.0a ClassicMcEliece KEM
+= ISARA Radiate™ Quantum-Safe Library 2.1 ClassicMcEliece KEM
 Samples =
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
@@ -30,11 +30,6 @@ toolkit's ClassicMcEliece KEM implementation:
 * `classicmceliece_encapsulate` takes care of step 4.
 * `classicmceliece_decapsulate` takes care of step 7.
 
-**NOTE**
-Before building the samples, copy one of the CPU-specific versions of the
-toolkit libraries into a `lib` directory. For example, to build the samples
-for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
-
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
 environment variables are set on the same line as the CMake command, or are
@@ -58,14 +53,14 @@ Execute the samples with no arguments to use the default parameters, or use
 ## Further Reading
 
 * See `iqr_classicmceliece.h` in the toolkit's `include` directory.
-* <a href="https://csrc.nist.gov/projects/post-quantum-cryptography/round-1-submissions">
-  <em>Classic McEliece/em></a>.
+* <a href="https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions">
+  <em>Classic McEliece</em></a>.
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright © 2018-2019, ISARA Corporation
+> Copyright © 2018-2020, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

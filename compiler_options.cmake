@@ -18,7 +18,7 @@ string (TOLOWER "${CMAKE_SYSTEM_NAME}" CMAKE_SYSTEM_NAME_LOWER)
 # Compiler specific flags
 if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
     ### Clang
-    add_compile_options (-Weverything)
+    add_compile_options (-Wall)
     add_compile_options (-Wno-vla)
     add_compile_options (-Wno-packed)
     add_compile_options (-Wno-padded)
@@ -74,6 +74,14 @@ if ("${CMAKE_C_COMPILER_ID}" MATCHES "Clang")
         # Cygwin warns you that -fPIC isn't necessary. That doesn't mix well
         # with -Werror unfortunately.
         add_compile_options (-fPIC)
+    endif ()
+
+    # UndefinedBehaviourSanitizer
+    if (SANITIZE)
+        # Get ready for false positives!
+        message (STATUS "Sanitizer: EXTREME MODE ENABLED")
+        add_compile_options (-fsanitize=undefined,implicit-integer-truncation,implicit-integer-arithmetic-value-change,implicit-conversion,integer,nullability)
+        add_link_options (-fsanitize=undefined,implicit-integer-truncation,implicit-integer-arithmetic-value-change,implicit-conversion,integer,nullability)
     endif ()
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")

@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's ClassicMcEliece key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2018-2019, ISARA Corporation
+ * @copyright Copyright (C) 2018-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,9 @@
 
 static const char *usage_msg =
 "classicmceliece_generate_keys [--variant 6|8] [--pub <filename>]\n"
-"    [--priv <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
+"  [--priv <filename>]\n"
+"\n"
+"    Defaults:\n"
 "        --variant 6\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n";
@@ -179,7 +180,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
     fprintf(stdout, "The context has been created.\n");
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -250,7 +251,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Class
             i++;
             if (paramcmp(argv[i], "6") == 0) {
                 *variant = &IQR_CLASSICMCELIECE_6;
-            } else if  (paramcmp(argv[i], "8") == 0) {
+            } else if (paramcmp(argv[i], "8") == 0) {
                 *variant = &IQR_CLASSICMCELIECE_8;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -271,7 +272,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Class
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_ClassicMcElieceVariant *variant = &IQR_CLASSICMCELIECE_6;

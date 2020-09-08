@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's NTRUPrime key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,10 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"ntruprime_generate_keys [--pub <filename>] [--priv <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
+"ntruprime_generate_keys [--variant 653|761|857] [--pub <filename>] [--priv <filename>]\n"
+"\n"
+"    Defaults:\n"
+"        --variant 761\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n";
 
@@ -46,14 +48,16 @@ static const char *usage_msg =
 // private keys.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_ntruprime_key_gen(const iqr_NTRUPrimeParams *params, const iqr_RNG *rng,
-    const char *pub_file, const char *priv_file)
+static iqr_retval showcase_ntruprime_key_gen(const iqr_NTRUPrimeParams *params, const iqr_RNG *rng, const char *pub_file,
+    const char *priv_file)
 {
     iqr_NTRUPrimePublicKey *pub = NULL;
     iqr_NTRUPrimePrivateKey *priv = NULL;
 
-    uint8_t pub_raw[IQR_NTRUPRIME_PUBLIC_KEY_SIZE] = { 0 };
-    uint8_t priv_raw[IQR_NTRUPRIME_PRIVATE_KEY_SIZE] = { 0 };
+    size_t pub_size = 0;
+    size_t priv_size = 0;
+    uint8_t *pub_raw = NULL;
+    uint8_t *priv_raw = NULL;
 
     fprintf(stdout, "Creating NTRUPrime key-pair.\n");
 
@@ -64,7 +68,33 @@ static iqr_retval showcase_ntruprime_key_gen(const iqr_NTRUPrimeParams *params, 
     }
     fprintf(stdout, "NTRUPrime public and private key-pair has been created\n");
 
-    ret = iqr_NTRUPrimeExportPublicKey(pub, pub_raw, sizeof(pub_raw));
+    ret = iqr_NTRUPrimeGetPrivateKeySize(params, &priv_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_NTRUPrimeGetPrivateKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    priv_raw = calloc(1, priv_size);
+    if (priv_raw == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    ret = iqr_NTRUPrimeGetPublicKeySize(params, &pub_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_NTRUPrimeGetPublicKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    pub_raw = calloc(1, pub_size);
+    if (pub_raw == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    ret = iqr_NTRUPrimeExportPublicKey(pub, pub_raw, pub_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_NTRUPrimeExportPublicKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -72,7 +102,7 @@ static iqr_retval showcase_ntruprime_key_gen(const iqr_NTRUPrimeParams *params, 
 
     fprintf(stdout, "Public key has been exported.\n");
 
-    ret = iqr_NTRUPrimeExportPrivateKey(priv, priv_raw, sizeof(priv_raw));
+    ret = iqr_NTRUPrimeExportPrivateKey(priv, priv_raw, priv_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_NTRUPrimeExportPrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -81,12 +111,12 @@ static iqr_retval showcase_ntruprime_key_gen(const iqr_NTRUPrimeParams *params, 
     fprintf(stdout, "Private key has been exported.\n");
 
     /* And finally, write the public and private key to disk. */
-    ret = save_data(pub_file, pub_raw, sizeof(pub_raw));
+    ret = save_data(pub_file, pub_raw, pub_size);
     if (ret != IQR_OK) {
         goto end;
     }
 
-    ret = save_data(priv_file, priv_raw, sizeof(priv_raw));
+    ret = save_data(priv_file, priv_raw, priv_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -98,6 +128,8 @@ end:
      * containing them when you're done.
      */
     secure_memzero(priv_raw, sizeof(priv_raw));
+    free(priv_raw);
+    free(pub_raw);
 
     iqr_NTRUPrimeDestroyPublicKey(&pub);
     iqr_NTRUPrimeDestroyPrivateKey(&priv);
@@ -109,10 +141,11 @@ end:
 // This function showcases the creation of NTRUPrime parameter structure.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_ntruprime_params_creation(const iqr_Context *ctx, iqr_NTRUPrimeParams **params)
+static iqr_retval showcase_ntruprime_params_creation(const iqr_Context *ctx, const iqr_NTRUPrimeVariant *variant,
+    iqr_NTRUPrimeParams **params)
 {
     /* Create NTRUPrime parameters. */
-    iqr_retval ret = iqr_NTRUPrimeCreateParams(ctx, params);
+    iqr_retval ret = iqr_NTRUPrimeCreateParams(ctx, variant, params);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_NTRUPrimeCreateParams(): %s\n", iqr_StrError(ret));
         return ret;
@@ -141,7 +174,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
     fprintf(stdout, "The context has been created.\n");
 
-    /* Globally register the hashing functions. */
+    /* Register the hashing functions with the Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -183,15 +216,23 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char * pub, const char * priv)
+static void preamble(const char *cmd, const iqr_NTRUPrimeVariant *variant, const char *pub, const char *priv)
 {
     fprintf(stdout, "Running %s with the following parameters:\n", cmd);
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
+    if (variant == &IQR_SNTRUP_653) {
+        fprintf(stdout, "    variant: IQR_SNTRUP_653\n");
+    } else if (variant == &IQR_SNTRUP_761) {
+        fprintf(stdout, "    variant: IQR_SNTRUP_761\n");
+    } else {
+        fprintf(stdout, "    variant: IQR_SNTRUP_857\n");
+    }
 }
 
 /* Parse the command line options. */
-static iqr_retval parse_commandline(int argc, const char **argv, const char **public_key_file, const char **private_key_file)
+static iqr_retval parse_commandline(int argc, const char **argv, const iqr_NTRUPrimeVariant **variant, const char **public_key_file,
+    const char **private_key_file)
 {
     int i = 1;
     while (i != argc) {
@@ -203,6 +244,19 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             /* [--priv <filename>] */
             i++;
             *private_key_file = argv[i];
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 653|761|857] */
+            i++;
+            if (paramcmp(argv[i], "653") == 0) {
+                *variant = &IQR_SNTRUP_653;
+            } else if (paramcmp(argv[i], "761") == 0) {
+                *variant = &IQR_SNTRUP_761;
+            } else if (paramcmp(argv[i], "857") == 0) {
+                *variant = &IQR_SNTRUP_857;
+            } else {
+                fprintf(stdout, "%s", usage_msg);
+                return IQR_EBADVALUE;
+            }
         } else {
             fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
@@ -219,9 +273,10 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
+    const iqr_NTRUPrimeVariant *variant = &IQR_SNTRUP_761;
     const char *public_key_file = "pub.key";
     const char *private_key_file = "priv.key";
 
@@ -232,13 +287,13 @@ int main(int argc, const char **argv)
     /* If the command line arguments were not sane, this function will return
      * an error.
      */
-    iqr_retval ret = parse_commandline(argc, argv, &public_key_file, &private_key_file);
+    iqr_retval ret = parse_commandline(argc, argv, &variant, &public_key_file, &private_key_file);
     if (ret != IQR_OK) {
         return EXIT_FAILURE;
     }
 
     /* Show the parameters for the program. */
-    preamble(argv[0], public_key_file, private_key_file);
+    preamble(argv[0], variant, public_key_file, private_key_file);
 
     /* IQR toolkit initialization. */
     ret = init_toolkit(&ctx, &rng);
@@ -247,7 +302,7 @@ int main(int argc, const char **argv)
     }
 
     /* Showcase the creation of NTRUPrime parameter structure. */
-    ret = showcase_ntruprime_params_creation(ctx, &parameters);
+    ret = showcase_ntruprime_params_creation(ctx, variant, &parameters);
     if (ret != IQR_OK) {
         goto cleanup;
     }

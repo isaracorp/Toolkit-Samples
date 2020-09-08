@@ -1,8 +1,8 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0a Dilithium Samples
+# ISARA Radiate™ Quantum-Safe Library 2.1 Dilithium Samples
 
 ## Introduction to Signature Schemes
 
-In general, all signature schemes follow a similar pattern.  There is one
+In general, all signature schemes follow a similar pattern. There is one
 signer and any number of verifiers.
 
 1.  The signer generates a public and private key pair.
@@ -28,9 +28,10 @@ toolkit's Dilithium implementation:
 
 The rest of the steps are left up to the underlying system.
 
-As per [CRYSTALS -- Dilithium:](https://eprint.iacr.org/2017/633.pdf)
-Digital Signatures from Module Lattices, the toolkit's Dilithium implementation
-provides both 128-bit and 160-bit quantum security.
+As per https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions[CRYSTALS
+- Dilithium], the toolkit's Dilithium implementation provides
+103 bits, 138 bits, and 176 bits of classical security with the
+`IQR_DILITHIUM_80`, `IQR_DILITHIUM_128`, and `IQR_DILITHIUM_160` variants.
 
 Here is the simplest way to use the samples:
 
@@ -40,11 +41,6 @@ Wonderland by Lewis Carroll. (It can be freely obtained from
 [Project Gutenberg](http://www.gutenberg.org/ebooks/11.txt.utf-8).)
 We downloaded the plaintext version and saved it as `message.dat` in the same
 directory that contained the compiled executables of the samples.
-
-**NOTE**
-Before building the samples, copy one of the CPU-specific versions of the
-toolkit libraries into a `lib` directory. For example, to build the samples
-for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
@@ -74,7 +70,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2017-2019, ISARA Corporation
+> Copyright © 2017-2020, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

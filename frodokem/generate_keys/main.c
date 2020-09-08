@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's FrodoKEM key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2018-2019, ISARA Corporation
+ * @copyright Copyright (C) 2018-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,10 +36,12 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"frodokem_generate_keys [--variant AES|SHAKE] [--pub <filename>]\n"
-"    [--priv <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
-"        --variant AES\n"
+"frodokem_generate_keys\n"
+"  [--variant 640AES|640SHAKE|976AES|976SHAKE|1344AES|1344SHAKE]\n"
+"  [--pub <filename>] [--priv <filename>]\n"
+"\n"
+"    Defaults:\n"
+"        --variant 976AES\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n";
 
@@ -48,14 +50,16 @@ static const char *usage_msg =
 // private keys.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_frodokem_key_gen(const iqr_FrodoKEMParams *params, const iqr_RNG *rng,
-    const char *pub_file, const char *priv_file)
+static iqr_retval showcase_frodokem_key_gen(const iqr_FrodoKEMParams *params, const iqr_RNG *rng, const char *pub_file,
+    const char *priv_file)
 {
     iqr_FrodoKEMPublicKey *pub = NULL;
     iqr_FrodoKEMPrivateKey *priv = NULL;
 
-    uint8_t pub_raw[IQR_FRODOKEM_PUBLIC_KEY_SIZE] = { 0 };
-    uint8_t priv_raw[IQR_FRODOKEM_PRIVATE_KEY_SIZE] = { 0 };
+    uint8_t *pub_raw = NULL;
+    size_t pub_raw_size = 0;
+    uint8_t *priv_raw = NULL;
+    size_t priv_raw_size = 0;
 
     fprintf(stdout, "Creating FrodoKEM key-pair.\n");
 
@@ -66,7 +70,20 @@ static iqr_retval showcase_frodokem_key_gen(const iqr_FrodoKEMParams *params, co
     }
     fprintf(stdout, "FrodoKEM public and private key-pair has been created\n");
 
-    ret = iqr_FrodoKEMExportPublicKey(pub, pub_raw, sizeof(pub_raw));
+    ret = iqr_FrodoKEMGetPublicKeySize(params, &pub_raw_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_FrodoKEMGetPublicKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    pub_raw = calloc(1, pub_raw_size);
+    if (pub_raw == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    ret = iqr_FrodoKEMExportPublicKey(pub, pub_raw, pub_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_FrodoKEMExportPublicKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -74,7 +91,20 @@ static iqr_retval showcase_frodokem_key_gen(const iqr_FrodoKEMParams *params, co
 
     fprintf(stdout, "Public key has been exported.\n");
 
-    ret = iqr_FrodoKEMExportPrivateKey(priv, priv_raw, sizeof(priv_raw));
+    ret = iqr_FrodoKEMGetPrivateKeySize(params, &priv_raw_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_FrodoKEMGetPrivateKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    priv_raw = calloc(1, priv_raw_size);
+    if (priv_raw == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
+    ret = iqr_FrodoKEMExportPrivateKey(priv, priv_raw, priv_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_FrodoKEMExportPrivateKey(): %s\n", iqr_StrError(ret));
         goto end;
@@ -83,12 +113,12 @@ static iqr_retval showcase_frodokem_key_gen(const iqr_FrodoKEMParams *params, co
     fprintf(stdout, "Private key has been exported.\n");
 
     /* And finally, write the public and private key to disk. */
-    ret = save_data(pub_file, pub_raw, sizeof(pub_raw));
+    ret = save_data(pub_file, pub_raw, pub_raw_size);
     if (ret != IQR_OK) {
         goto end;
     }
 
-    ret = save_data(priv_file, priv_raw, sizeof(priv_raw));
+    ret = save_data(priv_file, priv_raw, priv_raw_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -96,13 +126,18 @@ static iqr_retval showcase_frodokem_key_gen(const iqr_FrodoKEMParams *params, co
     fprintf(stdout, "Public and private keys have been saved to disk.\n");
 
 end:
-    /* (Private) Keys are private, sensitive data, be sure to clear memory
-     * containing them when you're done.
-     */
-    secure_memzero(priv_raw, sizeof(priv_raw));
+    if (priv_raw != NULL) {
+        /* (Private) Keys are private, sensitive data, be sure to clear memory
+         * containing them when you're done.
+         */
+        secure_memzero(priv_raw, priv_raw_size);
+    }
 
     iqr_FrodoKEMDestroyPublicKey(&pub);
     iqr_FrodoKEMDestroyPrivateKey(&priv);
+
+    free(pub_raw);
+    free(priv_raw);
 
     return ret;
 }
@@ -147,7 +182,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
     fprintf(stdout, "The context has been created.\n");
 
-    /* This sets the SHA2-256 functions that will be used globally. */
+    /* This sets the SHA2-256 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -194,10 +229,18 @@ static void preamble(const char *cmd, const iqr_FrodoKEMVariant *variant, const 
     fprintf(stdout, "Running %s with the following parameters:\n", cmd);
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
-    if (variant == &IQR_FRODOKEM_976_AES) {
-        fprintf(stdout, "    variant: AES\n");
+    if (variant == &IQR_FRODOKEM_640_AES) {
+        fprintf(stdout, "    variant: 640AES\n");
+    } else if (variant == &IQR_FRODOKEM_640_SHAKE) {
+        fprintf(stdout, "    variant: 640SHAKE\n");
+    } else if (variant == &IQR_FRODOKEM_976_AES) {
+        fprintf(stdout, "    variant: 976AES\n");
+    } else if (variant == &IQR_FRODOKEM_976_SHAKE) {
+        fprintf(stdout, "    variant: 976SHAKE\n");
+    } else if (variant == &IQR_FRODOKEM_1344_AES) {
+        fprintf(stdout, "    variant: 1344AES\n");
     } else {
-        fprintf(stdout, "    variant: SHAKE\n");
+        fprintf(stdout, "    variant: 1344SHAKE\n");
     }
 }
 
@@ -216,12 +259,20 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Frodo
             i++;
             *private_key_file = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant AES|SHAKE] */
+            /* [--variant 640AES|640SHAKE|976AES|976SHAKE|1344AES|1344SHAKE] */
             i++;
-            if (paramcmp(argv[i], "AES") == 0) {
+            if (paramcmp(argv[i], "640AES") == 0) {
+                *variant = &IQR_FRODOKEM_640_AES;
+            } else if (paramcmp(argv[i], "640SHAKE") == 0) {
+                *variant = &IQR_FRODOKEM_640_SHAKE;
+            } else if (paramcmp(argv[i], "976AES") == 0) {
                 *variant = &IQR_FRODOKEM_976_AES;
-            } else if  (paramcmp(argv[i], "SHAKE") == 0) {
+            } else if (paramcmp(argv[i], "976SHAKE") == 0) {
                 *variant = &IQR_FRODOKEM_976_SHAKE;
+            } else if (paramcmp(argv[i], "1344AES") == 0) {
+                *variant = &IQR_FRODOKEM_1344_AES;
+            } else if  (paramcmp(argv[i], "1344SHAKE") == 0) {
+                *variant = &IQR_FRODOKEM_1344_SHAKE;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -241,7 +292,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Frodo
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_FrodoKEMVariant *variant = &IQR_FRODOKEM_976_AES;

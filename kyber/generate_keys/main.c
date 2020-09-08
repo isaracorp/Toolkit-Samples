@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's Kyber key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,11 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"kyber_generate_keys [--security 128|224] [--pub <filename>] [--priv <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
-"        --security 128\n"
+"kyber_generate_keys [--variant 512|768|1024] [--pub <filename>]\n"
+"  [--priv <filename>]\n"
+"\n"
+"    Defaults:\n"
+"        --variant 768\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n";
 
@@ -47,8 +49,8 @@ static const char *usage_msg =
 // private keys.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_kyber_key_gen(const iqr_KyberParams *params, const iqr_RNG *rng,
-    const char *pub_file, const char *priv_file)
+static iqr_retval showcase_kyber_key_gen(const iqr_KyberParams *params, const iqr_RNG *rng, const char *pub_file,
+    const char *priv_file)
 {
     iqr_KyberPublicKey *pub = NULL;
     iqr_KyberPrivateKey *priv = NULL;
@@ -179,21 +181,21 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
     fprintf(stdout, "The context has been created.\n");
 
-    /* This sets the SHA2-256 functions that will be used globally. */
+    /* This sets the SHA2-256 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the SHA3-256 functions that will be used globally. */
+    /* This sets the SHA3-256 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_256, &IQR_HASH_DEFAULT_SHA3_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the SHA3-512 functions that will be used globally. */
+    /* This sets the SHA3-512 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -240,10 +242,12 @@ static void preamble(const char *cmd, const iqr_KyberVariant *variant, const cha
     fprintf(stdout, "Running %s with the following parameters:\n", cmd);
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    private key file: %s\n", priv);
-    if (variant == &IQR_KYBER_768) {
-        fprintf(stdout, "    security level: 128 bits\n");
+    if (variant == &IQR_KYBER_512) {
+        fprintf(stdout, "    variant: IQR_KYBER_512\n");
+    } else if (variant == &IQR_KYBER_768) {
+        fprintf(stdout, "    variant: IQR_KYBER_768\n");
     } else {
-        fprintf(stdout, "    security level: 224 bits\n");
+        fprintf(stdout, "    variant: IQR_KYBER_1024\n");
     }
 }
 
@@ -261,12 +265,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Kyber
             /* [--priv <filename>] */
             i++;
             *private_key_file = argv[i];
-        } else if (paramcmp(argv[i], "--security") == 0) {
-            /* [--security 128|224] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 512|768|1024] */
             i++;
-            if (paramcmp(argv[i], "128") == 0) {
+            if (paramcmp(argv[i], "512") == 0) {
+                *variant = &IQR_KYBER_512;
+            } else if (paramcmp(argv[i], "768") == 0) {
                 *variant = &IQR_KYBER_768;
-            } else if  (paramcmp(argv[i], "224") == 0) {
+            } else if (paramcmp(argv[i], "1024") == 0) {
                 *variant = &IQR_KYBER_1024;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -287,7 +293,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Kyber
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_KyberVariant *variant = &IQR_KYBER_768;

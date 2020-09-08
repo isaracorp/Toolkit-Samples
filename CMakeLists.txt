@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019, ISARA Corporation
+# Copyright (C) 2017-2020, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,27 +42,30 @@ set (
     frodokem/encapsulate
     frodokem/generate_keys
     hash
-    hmac
     hss/detach
     hss/generate_keys
     hss/sign
     hss/verify
     hss/verify_from_sig
-    kdf_concatenation
-    kdf_pbkdf2
-    kdf_rfc5869
+    kdf/concatenation
+    kdf/pbkdf2
+    kdf/rfc5869
     kyber/decapsulate
     kyber/encapsulate
     kyber/generate_keys
+    mac/hmac
+    mac/poly1305
     newhopedh
     ntruprime/decapsulate
     ntruprime/encapsulate
     ntruprime/generate_keys
-    poly1305
     rainbow/generate_keys
     rainbow/sign
     rainbow/verify
     rng
+    saber/decapsulate
+    saber/encapsulate
+    saber/generate_keys
     samwise
     sidh
     sike/decapsulate
@@ -82,6 +85,12 @@ set (
     xmssmt/sign
     xmssmt/verify
     xmssmt/verify_from_public
+
+    # Integration samples. These are only built if your system has the
+    # necessary dependencies.
+    integration/hash-openssl    # Requires OpenSSL development headers/libraries.
+    integration/rng-cng         # Requires Windows CNG.
+    integration/rng-urandom     # Requires a /dev/random device.
 )
 
 foreach(sample ${samples})

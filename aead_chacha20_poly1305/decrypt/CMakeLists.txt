@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019, ISARA Corporation
+# Copyright (C) 2016-2020, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,4 +31,4 @@ endif ()
 
 add_executable (aead_chacha20_poly1305_decrypt main.c)
 add_dependencies(aead_chacha20_poly1305_decrypt isara_samples)
-target_link_libraries (aead_chacha20_poly1305_decrypt iqr_toolkit isara_samples)
+target_link_libraries (aead_chacha20_poly1305_decrypt ${IQR_TOOLKIT_LIB} isara_samples)

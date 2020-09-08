@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's HSS signature scheme.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,16 +34,18 @@
 
 static const char *usage_msg =
 "hss_verify [--sig <filename>] [--pub <filename>]\n"
-"  [--variant 2e20f|2e25f|2e20s|2e25s]\n"
+"  [--variant 2e15f|2e20f|2e30f|2e45f|2e65f|2e15s|2e20s|2e30s|2e45s|2e65s]\n"
 "  [--message <filename>]\n"
 "\n"
-"  The 'f' variants are Fast, the 's' variants are Small.\n"
+"    The 'f' variants are Fast, the 's' variants are Small.\n"
 "\n"
-"  Defaults are: \n"
+"    Defaults:\n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
-"        --variant 2e20f\n"
-"        --message message.dat\n";
+"        --variant 2e30f\n"
+"        --message message.dat\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the verification of an HSS signature against a
@@ -126,7 +128,7 @@ static iqr_retval create_digest(const iqr_Context *ctx, uint8_t *data, size_t da
     }
 
     /* The HSS scheme will sign a digest of the message, so we need a digest
-     * of our message.  This will give us that digest.
+     * of our message. This will give us that digest.
      */
     ret = iqr_HashMessage(hash, data, data_size, out_digest, IQR_SHA2_512_DIGEST_SIZE);
     if (ret != IQR_OK) {
@@ -144,14 +146,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
     uint8_t *message_raw = NULL;
     size_t message_raw_size = 0;
 
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -201,21 +203,32 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_HSSVariant *variant,
-    const char *message)
+static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_HSSVariant *variant, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
 
-    if (variant == &IQR_HSS_2E20_FAST) {
+    if (variant == &IQR_HSS_2E15_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E15_FAST\n");
+    } else if (variant == &IQR_HSS_2E15_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E15_SMALL\n");
+    } else if (variant == &IQR_HSS_2E20_FAST) {
         fprintf(stdout, "    Variant: IQR_HSS_2E20_FAST\n");
     } else if (variant == &IQR_HSS_2E20_SMALL) {
         fprintf(stdout, "    Variant: IQR_HSS_2E20_SMALL\n");
-    } else if (variant == &IQR_HSS_2E25_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E25_FAST\n");
-    } else if (variant == &IQR_HSS_2E25_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E25_SMALL\n");
+    } else if (variant == &IQR_HSS_2E30_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30_FAST\n");
+    } else if (variant == &IQR_HSS_2E30_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30_SMALL\n");
+    } else if (variant == &IQR_HSS_2E45_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45_FAST\n");
+    } else if (variant == &IQR_HSS_2E45_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45_SMALL\n");
+    } else if (variant == &IQR_HSS_2E65_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65_FAST\n");
+    } else if (variant == &IQR_HSS_2E65_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65_SMALL\n");
     } else {
         fprintf(stdout, "    Variant: INVALID\n");
     }
@@ -244,22 +257,34 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             *pub = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
-            if (paramcmp(argv[i], "2e20f") == 0) {
+            if (paramcmp(argv[i], "2e15f") == 0) {
+                *variant = &IQR_HSS_2E15_FAST;
+            } else if (paramcmp(argv[i], "2e15s") == 0) {
+                *variant = &IQR_HSS_2E15_SMALL;
+            } else if (paramcmp(argv[i], "2e20f") == 0) {
                 *variant = &IQR_HSS_2E20_FAST;
             } else if (paramcmp(argv[i], "2e20s") == 0) {
                 *variant = &IQR_HSS_2E20_SMALL;
-            } else if (paramcmp(argv[i], "2e25f") == 0) {
-                *variant = &IQR_HSS_2E25_FAST;
-            } else if (paramcmp(argv[i], "2e25s") == 0) {
-                *variant = &IQR_HSS_2E25_SMALL;
+            } else if (paramcmp(argv[i], "2e30f") == 0) {
+                *variant = &IQR_HSS_2E30_FAST;
+            } else if (paramcmp(argv[i], "2e30s") == 0) {
+                *variant = &IQR_HSS_2E30_SMALL;
+            } else if (paramcmp(argv[i], "2e45f") == 0) {
+                *variant = &IQR_HSS_2E45_FAST;
+            } else if (paramcmp(argv[i], "2e45s") == 0) {
+                *variant = &IQR_HSS_2E45_SMALL;
+            } else if (paramcmp(argv[i], "2e65f") == 0) {
+                *variant = &IQR_HSS_2E65_FAST;
+            } else if (paramcmp(argv[i], "2e65s") == 0) {
+                *variant = &IQR_HSS_2E65_SMALL;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message = argv[i];
         }
 
         i++;
@@ -273,12 +298,13 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     * here. */
+    /* Default values. Please adjust the usage message if you make changes
+     * here.
+     */
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
-    const iqr_HSSVariant *variant = &IQR_HSS_2E20_FAST;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E30_FAST;
 
     iqr_Context *ctx = NULL;
     uint8_t *digest = NULL;
@@ -300,8 +326,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of HSS signature verification.
-     */
+    /* This function showcases the usage of HSS signature verification. */
     ret = showcase_hss_verify(ctx, variant, digest, pub, sig);
 
 cleanup:

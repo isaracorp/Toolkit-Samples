@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2019, ISARA Corporation
+# Copyright (C) 2016-2020, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,4 +25,4 @@ include (../find_toolkit.cmake)
 include (../compiler_options.cmake)
 
 add_executable (version main.c)
-target_link_libraries (version iqr_toolkit)
+target_link_libraries (version ${IQR_TOOLKIT_LIB})

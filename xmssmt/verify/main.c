@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's XMSS^MT signature scheme.
  *
- * @copyright Copyright (C) 2018-2019, ISARA Corporation
+ * @copyright Copyright (C) 2018-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,19 +36,22 @@ static const char *usage_msg =
 "xmssmt_verify [--sig <filename>] [--pub <filename>]\n"
 "  [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d]\n"
 "  [--message <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
 "        --variant 2e20_4d\n"
-"        --message message.dat\n";
+"        --message message.dat\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the verification of an XMSS^MT signature against a
 // digest.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_xmssmt_verify(const iqr_Context *ctx, const iqr_XMSSMTVariant *variant,
-    const uint8_t *digest, const char *pub_file, const char *sig_file)
+static iqr_retval showcase_xmssmt_verify(const iqr_Context *ctx, const iqr_XMSSMTVariant *variant, const uint8_t *digest,
+    const char *pub_file, const char *sig_file)
 {
     iqr_XMSSMTParams *params = NULL;
     iqr_XMSSMTPublicKey *pub = NULL;
@@ -145,14 +148,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
     uint8_t *message_raw = NULL;
     size_t message_raw_size = 0;
 
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -204,8 +207,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSMTVariant *variant,
-    const char *message)
+static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSMTVariant *variant, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
@@ -257,30 +259,30 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
         } else if (paramcmp(argv[i], "--variant") == 0) {
             /* [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d] */
             i++;
-            if  (paramcmp(argv[i], "2e20_2d") == 0) {
+            if (paramcmp(argv[i], "2e20_2d") == 0) {
                 *variant = &IQR_XMSSMT_2E20_2D;
-            } else if  (paramcmp(argv[i], "2e20_4d") == 0) {
+            } else if (paramcmp(argv[i], "2e20_4d") == 0) {
                 *variant = &IQR_XMSSMT_2E20_4D;
-            } else if  (paramcmp(argv[i], "2e40_2d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_2d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_2D;
-            } else if  (paramcmp(argv[i], "2e40_4d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_4d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_4D;
-            } else if  (paramcmp(argv[i], "2e40_8d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_8d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_8D;
-            } else if  (paramcmp(argv[i], "2e60_3d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_3d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_3D;
-            } else if  (paramcmp(argv[i], "2e60_6d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_6d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_6D;
-            } else if  (paramcmp(argv[i], "2e60_12d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_12d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_12D;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message = argv[i];
         } else {
             fprintf(stderr, "Unknown argument: %s", argv[i]);
             fprintf(stdout, "%s", usage_msg);
@@ -298,8 +300,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     * here. */
+    /* Default values. Please adjust the usage message if you make changes
+     * here.
+     */
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
@@ -325,8 +328,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of XMSS^MT signature verification.
-     */
+    /* This function showcases the usage of XMSS^MT signature verification. */
     ret = showcase_xmssmt_verify(ctx, variant, digest, pub, sig);
 
 cleanup:

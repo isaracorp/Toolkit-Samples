@@ -2,7 +2,7 @@
  *
  * @brief Perform ChaCha20-Poly1305-AEAD decryption using the toolkit.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,8 @@
 #include "isara_samples.h"
 
 /* RFC 8439 specifies that data is padded with zero-bytes so the length is a
- * 16 byte multiple. */
+ * 16 byte multiple.
+ */
 #define PAD_TO_LENGTH 16
 /* RFC 8439 specifies that lengths are written out at 8 bytes. */
 #define LENGTH_BYTES 8
@@ -49,7 +50,8 @@ static const char *usage_msg =
 "aead_chacha20_poly1305_decrypt [--key <filename>] [--nonce <filename>]\n"
 "  [--ciphertext <filename>] [--aad <filename>]\n"
 "  [--tag <filename>] [--plaintext <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --key key.dat\n"
 "        --nonce nonce.dat\n"
 "        --ciphertext ciphertext.dat\n"
@@ -73,8 +75,8 @@ static iqr_retval decrypt_ciphertext(const uint8_t *key_data, size_t key_size, c
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval showcase_AEAD_chacha20_poly1305_decrypt(const iqr_Context *ctx, const uint8_t *key_data, size_t key_size,
-    const uint8_t *nonce_data, size_t nonce_size, const uint8_t *ciphertext_data, size_t ciphertext_size,
-    const uint8_t *aad_data, size_t aad_size, const uint8_t *tag_data, size_t tag_size, const char *plaintext_file)
+    const uint8_t *nonce_data, size_t nonce_size, const uint8_t *ciphertext_data, size_t ciphertext_size, const uint8_t *aad_data,
+    size_t aad_size, const uint8_t *tag_data, size_t tag_size, const char *plaintext_file)
 {
     iqr_MAC *poly1305_obj = NULL;
 
@@ -201,6 +203,10 @@ static iqr_retval append_data_and_pad(iqr_MAC *poly1305_obj, const uint8_t *data
 
 static iqr_retval append_length(iqr_MAC *poly1305_obj, size_t length)
 {
+    if (length > UCHAR_MAX) {
+        return IQR_EOUTOFRANGE;
+    }
+
     uint8_t length_bytes[LENGTH_BYTES];
     for (int i = 0; i < LENGTH_BYTES; i++) {
         length_bytes[i] = (uint8_t)length;
@@ -286,8 +292,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *key, const char *nonce,
-    const char *ciphertext, const char *aad, const char *tag, const char *plaintext)
+static void preamble(const char *cmd, const char *key, const char *nonce, const char *ciphertext, const char *aad, const char *tag,
+    const char *plaintext)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    key file: %s\n", key);
@@ -348,7 +354,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **ke
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const char *key = "key.dat";

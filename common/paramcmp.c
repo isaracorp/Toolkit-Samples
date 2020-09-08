@@ -2,7 +2,7 @@
  *
  * @brief Test to see if two parameters match.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,10 @@
 
 int paramcmp(const char *p1 , const char *p2)
 {
+    if (p1 == NULL || p2 == NULL) {
+        return -1;
+    }
+
     const size_t max_param_size = 32;  // Arbitrary, but reasonable.
 
     if (strnlen(p1, max_param_size) != strnlen(p2, max_param_size)) {

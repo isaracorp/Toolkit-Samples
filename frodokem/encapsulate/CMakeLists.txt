@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2019, ISARA Corporation
+# Copyright (C) 2018-2020, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,4 +33,4 @@ endif ()
 
 add_executable (frodokem_encapsulate main.c)
 add_dependencies(frodokem_encapsulate isara_samples)
-target_link_libraries (frodokem_encapsulate iqr_toolkit isara_samples)
+target_link_libraries (frodokem_encapsulate ${IQR_TOOLKIT_LIB} isara_samples)

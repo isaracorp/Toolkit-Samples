@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's XMSS^MT signature scheme.
  *
- * @copyright Copyright (C) 2018-2019, ISARA Corporation
+ * @copyright Copyright (C) 2018-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ static const char *usage_msg =
 "  [--state <filename>]\n"
 "  [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d]\n"
 "  [--strategy cpu|memory|full]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
@@ -212,7 +213,7 @@ static iqr_retval progress_watchdog(void *watchdog_data)
 // Initialize the toolkit and the algorithms required by XMSS^MT.
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
@@ -226,7 +227,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -234,7 +235,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     }
 
     /* This lets us give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
@@ -264,8 +265,8 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *pub, const char *priv, const char *state,
-    const iqr_XMSSMTVariant* variant, const iqr_XMSSMTTreeStrategy *strategy)
+static void preamble(const char *cmd, const char *pub, const char *priv, const char *state, const iqr_XMSSMTVariant* variant,
+    const iqr_XMSSMTTreeStrategy *strategy)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    public key file: %s\n", pub);
@@ -331,21 +332,21 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
         } else if (paramcmp(argv[i], "--variant") == 0) {
             /* [--variant 2e20_2d|2e20_4d|2e40_2d|2e40_4d|2e40_8d|2e60_3d|2e60_6d|2e60_12d] */
             i++;
-            if  (paramcmp(argv[i], "2e20_2d") == 0) {
+            if (paramcmp(argv[i], "2e20_2d") == 0) {
                 *variant = &IQR_XMSSMT_2E20_2D;
-            } else if  (paramcmp(argv[i], "2e20_4d") == 0) {
+            } else if (paramcmp(argv[i], "2e20_4d") == 0) {
                 *variant = &IQR_XMSSMT_2E20_4D;
-            } else if  (paramcmp(argv[i], "2e40_2d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_2d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_2D;
-            } else if  (paramcmp(argv[i], "2e40_4d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_4d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_4D;
-            } else if  (paramcmp(argv[i], "2e40_8d") == 0) {
+            } else if (paramcmp(argv[i], "2e40_8d") == 0) {
                 *variant = &IQR_XMSSMT_2E40_8D;
-            } else if  (paramcmp(argv[i], "2e60_3d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_3d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_3D;
-            } else if  (paramcmp(argv[i], "2e60_6d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_6d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_6D;
-            } else if  (paramcmp(argv[i], "2e60_12d") == 0) {
+            } else if (paramcmp(argv[i], "2e60_12d") == 0) {
                 *variant = &IQR_XMSSMT_2E60_12D;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -382,7 +383,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const char *pub = "pub.key";
@@ -411,8 +412,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of XMSS^MT key generation.
-     */
+    /* This function showcases the usage of XMSS^MT key generation. */
     ret = showcase_xmssmt_keygen(ctx, rng, pub, priv, state, strategy, variant);
 
 cleanup:

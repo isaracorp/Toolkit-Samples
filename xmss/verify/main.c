@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's XMSS signature scheme.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,11 +35,14 @@
 static const char *usage_msg =
 "xmss_verify [--sig <filename>] [--pub <filename>] [--variant 10|16|20]\n"
 "  [--message <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
 "        --variant 10\n"
-"        --message message.dat\n";
+"        --message message.dat\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the verification of an XMSS signature against a
@@ -144,14 +147,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
     uint8_t *message_raw = NULL;
     size_t message_raw_size = 0;
 
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -202,8 +205,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t *
 // Report the chosen runtime parameters.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSVariant *variant,
-    const char *message)
+static void preamble(const char *cmd, const char *sig, const char *pub, const iqr_XMSSVariant *variant, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
     fprintf(stdout, "    signature file: %s\n", sig);
@@ -246,18 +248,18 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             i++;
             if (paramcmp(argv[i], "10") == 0) {
                 *variant = &IQR_XMSS_2E10;
-            } else if  (paramcmp(argv[i], "16") == 0) {
+            } else if (paramcmp(argv[i], "16") == 0) {
                 *variant = &IQR_XMSS_2E16;
-            } else if  (paramcmp(argv[i], "20") == 0) {
+            } else if (paramcmp(argv[i], "20") == 0) {
                 *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message = argv[i];
         }
         i++;
     }
@@ -271,8 +273,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     * here. */
+    /* Default values. Please adjust the usage message if you make changes
+     * here.
+     */
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";
@@ -298,8 +301,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of XMSS signature verification.
-     */
+    /* This function showcases the usage of XMSS signature verification. */
     ret = showcase_xmss_verify(ctx, variant, digest, pub, sig);
 
 cleanup:

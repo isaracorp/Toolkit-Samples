@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's FrodoKEM key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2018-2019, ISARA Corporation
+ * @copyright Copyright (C) 2018-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,13 +35,17 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"frodokem_decapsulate [--variant AES|SHAKE] [--priv <filename>]\n"
-"  [--ciphertext <filename>] [--shared <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
-"        --variant AES\n"
+"frodokem_decapsulate\n"
+"  [--variant 640AES|640SHAKE|976AES|976SHAKE|1344AES|1344SHAKE]\n"
+"  [--priv <filename>] [--ciphertext <filename>] [--shared <filename>]\n"
+"\n"
+"    Defaults:\n"
+"        --variant 976AES\n"
 "        --priv priv.key\n"
 "        --ciphertext ciphertext.dat\n"
-"        --shared shared.key\n";
+"        --shared shared.key\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases FrodoKEM decapsulation.
@@ -56,7 +60,8 @@ static iqr_retval showcase_frodokem_decapsulation(const iqr_FrodoKEMParams *para
     uint8_t *ciphertext = NULL;
     uint8_t *privkey_dat = NULL;
 
-    uint8_t sharedkey[IQR_FRODOKEM_SHARED_KEY_SIZE] = { 0 };
+    uint8_t *sharedkey = NULL;
+    size_t sharedkey_size = 0;
 
     iqr_FrodoKEMPrivateKey *privkey = NULL;
 
@@ -76,14 +81,27 @@ static iqr_retval showcase_frodokem_decapsulation(const iqr_FrodoKEMParams *para
         goto end;
     }
 
+    ret = iqr_FrodoKEMGetSharedKeySize(params, &sharedkey_size);
+    if (ret != IQR_OK) {
+        fprintf(stderr, "Failed on iqr_FrodoKEMGetSharedKeySize(): %s\n", iqr_StrError(ret));
+        goto end;
+    }
+
+    sharedkey = calloc(1, sharedkey_size);
+    if (sharedkey == NULL) {
+        fprintf(stderr, "Failed on calloc(): %s\n", strerror(errno));
+        ret = IQR_ENOMEM;
+        goto end;
+    }
+
     /* Perform FrodoKEM decapsulation. */
-    ret = iqr_FrodoKEMDecapsulate(privkey, ciphertext, ciphertext_size, sharedkey, sizeof(sharedkey));
+    ret = iqr_FrodoKEMDecapsulate(privkey, ciphertext, ciphertext_size, sharedkey, sharedkey_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_FrodoKEMDecapsulate(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    ret = save_data(sharedkey_file, sharedkey, sizeof(sharedkey));
+    ret = save_data(sharedkey_file, sharedkey, sharedkey_size);
     if (ret != IQR_OK) {
         goto end;
     }
@@ -97,6 +115,7 @@ end:
          */
         secure_memzero(privkey_dat, privkey_dat_size);
     }
+    free(sharedkey);
     free(ciphertext);
     free(privkey_dat);
     iqr_FrodoKEMDestroyPrivateKey(&privkey);
@@ -141,14 +160,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
         return ret;
     }
 
-    /* This sets the SHA3-256 functions that will be used globally. */
+    /* This sets the SHA3-256 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_256, &IQR_HASH_DEFAULT_SHA3_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the SHA3-512 functions that will be used globally. */
+    /* This sets the SHA3-512 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -177,10 +196,18 @@ static void preamble(const char *cmd, const iqr_FrodoKEMVariant *variant, const 
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    ciphertext file: %s\n", cipher);
     fprintf(stdout, "    shared key file: %s\n", sharedkey);
-    if (variant == &IQR_FRODOKEM_976_AES) {
-        fprintf(stdout, "    variant: AES\n");
+    if (variant == &IQR_FRODOKEM_640_AES) {
+        fprintf(stdout, "    variant: 640AES\n");
+    } else if (variant == &IQR_FRODOKEM_640_SHAKE) {
+        fprintf(stdout, "    variant: 640SHAKE\n");
+    } else if (variant == &IQR_FRODOKEM_976_AES) {
+        fprintf(stdout, "    variant: 976AES\n");
+    } else if (variant == &IQR_FRODOKEM_976_SHAKE) {
+        fprintf(stdout, "    variant: 976SHAKE\n");
+    } else if (variant == &IQR_FRODOKEM_1344_AES) {
+        fprintf(stdout, "    variant: 1344AES\n");
     } else {
-        fprintf(stdout, "    variant: SHAKE\n");
+        fprintf(stdout, "    variant: 1344SHAKE\n");
     }
 }
 
@@ -203,12 +230,20 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Frodo
             i++;
             *sharedkey_file = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant AES|SHAKE] */
+            /* [--variant 640AES|640SHAKE|976AES|976SHAKE|1344AES|1344SHAKE] */
             i++;
-            if (paramcmp(argv[i], "AES") == 0) {
+            if (paramcmp(argv[i], "640AES") == 0) {
+                *variant = &IQR_FRODOKEM_640_AES;
+            } else if (paramcmp(argv[i], "640SHAKE") == 0) {
+                *variant = &IQR_FRODOKEM_640_SHAKE;
+            } else if (paramcmp(argv[i], "976AES") == 0) {
                 *variant = &IQR_FRODOKEM_976_AES;
-            } else if  (paramcmp(argv[i], "SHAKE") == 0) {
+            } else if (paramcmp(argv[i], "976SHAKE") == 0) {
                 *variant = &IQR_FRODOKEM_976_SHAKE;
+            } else if (paramcmp(argv[i], "1344AES") == 0) {
+                *variant = &IQR_FRODOKEM_1344_AES;
+            } else if  (paramcmp(argv[i], "1344SHAKE") == 0) {
+                *variant = &IQR_FRODOKEM_1344_SHAKE;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -219,7 +254,6 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Frodo
         }
         i++;
     }
-
     return IQR_OK;
 }
 
@@ -229,7 +263,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Frodo
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_FrodoKEMVariant *variant = &IQR_FRODOKEM_976_AES;

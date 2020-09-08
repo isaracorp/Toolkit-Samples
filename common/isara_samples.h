@@ -2,7 +2,7 @@
  *
  * @brief Common functionality for the ISARA samples.
  *
- * @copyright Copyright (C) 2018-2019, ISARA Corporation
+ * @copyright Copyright (C) 2018-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@
  * This function overwrites @a len bytes of the buffer @a b with 0x00 values
  * using an implementation that won't be optimized out of code.
  *
- * @param b     Pointer to a memory buffer.
- * @param len   The size of the buffer in bytes.
+ * @param[out] b                Pointer to a memory buffer.
+ * @param[in]  len              The size of the buffer in bytes.
  */
 void secure_memzero(void *b, size_t len);
 
@@ -42,9 +42,12 @@ void secure_memzero(void *b, size_t len);
 
 /** Write the given buffer to the named file.
  *
- * @param fname     Name of the file.
- * @param data      Pointer to a data buffer.
- * @param data_size Size of @a data in bytes.
+ * @param[in] fname             Name of the file.
+ * @param[in] data              Pointer to a data buffer.
+ * @param[in] data_size         Size of @a data in bytes.
+ *
+ * @return @c IQR_OK on success, or a value from iqr_retval.h when an error
+ * occurs.
  */
 iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
 
@@ -52,11 +55,15 @@ iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size);
  *
  * This function allocates the buffer; be sure to secure_memzero() it when
  * you're done with it if it contains cryptographic information. You must
- * free() the @a data buffer when you're done with it.
+ * free() the data buffer when you're done with it.
  *
- * @param fname     Name of the file.
- * @param data      A pointer that will receive the buffer's pointer.
- * @param data_size A pointer to the size of @a data in bytes.
+ * @param[in]  fname            Name of the file.
+ * @param[out] data             A pointer that will receive the buffer's
+ *                              pointer.
+ * @param[out] data_size        A pointer to the size of @a data in bytes.
+ *
+ * @return @c IQR_OK on success, or a value from iqr_retval.h when an error
+ * occurs.
  */
 iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
 
@@ -68,8 +75,8 @@ iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size);
  *
  * Parameters are expected to be less than 32 characters in length.
  *
- * @param p1    First parameter string.
- * @param p2    Second parameter string.
+ * @param[in] p1                First parameter string.
+ * @param[in] p2                Second parameter string.
  *
  * @return 0 if the two parameters match, non-zero otherwise.
  */

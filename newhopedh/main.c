@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's NewHopeDH implementation.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,12 +39,12 @@
 
 static const char *usage_msg =
 "newhopedh [--dump]\n"
-"        --dump Dumps the generated keys and secrets to file.\n"
-"               Filenames:\n"
-"                 Alice's key:    alice_key.dat\n"
-"                 Bob's key:      bob_key.dat\n"
-"                 Alice's secret: alice_secret.dat\n"
-"                 Bob's secret:   bob_secret.dat\n";
+"\n"
+"    The --dump option dumps the generated keys and secrets to file:\n"
+"        Alice's key:    alice_key.dat\n"
+"        Bob's key:      bob_key.dat\n"
+"        Alice's secret: alice_secret.dat\n"
+"        Bob's secret:   bob_secret.dat\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the use of the NewHopeDH algorithm to generate a
@@ -137,7 +137,7 @@ end:
 
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_ContextCreate(): %s\n", iqr_StrError(ret));
@@ -174,7 +174,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 // These functions are designed to help the end user understand how to use
 // this sample and hold little value to the developer trying to learn how to
 // use the toolkit.
-//---------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Report the chosen runtime parameters.
@@ -216,7 +216,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, bool *dump)
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     bool dump = false;

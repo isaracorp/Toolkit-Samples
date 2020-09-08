@@ -2,7 +2,7 @@
  *
  * @brief Securely wipe a block of memory.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,13 @@
 
 void secure_memzero(void *b, size_t len)
 {
+    /* It's possible that b can be NULL, which will deref at least in the
+     * fallback implementation at the bottom.
+     */
+    if ((b == NULL) || (len == 0)) {
+        return;
+    }
+
     /* You may need to substitute your platform's version of a secure memset()
      * (one that won't be optimized out by the compiler). There isn't a secure,
      * portable memset() available before C11 which provides memset_s(). Windows

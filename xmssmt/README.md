@@ -1,8 +1,8 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0a XMSS<sup>MT</sup> Samples
+# ISARA Radiate™ Quantum-Safe Library 2.1 XMSS<sup>MT</sup> Samples
 
 ## Introduction to Signature Schemes
 
-In general, all signature schemes follow a similar pattern.  There is one
+In general, all signature schemes follow a similar pattern. There is one
 signer and any number of verifiers.
 
 1.  The signer generates a public and private key pair.
@@ -30,7 +30,7 @@ an unlimited number of times.
     against the signature.
 
 **IMPORTANT**
-In step 4, the private key state must be saved due to its dynamic nature.  If
+In step 4, the private key state must be saved due to its dynamic nature. If
 the signer does not save it after signing, the signer risks using the one time
 signature data multiple times which would destroy the security of the scheme.
 
@@ -53,7 +53,7 @@ toolkit's XMSS<sup>MT</sup> implementation:
 * `xmssmt_verify` takes care of step 6.
 
 `xmssmt_sign` also lets the user know how many more signing operations can be
-done with the private key.  The rest of the steps are left up to the underlying
+done with the private key. The rest of the steps are left up to the underlying
 system.
 
 There's also an `xmssmt_detach` sample showing you how to detach parts of a
@@ -69,11 +69,6 @@ Wonderland by Lewis Carroll. (It can be freely obtained from
 [Project Gutenberg](http://www.gutenberg.org/ebooks/11.txt.utf-8).)
 We downloaded the plaintext version and saved it as `message.dat` in the same
 directory that contained the compiled executables of the samples.
-
-**NOTE**
-Before building the samples, copy one of the CPU-specific versions of the
-toolkit libraries into a `lib` directory. For example, to build the samples
-for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
@@ -105,7 +100,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2017-2019, ISARA Corporation
+> Copyright © 2017-2020, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

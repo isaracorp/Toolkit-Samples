@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's Kyber key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,13 +35,16 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"kyber_decapsulate [--security 128|224] [--priv <filename>]\n"
+"kyber_decapsulate [--variant 512|768|1024] [--priv <filename>]\n"
 "  [--ciphertext <filename>] [--shared <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
-"        --security 128\n"
+"\n"
+"    Defaults:\n"
+"        --variant 768\n"
 "        --priv priv.key\n"
 "        --ciphertext ciphertext.dat\n"
-"        --shared shared.key\n";
+"        --shared shared.key\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases Kyber decapsulation.
@@ -140,14 +143,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
         return ret;
     }
 
-    /* This sets the SHA3-256 functions that will be used globally. */
+    /* This sets the SHA3-256 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_256, &IQR_HASH_DEFAULT_SHA3_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the SHA3-512 functions that will be used globally. */
+    /* This sets the SHA3-512 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -175,10 +178,12 @@ static void preamble(const char *cmd, const iqr_KyberVariant *variant, const cha
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    ciphertext file: %s\n", cipher);
     fprintf(stdout, "    shared key file: %s\n", sharedkey);
-    if (variant == &IQR_KYBER_768) {
-        fprintf(stdout, "    security level: 128 bits\n");
+    if (variant == &IQR_KYBER_512) {
+        fprintf(stdout, "    variant: IQR_KYBER_512\n");
+    } else if (variant == &IQR_KYBER_768) {
+        fprintf(stdout, "    variant: IQR_KYBER_768\n");
     } else {
-        fprintf(stdout, "    security level: 224 bits\n");
+        fprintf(stdout, "    variant: IQR_KYBER_1024\n");
     }
 }
 
@@ -200,12 +205,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Kyber
             /* [--shared <filename>] */
             i++;
             *sharedkey_file = argv[i];
-        } else if (paramcmp(argv[i], "--security") == 0) {
-            /* [--security 128|224] */
+        } else if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 512|768|1024] */
             i++;
-            if (paramcmp(argv[i], "128") == 0) {
+            if (paramcmp(argv[i], "512") == 0) {
+                *variant = &IQR_KYBER_512;
+            } else if (paramcmp(argv[i], "768") == 0) {
                 *variant = &IQR_KYBER_768;
-            } else if  (paramcmp(argv[i], "224") == 0) {
+            } else if (paramcmp(argv[i], "1024") == 0) {
                 *variant = &IQR_KYBER_1024;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -226,7 +233,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Kyber
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_KyberVariant *variant = &IQR_KYBER_768;

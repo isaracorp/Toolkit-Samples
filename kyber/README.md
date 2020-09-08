@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.0a Kyber KEM Samples
+# ISARA Radiate™ Quantum-Safe Library 2.1 Kyber KEM Samples
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -29,14 +29,11 @@ toolkit's Kyber KEM implementation:
 * `kyber_encapsulate` takes care of step 4.
 * `kyber_decapsulate` takes care of step 7.
 
-As per [Kyber:](https://eprint.iacr.org/2017/634.pdf)CRYSTALS -- Kyber: a
-CCA-secure module-lattice-based KEM, the toolkit's Kyber implementation provides
-both 128-bit and 224-bit quantum security.
-
-**NOTE**
-Before building the samples, copy one of the CPU-specific versions of the
-toolkit libraries into a `lib` directory. For example, to build the samples
-for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
+As per
+https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions[CRYSTALS
+- Kyber], the toolkit's Kyber implementation provides 100-bit, 160-bit, and
+224-bit quantum security with the `IQR_KYBER_512`, `IQR_KYBER_768`, and
+`IQR_KYBER_1024` variants.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
@@ -61,14 +58,14 @@ Execute the samples with no arguments to use the default parameters, or use
 ## Further Reading
 
 * See `iqr_kyber.h` in the toolkit's `include` directory.
-* [Kyber:](https://eprint.iacr.org/2017/634.pdf)CRYSTALS -- Kyber: a CCA-secure
-module-lattice-based KEM
+* https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions[CRYSTALS
+  - Kyber]
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2019, ISARA Corporation
+> Copyright © 2016-2020, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

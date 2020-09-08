@@ -6,7 +6,7 @@
  * appears to keep his own state. It is done like this to show how the "Bob"
  * side of the transaction can be performed independent of Alice.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,9 @@
 #include "iqr_sidh.h"
 #include "isara_samples.h"
 
-/* It is not suggested to make these global variables. It's not thread safe.
- * It would be better to pass this around as required. It is done this way to
- * facilitate the pseudo-separate process paradigm.
+/* In a real program, you wouldn't make these global variables. It's not thread
+ * safe. It would be better to pass this around as required. It is done this
+ * way to facilitate the pseudo-separate process paradigm.
  */
 static iqr_SIDHParams *params;
 static iqr_SIDHBobPrivateKey *bob_private_key;
@@ -124,6 +124,7 @@ iqr_retval bob_get_secret(uint8_t *secret, size_t secret_size)
     if (alice_public_key == NULL) {
         fprintf(stderr, "We seem to have run out of memory. ret=%d\n", errno);
         ret = IQR_ENOMEM;
+        goto end;
     }
 
     ret = receive_from_alice(alice_public_key, &alice_size);

@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's Dilithium signature scheme.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,13 +33,16 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"dilithium_verify [--security 128|160] [--sig <filename>] [--pub <filename>]\n"
+"dilithium_verify [--variant 80|128|160] [--sig <filename>] [--pub <filename>]\n"
 "  [--message <filename>]\n"
-"    Defaults are: \n"
-"        --security 128\n"
+"\n"
+"    Defaults:\n"
+"        --variant 128\n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
-"        --message message.dat\n";
+"        --message message.dat\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the verification of a Dilithium signature against a
@@ -118,14 +121,14 @@ end:
 
 static iqr_retval init_toolkit(iqr_Context **ctx)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -148,10 +151,12 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 static void preamble(const char *cmd, const iqr_DilithiumVariant *variant, const char *sig, const char *pub, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    if (variant == &IQR_DILITHIUM_160) {
-        fprintf(stdout, "    security level: 160 bits\n");
+    if (variant == &IQR_DILITHIUM_80) {
+        fprintf(stdout, "    variant: IQR_DILITHIUM_80\n");
+    } else if (variant == &IQR_DILITHIUM_128) {
+        fprintf(stdout, "    variant: IQR_DILITHIUM_128\n");
     } else {
-        fprintf(stdout, "    security level: 128 bits\n");
+        fprintf(stdout, "    variant: IQR_DILITHIUM_160\n");
     }
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
@@ -165,12 +170,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Dilit
 {
     int i = 1;
     while (i != argc) {
-        if (paramcmp(argv[i], "--security") == 0) {
-            /* [--security 128|160] */
+        if (paramcmp(argv[i], "--variant") == 0) {
+            /* [--variant 80|128|160] */
             i++;
-            if (paramcmp(argv[i], "128") == 0) {
+            if (paramcmp(argv[i], "80") == 0) {
+                *variant = &IQR_DILITHIUM_80;
+            } else if (paramcmp(argv[i], "128") == 0) {
                 *variant = &IQR_DILITHIUM_128;
-            } else if  (paramcmp(argv[i], "160") == 0) {
+            } else if (paramcmp(argv[i], "160") == 0) {
                 *variant = &IQR_DILITHIUM_160;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -185,9 +192,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Dilit
             i++;
             *pub = argv[i];
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message = argv[i];
         } else {
             fprintf(stdout, "%s", usage_msg);
             return IQR_EBADVALUE;
@@ -205,7 +212,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Dilit
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_DilithiumVariant *variant = &IQR_DILITHIUM_128;

@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2019, ISARA Corporation
+# Copyright (C) 2017-2020, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,4 +31,4 @@ endif ()
 
 add_executable (dilithium_generate_keys main.c)
 add_dependencies(dilithium_generate_keys isara_samples)
-target_link_libraries (dilithium_generate_keys iqr_toolkit isara_samples)
+target_link_libraries (dilithium_generate_keys ${IQR_TOOLKIT_LIB} isara_samples)

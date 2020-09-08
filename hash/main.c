@@ -2,7 +2,7 @@
  *
  * @brief Create a Hash using the toolkit.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,13 +29,13 @@
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Document the command-line arguments.
-//  --------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"hash\n"
-"  [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]\n"
+"hash [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]\n"
 "  [--message <filename>]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --hash sha2-512\n"
 "        --message message.dat\n";
 
@@ -99,10 +99,9 @@ static iqr_retval showcase_hash(iqr_Context *ctx, iqr_HashAlgorithmType hash_alg
     }
 
     /* And now we publish the hash. */
-    size_t i = 0;
     const size_t BYTES_PER_LINE = 32;
     fprintf(stdout, "Message hashes to:");
-    for (i = 0; i < digest_size; i++) {
+    for (size_t i = 0; i < digest_size; i++) {
         if ((i % BYTES_PER_LINE) == 0) {
             fprintf(stdout, "\n");
         }
@@ -126,7 +125,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_HashAlgorithmType hash_alg
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, hash_alg, cb);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -179,10 +178,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
         }
 
         if (paramcmp(argv[i], "--hash") == 0) {
-            /* [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]
-             */
+            /* [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512] */
             i++;
-            if  (paramcmp(argv[i], "sha2-256") == 0) {
+            if (paramcmp(argv[i], "sha2-256") == 0) {
                 *hash_alg = IQR_HASHALGO_SHA2_256;
                 *cb = &IQR_HASH_DEFAULT_SHA2_256;
             } else if (paramcmp(argv[i], "sha2-384") == 0) {
@@ -202,9 +200,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--message") == 0) {
-           /* [--message <filename>] */
-           i++;
-           *message_file = argv[i];
+            /* [--message <filename>] */
+            i++;
+            *message_file = argv[i];
         }
         i++;
     }
@@ -218,8 +216,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     *  here.
+    /* Default values. Please adjust the usage message if you make changes here.
      */
     const char *message_file = "message.dat";
     iqr_HashAlgorithmType hash_alg = IQR_HASHALGO_SHA2_512;

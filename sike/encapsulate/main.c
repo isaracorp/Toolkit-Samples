@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's SIKE key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,13 +36,16 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"sike_encapsulate [--variant p503|p751] [--pub <filename>]\n"
+"sike_encapsulate [--variant p434|p503|p610|p751] [--pub <filename>]\n"
 "  [--ciphertext <filename>] [--shared <filename>]\n"
-"    Default for the sample (when no option is specified):\n"
+"\n"
+"    Defaults:\n"
 "        --variant p751\n"
 "        --pub pub.key\n"
 "        --ciphertext ciphertext.dat\n"
-"        --shared shared.key\n";
+"        --shared shared.key\n"
+"\n"
+"    The --variant must match the --variant specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases SIKE encapsulation.
@@ -117,6 +120,7 @@ static iqr_retval showcase_sike_encapsulation(const iqr_RNG *rng, const iqr_SIKE
     fprintf(stdout, "SIKE encapsulation completed.\n");
 
 end:
+    free(ciphertext);
     free(pubkey_dat);
     free(sharedkey);
     iqr_SIKEDestroyPublicKey(&pubkey);
@@ -163,21 +167,21 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 
     fprintf(stdout, "The context has been created.\n");
 
-    /* This sets the SHA2-256 functions that will be used globally. */
+    /* This sets the SHA2-256 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the SHA3-256 functions that will be used globally. */
+    /* This sets the SHA3-256 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_256, &IQR_HASH_DEFAULT_SHA3_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the SHA3-512 functions that will be used globally. */
+    /* This sets the SHA3-512 functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA3_512, &IQR_HASH_DEFAULT_SHA3_512);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -185,7 +189,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     }
 
     /* This lets us give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
@@ -220,10 +224,14 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 static void preamble(const char *cmd, const iqr_SIKEVariant *variant, const char *pub, const char *cipher, const char *sharedkey)
 {
     fprintf(stdout, "Running %s with the following parameters:\n", cmd);
-    if (variant == &IQR_SIKE_P751) {
-        fprintf(stdout, "    variant: p751\n");
-    } else {
+    if (variant == &IQR_SIKE_P434) {
+        fprintf(stdout, "    variant: p434\n");
+    } else if (variant == &IQR_SIKE_P503) {
         fprintf(stdout, "    variant: p503\n");
+    } else if (variant == &IQR_SIKE_P610) {
+        fprintf(stdout, "    variant: p610\n");
+    } else {
+        fprintf(stdout, "    variant: p751\n");
     }
     fprintf(stdout, "    public key file: %s\n", pub);
     fprintf(stdout, "    ciphertext file: %s\n", cipher);
@@ -249,11 +257,15 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_SIKEV
             i++;
             *sharedkey_file = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant p503|p751] */
+            /* [--variant p434|p503|p610|p751] */
             i++;
-            if (paramcmp(argv[i], "p503") == 0) {
+            if (paramcmp(argv[i], "p434") == 0) {
+                *variant = &IQR_SIKE_P434;
+            } else if (paramcmp(argv[i], "p503") == 0) {
                 *variant = &IQR_SIKE_P503;
-            } else if  (paramcmp(argv[i], "p751") == 0) {
+            } else if (paramcmp(argv[i], "p610") == 0) {
+                *variant = &IQR_SIKE_P610;
+            } else if (paramcmp(argv[i], "p751") == 0) {
                 *variant = &IQR_SIKE_P751;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -274,7 +286,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_SIKEV
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const iqr_SIKEVariant *variant = &IQR_SIKE_P751;

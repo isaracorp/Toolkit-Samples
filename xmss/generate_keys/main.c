@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's XMSS signature scheme.
  *
- * @copyright Copyright (C) 2017-2019, ISARA Corporation
+ * @copyright Copyright (C) 2017-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,8 @@
 static const char *usage_msg =
 "xmss_generate_keys [--pub <filename>] [--priv <filename>] [--state <filename>]\n"
 "  [--variant 10|16|20] [--strategy cpu|memory|full]\n"
-"    Defaults are: \n"
+"\n"
+"    Defaults:\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
@@ -210,7 +211,7 @@ static iqr_retval progress_watchdog(void *watchdog_data)
 // Initialize the toolkit and the algorithms required by XMSS.
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
@@ -224,7 +225,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -232,7 +233,7 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
     }
 
     /* This lets us give satisfactory randomness to the algorithm. */
-    ret =  iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
+    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
         return ret;
@@ -320,9 +321,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             i++;
             if (paramcmp(argv[i], "10") == 0) {
                 *variant = &IQR_XMSS_2E10;
-            } else if  (paramcmp(argv[i], "16") == 0) {
+            } else if (paramcmp(argv[i], "16") == 0) {
                 *variant = &IQR_XMSS_2E16;
-            } else if  (paramcmp(argv[i], "20") == 0) {
+            } else if (paramcmp(argv[i], "20") == 0) {
                 *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
@@ -354,14 +355,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
+    /* Default values. Please adjust the usage message if you make changes
      * here.
      */
     const char *pub = "pub.key";
     const char *priv = "priv.key";
     const char *state = "priv.state";
     const iqr_XMSSTreeStrategy *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
-    const iqr_XMSSVariant *variant =  &IQR_XMSS_2E10;
+    const iqr_XMSSVariant *variant = &IQR_XMSS_2E10;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;
@@ -383,8 +384,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of XMSS key generation.
-     */
+    /* This function showcases the usage of XMSS key generation. */
     ret = showcase_xmss_keygen(ctx, rng, pub, priv, state, strategy, variant);
 
 cleanup:

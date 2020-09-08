@@ -2,7 +2,7 @@
  *
  * @brief Common stdio I/O operations for samples.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@ iqr_retval save_data(const char *fname, const uint8_t *data, size_t data_size)
     }
 
     iqr_retval ret = IQR_OK;
-    fwrite(data, data_size, 1, fp);
-    if (ferror(fp) != 0) {
+    size_t ret_write = fwrite(data, data_size, 1, fp);
+    if (ret_write != 1) {
         fprintf(stderr, "Failed on fwrite(): %s\n", strerror(errno));
         ret = IQR_EBADVALUE;
         goto end;
@@ -62,7 +62,13 @@ iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
     }
 
     /* Obtain file size. */
-    fseek(fp , 0 , SEEK_END);
+    int ret_seek = fseek(fp , 0 , SEEK_END);
+    if (ret_seek != 0) {
+        fprintf(stderr, "Failed on fseek(): %s\n", strerror(errno));
+        ret = IQR_EBADVALUE;
+        goto end;
+    }
+
 #if defined(_WIN32) || defined(_WIN64)
     const int64_t tmp_size64 = (int64_t)_ftelli64(fp);
 
@@ -79,16 +85,24 @@ iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
     /* Due to a bug in GCC 7.2, it is necessary to make tmp_size volatile.
      * Otherwise, the variable is removed by the compiler and tmp_size64 is used
      * instead. This causes the calloc() call further down to raise a compiler
-     * warning. */
+     * warning.
+     */
     volatile size_t tmp_size = (size_t)tmp_size64;
 #else
-    const size_t tmp_size = (size_t)ftell(fp);
-#endif
-    if (ferror(fp) != 0) {
+    const int64_t tmp_size64 = (int64_t)ftell(fp);
+
+    if (tmp_size64 < 0) {
         fprintf(stderr, "Failed on ftell(): %s\n", strerror(errno));
         ret = IQR_EBADVALUE;
         goto end;
+    } else if ((uint64_t)tmp_size64 > (uint64_t)SIZE_MAX) {
+        /* On 32-bit systems, we cannot allocate enough memory for large key files. */
+        ret = IQR_ENOMEM;
+        goto end;
     }
+
+    const size_t tmp_size = (size_t)tmp_size64;
+#endif
 
     rewind(fp);
 
@@ -119,6 +133,11 @@ iqr_retval load_data(const char *fname, uint8_t **data, size_t *data_size)
         *data = tmp;
 
         fprintf(stdout, "Successfully loaded %s (%zu bytes)\n", fname, *data_size);
+    } else {
+        *data_size = 0;
+        *data = NULL;
+
+        fprintf(stdout, "%s is empty.\n", fname);
     }
 
 end:

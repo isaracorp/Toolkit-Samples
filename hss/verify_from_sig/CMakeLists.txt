@@ -1,4 +1,4 @@
-# Copyright (C) 2019, ISARA Corporation
+# Copyright (C) 2019-2020, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,4 +31,4 @@ endif ()
 
 add_executable (hss_verify_from_sig main.c)
 add_dependencies(hss_verify_from_sig isara_samples)
-target_link_libraries (hss_verify_from_sig iqr_toolkit isara_samples)
+target_link_libraries (hss_verify_from_sig ${IQR_TOOLKIT_LIB} isara_samples)

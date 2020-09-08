@@ -9,7 +9,7 @@
  * understand the data flow of NewHopeDH. Again, don't read this file! You're
  * going to read it anyway aren't you...
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,13 +40,14 @@
  */
 #define ALICE_KEY_INDEX    0
 #define BOB_KEY_INDEX      1
-static uint8_t *gross_global_bufs[NUM_TRANSACTIONS];
+
+static uint8_t *simulated_network_bufs[NUM_TRANSACTIONS];
 
 iqr_retval init_comms(void)
 {
     for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-        gross_global_bufs[i] = calloc(1, MAX_PAYLOAD_BYTES);
-        if (gross_global_bufs[i] == NULL) {
+        simulated_network_bufs[i] = calloc(1, MAX_PAYLOAD_BYTES);
+        if (simulated_network_bufs[i] == NULL) {
             fprintf(stderr, "MEMORY ERROR!!!. ret=%d\n", errno);
             return IQR_ENOMEM;
         }
@@ -57,7 +58,7 @@ iqr_retval init_comms(void)
 void cleanup_comms(void)
 {
     for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-        free(gross_global_bufs[i]);
+        free(simulated_network_bufs[i]);
     }
 }
 
@@ -68,7 +69,7 @@ iqr_retval send_to_alice(uint8_t *buf, size_t size)
         fprintf(stderr, "Need less bytes.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(gross_global_bufs[BOB_KEY_INDEX], buf, size);
+    memcpy(simulated_network_bufs[BOB_KEY_INDEX], buf, size);
     return IQR_OK;
 }
 
@@ -78,7 +79,7 @@ iqr_retval send_to_bob(uint8_t *buf, size_t size)
         fprintf(stderr, "Bob cannot store that much data.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(gross_global_bufs[ALICE_KEY_INDEX], buf, size);
+    memcpy(simulated_network_bufs[ALICE_KEY_INDEX], buf, size);
     return IQR_OK;
 }
 
@@ -88,7 +89,7 @@ iqr_retval receive_from_alice(uint8_t *buf, size_t *size)
         fprintf(stderr, "That buffer is a tad on the small side.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(buf, gross_global_bufs[ALICE_KEY_INDEX], IQR_NEWHOPEDH_INITIATOR_PUBLIC_KEY_SIZE);
+    memcpy(buf, simulated_network_bufs[ALICE_KEY_INDEX], IQR_NEWHOPEDH_INITIATOR_PUBLIC_KEY_SIZE);
     *size = IQR_NEWHOPEDH_INITIATOR_PUBLIC_KEY_SIZE;
     return IQR_OK;
 }
@@ -99,7 +100,7 @@ iqr_retval receive_from_bob(uint8_t *buf, size_t *size)
         fprintf(stderr, "We have more data to give you then you are willing to receive.\n");
         return IQR_EBADVALUE;
     }
-    memcpy(buf, gross_global_bufs[BOB_KEY_INDEX], IQR_NEWHOPEDH_RESPONDER_PUBLIC_KEY_SIZE);
+    memcpy(buf, simulated_network_bufs[BOB_KEY_INDEX], IQR_NEWHOPEDH_RESPONDER_PUBLIC_KEY_SIZE);
     *size = IQR_NEWHOPEDH_RESPONDER_PUBLIC_KEY_SIZE;
     return IQR_OK;
 }

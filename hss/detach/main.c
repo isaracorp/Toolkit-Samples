@@ -2,7 +2,7 @@
  *
  * @brief Detach a portion of the HSS state into a separate file.
  *
- * @copyright Copyright (C) 2016-2019, ISARA Corporation
+ * @copyright Copyright (C) 2016-2020, ISARA Corporation
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,18 +39,21 @@
 static const char *usage_msg =
 "hss_detach [--priv <filename>] [--state <filename>]\n"
 "  [--detached-state <filename>] [--num-sigs <number>]\n"
-"  [--variant 2e20f|2e25f|2e20s|2e25s]\n"
+"  [--variant 2e15f|2e20f|2e30f|2e45f|2e65f|2e15s|2e20s|2e30s|2e45s|2e65s]\n"
 "  [--strategy cpu|memory|full]\n"
 "\n"
-"  The 'f' variants are Fast, the 's' variants are Small.\n"
+"    The 'f' variants are Fast, the 's' variants are Small.\n"
 "\n"
-"  Defaults are: \n"
+"    Defaults:\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
 "        --strategy full\n"
-"        --variant 2e20f\n"
+"        --variant 2e30f\n"
 "        --detached-state detached.state\n"
-"        --num-sigs 1\n";
+"        --num-sigs 1\n"
+"\n"
+"    The --strategy and --variant must match the --strategy and --variant\n"
+"    specified when generating keys.\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases state detachment using the HSS signature scheme.
@@ -198,14 +201,14 @@ end:
 
 static iqr_retval init_toolkit(iqr_Context **ctx)
 {
-    /* Create a Global Context. */
+    /* Create a Context. */
     iqr_retval ret = iqr_CreateContext(ctx);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_CreateContext(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
-    /* This sets the hashing functions that will be used globally. */
+    /* This sets the hashing functions that will be used with this Context. */
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_256, &IQR_HASH_DEFAULT_SHA2_256);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
@@ -234,14 +237,26 @@ static void preamble(const char *cmd, const char *priv, const char *state, const
     fprintf(stdout, "    private key detached state file: %s\n", detached_state);
     fprintf(stdout, "    detaching %u signatures\n", num_sigs);
 
-    if (variant == &IQR_HSS_2E20_FAST) {
+    if (variant == &IQR_HSS_2E15_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E15_FAST\n");
+    } else if (variant == &IQR_HSS_2E15_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E15_SMALL\n");
+    } else if (variant == &IQR_HSS_2E20_FAST) {
         fprintf(stdout, "    Variant: IQR_HSS_2E20_FAST\n");
     } else if (variant == &IQR_HSS_2E20_SMALL) {
         fprintf(stdout, "    Variant: IQR_HSS_2E20_SMALL\n");
-    } else if (variant == &IQR_HSS_2E25_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E25_FAST\n");
-    } else if (variant == &IQR_HSS_2E25_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E25_SMALL\n");
+    } else if (variant == &IQR_HSS_2E30_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30_FAST\n");
+    } else if (variant == &IQR_HSS_2E30_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E30_SMALL\n");
+    } else if (variant == &IQR_HSS_2E45_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45_FAST\n");
+    } else if (variant == &IQR_HSS_2E45_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E45_SMALL\n");
+    } else if (variant == &IQR_HSS_2E65_FAST) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65_FAST\n");
+    } else if (variant == &IQR_HSS_2E65_SMALL) {
+        fprintf(stdout, "    Variant: IQR_HSS_2E65_SMALL\n");
     } else {
         fprintf(stdout, "    Variant: INVALID\n");
     }
@@ -283,14 +298,26 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
             *detached_state = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
             i++;
-            if (paramcmp(argv[i], "2e20f") == 0) {
+            if (paramcmp(argv[i], "2e15f") == 0) {
+                *variant = &IQR_HSS_2E15_FAST;
+            } else if (paramcmp(argv[i], "2e15s") == 0) {
+                *variant = &IQR_HSS_2E15_SMALL;
+            } else if (paramcmp(argv[i], "2e20f") == 0) {
                 *variant = &IQR_HSS_2E20_FAST;
             } else if (paramcmp(argv[i], "2e20s") == 0) {
                 *variant = &IQR_HSS_2E20_SMALL;
-            } else if (paramcmp(argv[i], "2e25f") == 0) {
-                *variant = &IQR_HSS_2E25_FAST;
-            } else if (paramcmp(argv[i], "2e25s") == 0) {
-                *variant = &IQR_HSS_2E25_SMALL;
+            } else if (paramcmp(argv[i], "2e30f") == 0) {
+                *variant = &IQR_HSS_2E30_FAST;
+            } else if (paramcmp(argv[i], "2e30s") == 0) {
+                *variant = &IQR_HSS_2E30_SMALL;
+            } else if (paramcmp(argv[i], "2e45f") == 0) {
+                *variant = &IQR_HSS_2E45_FAST;
+            } else if (paramcmp(argv[i], "2e45s") == 0) {
+                *variant = &IQR_HSS_2E45_SMALL;
+            } else if (paramcmp(argv[i], "2e65f") == 0) {
+                *variant = &IQR_HSS_2E65_FAST;
+            } else if (paramcmp(argv[i], "2e65s") == 0) {
+                *variant = &IQR_HSS_2E65_SMALL;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -332,14 +359,13 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
 
 int main(int argc, const char **argv)
 {
-    /* Default values.  Please adjust the usage message if you make changes
-     *  here.
+    /* Default values. Please adjust the usage message if you make changes here.
      */
     const char *priv = "priv.key";
     const char *state = "priv.state";
     const char *detached_state = "detached.state";
     const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
-    const iqr_HSSVariant *variant = &IQR_HSS_2E20_FAST;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E30_FAST;
     uint32_t num_sigs = 1;
 
     iqr_Context *ctx = NULL;
@@ -361,8 +387,7 @@ int main(int argc, const char **argv)
         goto cleanup;
     }
 
-    /* This function showcases the usage of HSS signing.
-     */
+    /* This function showcases the usage of HSS signing. */
     ret = showcase_hss_detach(ctx, variant, strategy, priv, state, num_sigs, detached_state);
 
 cleanup:
