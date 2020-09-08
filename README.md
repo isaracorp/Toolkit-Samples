@@ -1,8 +1,8 @@
-# ISARA Radiate™ Quantum-safe Library 2.0 Samples
+# ISARA Radiate™ Quantum-Safe Library 2.1 Samples
 
 ## Samples
 
-Sample code for the toolkit.  Each directory has one or more self-contained
+Sample code for the toolkit. Each directory has one or more self-contained
 programs inside demonstrating how to use the toolkit for a specific purpose:
 
 * `aead_chacha20_poly1305` &mdash; Encrypt/decrypt using ChaCha20/Poly1305 for
@@ -14,27 +14,28 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
   Dilithium key, and verify a Dilithium signature.
 * `frododh` &mdash; Agree on a shared secret using Frodo, a relative of the
   NewHope scheme.
-* `frodokem` &mdsh; Generate keys, encapsulate and decapsulate data using
+* `frodokem` &mdash; Generate keys, encapsulate and decapsulate data using
   FrodoKEM.
 * `hash` &mdash; Hash a file's data using SHA2-256, SHA2-384, SHA2-512,
   SHA3-256, or SHA3-512.
-* `hmac` &mdash; Get the HMAC tag for a file's data using any of the available
-  hash algorithms.
 * `hss` &mdash; Generate keys, sign a file's data, detach signatures from a
   private key's state, and verify a signature using the HSS algorithm.
-* `kdf_concatenation`, `kdf_pbkdf2`, and `kdf_rfc5869` &mdash; Derive a key
-  (some pseudorandom data) using the specified key derivation function.
+* `kdf` &mdash; Derive a key (some pseudorandom data) using the specified key
+  derivation function.
 * `kyber` &mdash; Generate keys, encapsulate and decapsulate data using
   Kyber.
+* `mac` &mdash; Generate a message authentication code using the specified MAC
+  algorithm.
 * `newhopedh` &mdash; Agree on a shared secret using the NewHopeDH scheme.
 * `ntruprime` &mdash; Generate keys, encapsulate and decapsulate data
   using NTRUPrime.
-* `poly1305` &mdash; Get the Poly1305 tag for a file's data.
 * `rainbow` &mdash; Generate keys, sign a file's data, and verify a signature
   using the Rainbow algorithm.
 * `rng` &mdash; Generate pseudorandom bytes using HMAC-DRBG.
-* `samwise` &mdash; Agree on a shared secret using an optimized variant of
-  Frodo.
+* `saber` &mdash; Generate keys, encapsulate and decapsulate data using
+  Saber.
+* `samwise` &mdash; Agree on a shared secret using Samwise, a derivative of the
+  FrodoDH scheme.
 * `sidh` &mdash; Agree on a shared secret using Supersingular Isogeny
   Diffie-Hellman.
 * `sike` &mdash; Generate keys, encapsulate and decapsulate data using
@@ -42,17 +43,32 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
 * `sphincs` &mdash; Generate keys, sign a file's data, and verify a signature
   using the SPHINCS+ algorithm.
 * `version` &mdash; Display the library's version information.
+* `VisualStudio` &mdash; Visual Studio solution and project files.
 * `xmss` &mdash; Generate keys, sign a file's data, detach signatures from a
   private key's state, and verify a signature using the XMSS algorithm.
 * `xmssmt` &mdash; Generate keys, sign a file's data, detach signatures from a
   private key's state, and verify a signature using the XMSS<sup>MT</sup> algorithm.
 
+The `integration` directory has samples showing how to integrate external
+implementations with the toolkit. These samples may have external dependencies
+on specific software such as OpenSSL, or specific operating system features such
+as having a `/dev/urandom` device available.
+
+* `integration/hash-openssl` - Demonstrates using OpenSSL's SHA-256 and SHA-512
+  with the toolkit's hash API.
+* `integration/rng-cng` - Demonstrates using the Windows Cryptography API:
+  Next Generation (CNG) with the toolkit's random number generator API.
+* `integration/rng-urandom` - Demonstrates using `/dev/urandom` with the
+  toolkit's random number generator API.
+
 ### Building Samples
 
 **NOTE**
-Before building the samples, copy one of the CPU-specific versions of the
-toolkit libraries into a `lib` directory. For example, to build the samples
-for Intel Core 2 or better CPUs, copy the contents of `lib_core2` into `lib`.
+In addition to your platform's usual development tools, you'll need a recent
+version of `cmake` (version 3.7 or newer): https://cmake.org/ For most systems,
+you can use your platform's normal package tools to install it, but you may
+need to build an up-to-date version. Binaries are also available on the CMake
+website.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
@@ -64,11 +80,11 @@ where you're running the `cmake` command.
 1. Install the toolkit somewhere, e.g. `/path/to/toolkit/`.
 2. `cd` to the `samples` directory, such as `/path/to/toolkit/samples/`.
 3. Use `mkdir` to make a `build` directory; `cd` into the `build` directory.
-3. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..` or
+4. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..` or
    `IQR_TOOLKIT_ROOT=/path/to/toolkit cmake ..` The `..` in there refers to
    the parent of your `build` directory, so it'll pick up the `CMakeLists.txt`
    in the main `samples` directory.
-4. Run make: `make`
+5. Run make: `make`
 
 This will build all of the samples in individual directories under the `build`
 directory.
@@ -78,17 +94,20 @@ Don't build the samples on macOS using `gcc` 8, they will crash before `main()`
 due to a problem with `-fstack-protector-all`. Use `clang` to produce Mac
 binaries.
 
+Windows developers can also use Visual Studio to build the samples, using the
+solution and project files found in `VisualStudio`.
+
 To build individual samples:
 
 1. Install the toolkit somewhere, e.g. `/path/to/toolkit/`.
 2. `cd` to the specific `samples` directory, such as
    `/path/to/toolkit/samples/hash`.
 3. Use `mkdir` to make a `build` directory; `cd` into the `build` directory.
-3. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..` or
+4. Run CMake: `cmake -DIQR_TOOLKIT_ROOT=/path/to/toolkit/ ..` or
    `IQR_TOOLKIT_ROOT=/path/to/toolkit cmake ..` The `..` in there refers to
    the parent of your `build` directory, so it'll pick up the `CMakeLists.txt`
    in the specific `samples` directory (the one in `hash` in this case).
-4. Run make: `make`
+5. Run make: `make`
 
 This will build the specific sample in the `build` directory.
 
@@ -118,7 +137,7 @@ You can read the toolkit documentation online at ISARA's website:
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2019, ISARA Corporation
+> Copyright © 2016-2020, ISARA Corporation
 >
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.
