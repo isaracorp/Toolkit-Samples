@@ -113,7 +113,7 @@ This will build the specific sample in the `build` directory.
 
 ### Running Samples
 
-See individual `README.html` files in the sample subdirectories for instructions
+See individual `README.md` files in the sample subdirectories for instructions
 on running specific samples.
 
 Execute the samples with no arguments to use the default parameters, or use
