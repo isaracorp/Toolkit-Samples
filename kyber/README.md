@@ -30,10 +30,10 @@ toolkit's Kyber KEM implementation:
 * `kyber_decapsulate` takes care of step 7.
 
 As per
-https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions[CRYSTALS
-- Kyber], the toolkit's Kyber implementation provides 100-bit, 160-bit, and
-224-bit quantum security with the `IQR_KYBER_512`, `IQR_KYBER_768`, and
-`IQR_KYBER_1024` variants.
+[CRYSTALS - Kyber](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions),
+the toolkit's Kyber implementation provides 100-bit, 160-bit, and 224-bit
+quantum security with the `IQR_KYBER_512`, `IQR_KYBER_768`, and `IQR_KYBER_1024`
+variants.
 
 The samples use the `IQR_TOOLKIT_ROOT` CMake or environment variable to
 determine the location of the toolkit to build against. CMake requires that
@@ -58,8 +58,7 @@ Execute the samples with no arguments to use the default parameters, or use
 ## Further Reading
 
 * See `iqr_kyber.h` in the toolkit's `include` directory.
-* https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions[CRYSTALS
-  - Kyber]
+* [CRYSTALS - Kyber](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions)
 
 ## License
 

@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE Poly1305 MAC Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 Poly1305 MAC Sample
 
 ## Introduction to Message Authentication Codes
 

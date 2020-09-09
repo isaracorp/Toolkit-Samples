@@ -1,6 +1,4 @@
 # ISARA Radiate™ Quantum-Safe Library 2.1 FrodoKEM Samples
-ISARA Corporation <info@isara.com>
-v1.6 2018-12: Copyright © 2016-2020, ISARA Corporation, All Rights Reserved.
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -31,10 +29,11 @@ toolkit's FrodoKEM KEM implementation:
 * `frodokem_encapsulate` takes care of step 4.
 * `frodokem_decapsulate` takes care of step 7.
 
-As per https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions
-**FrodoKEM:**
-FrodoKEM implementation provides both AES and SHAKE implementations with
-104-bit, 150-bit, and 197-bit quantum security with the `IQR_FRODOKEM_640_AES`,
+As per
+[FrodoKEM:](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions)
+FrodoKem Learning With Errors Key Encapsulation, the toolkit's FrodoKEM
+implementation provides both AES and SHAKE implementations with 104-bit,
+150-bit, and 197-bit quantum security with the `IQR_FRODOKEM_640_AES`,
 `IQR_FRODOKEM_640_SHAKE`, `IQR_FRODOKEM_976_AES`, `IQR_FRODOKEM_976_SHAKE`,
 `IQR_FRODOKEM_1344_AES`, and `IQR_FRODOKEM_1344_SHAKE` variants.
 
@@ -61,8 +60,8 @@ Execute the samples with no arguments to use the default parameters, or use
 ## Further Reading
 
 * See `iqr_frodokem.h` in the toolkit's `include` directory.
-* https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions
-**FrodoKEM:**
+* [FrodoKEM:](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions)
+  FrodoKem Learning With Errors Key Encapsulation
 
 ## License
 

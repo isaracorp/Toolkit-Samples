@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE RFC 5869 KDF Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 RFC 5869 KDF Sample
 
 ## Introduction to Key Derivation Functions
 

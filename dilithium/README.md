@@ -28,10 +28,11 @@ toolkit's Dilithium implementation:
 
 The rest of the steps are left up to the underlying system.
 
-As per https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions[CRYSTALS
-- Dilithium], the toolkit's Dilithium implementation provides
-103 bits, 138 bits, and 176 bits of classical security with the
-`IQR_DILITHIUM_80`, `IQR_DILITHIUM_128`, and `IQR_DILITHIUM_160` variants.
+As per
+[CRYSTALS - Dilithium](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions),
+the toolkit's Dilithium implementation provides 103 bits, 138 bits, and 176
+bits of classical security with the `IQR_DILITHIUM_80`, `IQR_DILITHIUM_128`,
+and `IQR_DILITHIUM_160` variants.
 
 Here is the simplest way to use the samples:
 

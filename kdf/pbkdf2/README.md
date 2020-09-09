@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE RFC 2898 PBKDF2 Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 RFC 2898 PBKDF2 Sample
 
 ## Introduction to Key Derivation Functions
 

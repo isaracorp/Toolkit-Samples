@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE RNG CNG Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 RNG CNG Sample
 
 ## Introduction to Random Number Generation
 

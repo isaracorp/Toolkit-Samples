@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE HMAC Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 HMAC Sample
 
 ## Introduction to Message Authentication Codes
 

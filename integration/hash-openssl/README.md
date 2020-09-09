@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE Hash OpenSSL Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 Hash OpenSSL Sample
 
 ## Introduction to Hashing Algorithms
 

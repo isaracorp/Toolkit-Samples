@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE RNG /dev/urandom Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 RNG /dev/urandom Sample
 
 ## Introduction to Random Number Generation
 

@@ -1,5 +1,4 @@
-include::../../version.txt[]
-# ISARA UNKNOWN ATTRIBUTE UNKNOWN ATTRIBUTE Concatenation KDF Sample
+# ISARA Radiate™ Quantum-Safe Library 2.1 Concatenation KDF Sample
 
 ## Introduction to Key Derivation Functions
 
