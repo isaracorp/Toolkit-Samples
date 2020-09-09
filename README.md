@@ -10,6 +10,7 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
 * `chacha20` &mdash; Encrypt/decrypt using ChaCha20.
 * `classicmceliece` &mdash; Generate keys, encapsulate and decapsulate data
   using the Classic McEliece KEM.
+* `common` &mdash; A small library of functions common to the samples.
 * `dilithium` &mdash; Generate Dilithium keys, sign a file's data with a
   Dilithium key, and verify a Dilithium signature.
 * `frododh` &mdash; Agree on a shared secret using Frodo, a relative of the
@@ -20,6 +21,7 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
   SHA3-256, or SHA3-512.
 * `hss` &mdash; Generate keys, sign a file's data, detach signatures from a
   private key's state, and verify a signature using the HSS algorithm.
+* `integration` &mdash; Integrating the toolkit with other software.
 * `kdf` &mdash; Derive a key (some pseudorandom data) using the specified key
   derivation function.
 * `kyber` &mdash; Generate keys, encapsulate and decapsulate data using
