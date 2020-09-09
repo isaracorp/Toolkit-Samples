@@ -29,12 +29,14 @@ include_directories ("${IQR_TOOLKIT_ROOT}/include")
 link_directories ("${IQR_TOOLKIT_ROOT}/lib")
 
 # Find the toolkit.
-find_file (TOOLKIT_EDITION_LIB
-    NAMES libiqr_toolkit.so libiqr_toolkit.a
-    PATHS "${IQR_TOOLKIT_ROOT}/lib")
-if (TOOLKIT_EDITION_LIB)
-    set (IQR_TOOLKIT_LIB iqr_toolkit)
-else ()
-    message (ERROR "Unable to find the ISARA Radiate toolkit library.")
-    set (IQR_TOOLKIT_LIB iqr_toolkit)
+find_library(TOOLKIT_LIB
+    NAMES iqr_toolkit
+    PATHS "${IQR_TOOLKIT_ROOT}/lib"
+    NO_CMAKE_FIND_ROOT_PATH
+    )
+
+if (NOT TOOLKIT_LIB)
+    message (FATAL_ERROR "Unable to find the ISARA Radiate toolkit library.")
 endif ()
+
+set (IQR_TOOLKIT_LIB iqr_toolkit)
