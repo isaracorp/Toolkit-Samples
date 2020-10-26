@@ -279,7 +279,7 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
         fprintf(stdout, "    Variant: IQR_HSS_2E15_FAST\n");
     } else if (variant == &IQR_HSS_2E15_SMALL) {
         fprintf(stdout, "    Variant: IQR_HSS_2E15_SMALL\n");
-    } else if (variant == &IQR_HSS_2E15_FAST) {
+    } else if (variant == &IQR_HSS_2E20_FAST) {
         fprintf(stdout, "    Variant: IQR_HSS_2E20_FAST\n");
     } else if (variant == &IQR_HSS_2E20_SMALL) {
         fprintf(stdout, "    Variant: IQR_HSS_2E20_SMALL\n");
@@ -340,7 +340,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
                 *variant = &IQR_HSS_2E15_FAST;
             } else if (paramcmp(argv[i], "2e15s") == 0) {
                 *variant = &IQR_HSS_2E15_SMALL;
-            } else if (paramcmp(argv[i], "2e15f") == 0) {
+            } else if (paramcmp(argv[i], "2e20f") == 0) {
                 *variant = &IQR_HSS_2E20_FAST;
             } else if (paramcmp(argv[i], "2e20s") == 0) {
                 *variant = &IQR_HSS_2E20_SMALL;

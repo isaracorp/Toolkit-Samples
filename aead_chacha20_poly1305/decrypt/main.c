@@ -203,13 +203,13 @@ static iqr_retval append_data_and_pad(iqr_MAC *poly1305_obj, const uint8_t *data
 
 static iqr_retval append_length(iqr_MAC *poly1305_obj, size_t length)
 {
-    if (length > UCHAR_MAX) {
-        return IQR_EOUTOFRANGE;
-    }
-
     uint8_t length_bytes[LENGTH_BYTES];
     for (int i = 0; i < LENGTH_BYTES; i++) {
-        length_bytes[i] = (uint8_t)length;
+        /* CodeSonar complains about a potential overflow here, since length is
+         * cast to uint8_t but can exceed 255. However, overflow is anticipated
+         * and accounted for by shifting and looping over the value.
+         */
+        length_bytes[i] = (uint8_t)length;  // CodeSonar: ignore
         length >>= CHAR_BIT;
     }
 

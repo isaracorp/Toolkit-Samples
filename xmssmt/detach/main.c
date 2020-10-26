@@ -159,13 +159,13 @@ static iqr_retval showcase_xmssmt_detach(const iqr_Context *ctx, const iqr_XMSSM
         goto end;
     }
 
-    ret = iqr_XMSSMTExportState(detached_state, state_raw, state_raw_size);
+    ret = iqr_XMSSMTExportState(detached_state, detached_state_raw, detached_state_raw_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSMTExportState(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
-    ret = save_data(detached_state_file, state_raw, state_raw_size);
+    ret = save_data(detached_state_file, detached_state_raw, detached_state_raw_size);
     if (ret != IQR_OK) {
         goto end;
     }

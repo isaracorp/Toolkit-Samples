@@ -47,6 +47,23 @@ Execute `hash-openssl` using default parameters.
 Execute the sample with no arguments to use the default parameters, or use
 `--help` to list the available options.
 
+### Finding OpenSSL
+
+If `cmake` can't find OpenSSL's libraries and headers, you can tell it where
+to look:
+
+```
+cmake -DOPENSSL_ROOT_DIR=/path/to/openssl \
+    -DIQR_TOOLKIT_ROOT=/path/to/toolkit ..
+```
+
+For example, if you've installed OpenSSL through `brew` on a Mac:
+
+```
+cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl \
+    -DIQR_TOOLKIT_ROOT=/path/to/toolkit ..
+```
+
 ## Further Reading
 
 * See `iqr_hash.h` in the toolkit's `include` directory.

@@ -34,7 +34,7 @@
 
 static const char *usage_msg =
 "kdf_pbkdf2 [--hash sha2-256|sha2-384|sha2-512|sha3-256|sha3-512]\n"
-"  [--pass { string <password> | file <filename> | none }]\n"
+"  [--pass { string <password> | file <filename> }]\n"
 "  [--salt { string <salt> | file <filename> | none }]\n"
 "  [--iter <iterations>] [--keysize <size>] [--keyfile <output_filename>]\n"
 "\n"
@@ -137,10 +137,9 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
     }
     if (password != NULL) {
         fprintf(stdout, "    password: %s\n", password);
-    } else if (password_file != NULL) {
+    }
+    if (password_file != NULL) {
         fprintf(stdout, "    password file: %s\n", password_file);
-    } else {
-        fprintf(stdout, "    no password\n");
     }
     if (salt != NULL) {
         fprintf(stdout, "    salt: %s\n", salt);
@@ -149,7 +148,7 @@ static void preamble(const char *cmd, iqr_HashAlgorithmType hash, const uint8_t 
     } else {
         fprintf(stdout, "    no salt\n");
     }
-    fprintf(stdout, "    iterations: %d\n", iterations);
+    fprintf(stdout, "    iterations: %u\n", iterations);
     fprintf(stdout, "    key size: %zu\n", key_size);
     fprintf(stdout, "    output key file: %s\n", key_file);
     fprintf(stdout, "\n");
@@ -212,29 +211,24 @@ static iqr_retval parse_commandline(int argc, const char **argv, iqr_HashAlgorit
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--pass") == 0) {
-            /* [--pass { string <password> | file <filename> | none }] */
+            /* [--pass { string <password> | file <filename> }] */
             i++;
-            if (paramcmp(argv[i], "none") == 0) {
-                *password = NULL;
-                *password_file = NULL;
-            } else {
-                if (i + 2 > argc) {
-                    fprintf(stdout, "%s", usage_msg);
-                    return IQR_EBADVALUE;
-                }
+            if (i + 2 > argc) {
+                fprintf(stdout, "%s", usage_msg);
+                return IQR_EBADVALUE;
+            }
 
-                const char *param2 = argv[i];
-                i++;
-                if (paramcmp(param2, "string") == 0) {
-                    *password = (const uint8_t *)argv[i];
-                    *password_file = NULL;
-                } else if (paramcmp(param2, "file") == 0) {
-                    *password = NULL;
-                    *password_file = argv[i];
-                } else {
-                    fprintf(stdout, "%s", usage_msg);
-                    return IQR_EBADVALUE;
-                }
+            const char *param2 = argv[i];
+            i++;
+            if (paramcmp(param2, "string") == 0) {
+                *password = (const uint8_t *)argv[i];
+                *password_file = NULL;
+            } else if (paramcmp(param2, "file") == 0) {
+                *password = NULL;
+                *password_file = argv[i];
+            } else {
+                fprintf(stdout, "%s", usage_msg);
+                return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--salt") == 0) {
             /* [--salt { string <salt> | file <filename> | none }] */

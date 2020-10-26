@@ -22,7 +22,7 @@ cmake_policy (SET CMP0054 NEW)
 project (hash-openssl)
 
 # This should find any OpenSSL >= 1.0.2 with a compatible API.
-find_package(OPENSSL 1.0.2)
+find_package(OpenSSL 1.0.2)
 
 if (OPENSSL_FOUND)
     # This sample is only built if OpenSSL is found.

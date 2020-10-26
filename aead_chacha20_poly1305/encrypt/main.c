@@ -110,7 +110,7 @@ static iqr_retval showcase_AEAD_chacha20_poly1305_encrypt(const iqr_Context *ctx
      */
     ret = iqr_MACCreatePoly1305(ctx, &poly1305_obj);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305Create(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACCreatePoly1305(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -144,7 +144,7 @@ static iqr_retval showcase_AEAD_chacha20_poly1305_encrypt(const iqr_Context *ctx
     size_t poly1305_tag_size = sizeof(poly1305_tag);
     ret = iqr_MACEnd(poly1305_obj, poly1305_tag, poly1305_tag_size);
     if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_Poly1305End(): %s\n", iqr_StrError(ret));
+        fprintf(stderr, "Failed on iqr_MACEnd(): %s\n", iqr_StrError(ret));
         goto end;
     }
 
@@ -233,7 +233,11 @@ static iqr_retval append_length(iqr_MAC *poly1305_obj, size_t length)
 {
     uint8_t length_bytes[LENGTH_BYTES];
     for (int i = 0; i < LENGTH_BYTES; i++) {
-        length_bytes[i] = (uint8_t)length;
+        /* CodeSonar complains about a potential overflow here, since length is
+         * cast to uint8_t but can exceed 255. However, overflow is anticipated
+         * and accounted for by shifting and looping over the value.
+         */
+        length_bytes[i] = (uint8_t)length;  // CodeSonar: ignore
         length >>= CHAR_BIT;
     }
 
