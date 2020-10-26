@@ -24,7 +24,7 @@ encrypt a file you're sending to us, you can grab our PGP public key from
 It has the following checksums:
 
 |Algorithm |Checksum|
-|==========|========|
+|----------|--------|
 |MD5       |`9bd6531fee9e6be983a22f0da3415029`|
 |SHA1      |`0fac805775c29bb23a769e4c28e36c1c01ec9325`|
 |SHA2-256  |`10edbd26d3e470f48ca24e404fa78f45f494ecf492fc6f76ea77a5eb433328d0`|
