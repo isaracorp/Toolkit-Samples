@@ -65,6 +65,9 @@ as having a `/dev/urandom` device available.
 
 ### Building Samples
 
+For an evaluation copy of the ISARA Radiate™ Quantum-Safe Library, please
+contact our [sales team](mailto:sales@isara.com?subject=Radiate%20evaluation).
+
 **NOTE**
 In addition to your platform's usual development tools, you'll need a recent
 version of `cmake` (version 3.7 or newer): https://cmake.org/ For most systems,
