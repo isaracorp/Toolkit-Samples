@@ -2,7 +2,7 @@
  *
  * @brief Detach a portion of the XMSS state into a separate file.
  *
- * @copyright Copyright (C) 2016-2020, ISARA Corporation
+ * @copyright Copyright (C) 2016-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@
 
 static const char *usage_msg =
 "xmss_detach [--priv <filename>] [--state <filename>]\n"
-"  [--detached-state <filename>] [--num-sigs <number>] [--variant 10|16|20]\n"
-"  [--strategy cpu|memory|full]\n"
+"  [--detached-state <filename>] [--num-sigs <number>] [--variant 10|16]\n"
+"  [--strategy memory|full]\n"
 "\n"
 "    Defaults:\n"
 "        --priv priv.key\n"
@@ -73,8 +73,8 @@ static iqr_retval showcase_xmss_detach(const iqr_Context *ctx, const iqr_XMSSVar
     size_t detached_state_raw_size = 0;
     uint8_t *detached_state_raw = NULL;
 
-    uint64_t remaining_sigs = 0;
-    uint64_t detached_remaining_sigs = 0;
+    uint32_t remaining_sigs = 0;
+    uint32_t detached_remaining_sigs = 0;
 
     iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
@@ -128,8 +128,8 @@ static iqr_retval showcase_xmss_detach(const iqr_Context *ctx, const iqr_XMSSVar
         goto end;
     }
 
-    fprintf(stdout, "Original state has %" PRIu64 " signatures remaining.\n", remaining_sigs);
-    fprintf(stdout, "Detached state has %" PRIu64 " signatures remaining.\n", detached_remaining_sigs);
+    fprintf(stdout, "Original state has %" PRIu32 " signatures remaining.\n", remaining_sigs);
+    fprintf(stdout, "Detached state has %" PRIu32 " signatures remaining.\n", detached_remaining_sigs);
 
     /* Export the updated original state. */
     ret = iqr_XMSSExportState(state, state_raw, state_raw_size);
@@ -232,14 +232,12 @@ static void preamble(const char *cmd, const char *priv, const char *state, const
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
     fprintf(stdout, "    private key detached state file: %s\n", detached_state);
-    fprintf(stdout, "    detaching %u signatures\n", num_sigs);
+    fprintf(stdout, "    detaching %" PRIu32 " signatures\n", num_sigs);
 
     if (&IQR_XMSS_2E10 == variant) {
         fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
     } else if (&IQR_XMSS_2E16 == variant) {
         fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
-    } else if (&IQR_XMSS_2E20 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
         fprintf(stdout, "    variant: INVALID\n");
     }
@@ -248,8 +246,6 @@ static void preamble(const char *cmd, const char *priv, const char *state, const
         fprintf(stdout, "    strategy: Full Tree\n");
     } else if (strategy == &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY) {
         fprintf(stdout, "    strategy: Memory Constrained\n");
-    } else if (strategy == &IQR_XMSS_CPU_CONSTRAINED_STRATEGY) {
-        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
@@ -281,24 +277,20 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
             i++;
             *detached_state = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant 10|16|20] */
+            /* [--variant 10|16] */
             i++;
             if (paramcmp(argv[i], "10") == 0) {
                 *variant = &IQR_XMSS_2E10;
             } else if (paramcmp(argv[i], "16") == 0) {
                 *variant = &IQR_XMSS_2E16;
-            } else if (paramcmp(argv[i], "20") == 0) {
-                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy cpu|memory|full] */
+            /* [--strategy memory|full] */
             i++;
-            if (paramcmp(argv[i], "cpu") == 0) {
-                *strategy = &IQR_XMSS_CPU_CONSTRAINED_STRATEGY;
-            } else if (paramcmp(argv[i], "memory") == 0) {
+            if (paramcmp(argv[i], "memory") == 0) {
                 *strategy = &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
                 *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
@@ -311,12 +303,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
             i++;
 
             char *end = NULL;
-            const uint64_t val = strtoull(argv[i], &end, 10);
-            if (end == argv[i] || *end != '\0' || (val == ULLONG_MAX && errno == ERANGE)) {
+            const uint32_t val = strtoul(argv[i], &end, 10);
+            if (end == argv[i] || *end != '\0' || (val == UINT32_MAX && errno == ERANGE)) {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
-            *num_signatures = (uint32_t)val;
+            *num_signatures = val;
         }
         i++;
     }

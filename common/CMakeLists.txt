@@ -1,4 +1,4 @@
-# Copyright (C) 2018-2020, ISARA Corporation
+# Copyright (C) 2018-2021, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ cmake_policy (SET CMP0054 NEW)
 
 project (isara_samples)
 
+include (../find_toolkit.cmake)
 include (../compiler_options.cmake)
 
 set (

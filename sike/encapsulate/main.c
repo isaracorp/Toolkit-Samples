@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's SIKE key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2016-2020, ISARA Corporation
+ * @copyright Copyright (C) 2016-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ static iqr_retval showcase_sike_encapsulation(const iqr_RNG *rng, const iqr_SIKE
         goto end;
     }
 
-    sharedkey = malloc(sharedkey_size);
+    sharedkey = calloc(1, sharedkey_size);
     if (sharedkey == NULL) {
         ret = IQR_ENOMEM;
         goto end;
@@ -153,7 +153,7 @@ static iqr_retval showcase_sike_params_creation(const iqr_Context *ctx, const iq
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Initialize the toolkit by creating a context, registering hash
-// algorithm, and creating a RNG object.
+// algorithm, and creating an RNG object.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)

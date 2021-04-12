@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.1 HSS Samples
+# ISARA Radiate™ Quantum-Safe Library 3.0 HSS Samples
 
 ## Introduction to Signature Schemes
 
@@ -36,10 +36,9 @@ the signer does not save it after signing, the signer risks using the one time
 signature data multiple times which would destroy the security of the scheme.
 
 For HSS, keys only need to be generated once, however, only a limited number
-of messages may be signed depending on the height parameter that is chosen by
-the signer during key generation. This height parameter also affects private
-key size and signature size. Each message and signature can be verified an
-unlimited number of times.
+of messages may be signed depending on the height parameter. This height
+parameter also affects signature size. Each message and signature can be
+verified an unlimited number of times.
 
 For a more in-depth discussion about these issues, see RFC 8554,
 [Leighton-Micali Hash-Based Signatures](https://tools.ietf.org/html/rfc8554).
@@ -101,7 +100,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2020, ISARA Corporation
+> Copyright © 2016-2021, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

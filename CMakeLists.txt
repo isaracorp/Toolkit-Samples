@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2020, ISARA Corporation
+# Copyright (C) 2017-2021, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@ cmake_minimum_required (VERSION 3.7)
 cmake_policy (SET CMP0054 NEW)
 
 project(samples)
-
-include (find_toolkit.cmake)
-include (compiler_options.cmake)
 
 set (
     samples
@@ -55,13 +52,9 @@ set (
     kyber/generate_keys
     mac/hmac
     mac/poly1305
-    newhopedh
     ntruprime/decapsulate
     ntruprime/encapsulate
     ntruprime/generate_keys
-    rainbow/generate_keys
-    rainbow/sign
-    rainbow/verify
     rng
     saber/decapsulate
     saber/encapsulate
@@ -80,11 +73,6 @@ set (
     xmss/sign
     xmss/verify
     xmss/verify_from_public
-    xmssmt/detach
-    xmssmt/generate_keys
-    xmssmt/sign
-    xmssmt/verify
-    xmssmt/verify_from_public
 
     # Integration samples. These are only built if your system has the
     # necessary dependencies.

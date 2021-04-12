@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.1 Saber KEM Samples
+# ISARA Radiate™ Quantum-Safe Library 3.0 Saber KEM Samples
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -59,7 +59,7 @@ Mod-LWR based KEM
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2020, ISARA Corporation
+> Copyright © 2016-2021, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

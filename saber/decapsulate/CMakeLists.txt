@@ -1,4 +1,4 @@
-# Copyright (C) 2019-2020, ISARA Corporation
+# Copyright (C) 2019-2021, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
 # CMake or same-line/exported environment variables you need to use:
 #
 # * IQR_TOOLKIT_ROOT set to the IQR Toolkit's root directory.
-#
-# Note that this sample requires the standard math library.
 
 cmake_minimum_required (VERSION 3.7)
 cmake_policy (SET CMP0054 NEW)

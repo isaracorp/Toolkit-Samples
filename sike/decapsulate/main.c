@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's SIKE key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2016-2020, ISARA Corporation
+ * @copyright Copyright (C) 2016-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,7 @@ static iqr_retval showcase_sike_decapsulation(const iqr_SIKEParams *params, cons
         goto end;
     }
 
-    sharedkey = malloc(sharedkey_size);
+    sharedkey = calloc(1, sharedkey_size);
     if (sharedkey == NULL) {
         ret = IQR_ENOMEM;
         goto end;

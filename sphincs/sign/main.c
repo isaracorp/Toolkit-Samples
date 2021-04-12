@@ -2,7 +2,7 @@
  *
  * @brief Sign a message using the toolkit's SPHINCS+ signature scheme.
  *
- * @copyright Copyright (C) 2019-2020, ISARA Corporation
+ * @copyright Copyright (C) 2019-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -202,7 +202,15 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)
 static void preamble(const char *cmd, const iqr_SPHINCSVariant *variant, const char *sig, const char *priv, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    if (variant == &IQR_SPHINCS_SHA2_256_192F) {
+    if (variant == &IQR_SPHINCS_SHA2_256_128F) {
+        fprintf(stdout, "    Variant: SHA-256-128 (fast)\n");
+    } else if (variant == &IQR_SPHINCS_SHA2_256_128S) {
+        fprintf(stdout, "    Variant: SHA-256-128 (small)\n");
+    } else if (variant == &IQR_SPHINCS_SHAKE_256_128F) {
+        fprintf(stdout, "    Variant: SHAKE-256-128 (fast)\n");
+    } else if (variant == &IQR_SPHINCS_SHAKE_256_128S) {
+        fprintf(stdout, "    Variant: SHAKE-256-128 (small)\n");
+    } else if (variant == &IQR_SPHINCS_SHA2_256_192F) {
         fprintf(stdout, "    Variant: SHA-256-192 (fast)\n");
     } else if (variant == &IQR_SPHINCS_SHA2_256_192S) {
         fprintf(stdout, "    Variant: SHA-256-192 (small)\n");
@@ -232,11 +240,20 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_SPHIN
     int i = 1;
     while (i != argc) {
         if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant sha192f|sha192s|shake192f|shake192s|sha256f|sha256s
-             *  |shake256f|shake256s]
+            /* [--variant sha128f|sha128s|sha192f|sha192s|sha256f|
+             *            sha256s|shake128f|shake128s|shake192f|
+             *            shake192s|shake256f|shake256s]
              */
             i++;
-            if (paramcmp(argv[i], "sha192f") == 0) {
+            if (paramcmp(argv[i], "sha128f") == 0) {
+                *variant = &IQR_SPHINCS_SHA2_256_128F;
+            } else if (paramcmp(argv[i], "sha128s") == 0) {
+                *variant = &IQR_SPHINCS_SHA2_256_128S;
+            } else if (paramcmp(argv[i], "shake128f") == 0) {
+                *variant = &IQR_SPHINCS_SHAKE_256_128F;
+            } else if (paramcmp(argv[i], "shake128s") == 0) {
+                *variant = &IQR_SPHINCS_SHAKE_256_128S;
+            } else if (paramcmp(argv[i], "sha192f") == 0) {
                 *variant = &IQR_SPHINCS_SHA2_256_192F;
             } else if (paramcmp(argv[i], "sha192s") == 0) {
                 *variant = &IQR_SPHINCS_SHA2_256_192S;

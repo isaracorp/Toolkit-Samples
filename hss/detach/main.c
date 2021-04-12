@@ -2,7 +2,7 @@
  *
  * @brief Detach a portion of the HSS state into a separate file.
  *
- * @copyright Copyright (C) 2016-2020, ISARA Corporation
+ * @copyright Copyright (C) 2016-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,16 +39,16 @@
 static const char *usage_msg =
 "hss_detach [--priv <filename>] [--state <filename>]\n"
 "  [--detached-state <filename>] [--num-sigs <number>]\n"
-"  [--variant 2e15f|2e20f|2e30f|2e45f|2e65f|2e15s|2e20s|2e30s|2e45s|2e65s]\n"
-"  [--strategy cpu|memory|full]\n"
+"  [--variant 2e15f|2e15s]\n"
+"  [--strategy memory|full]\n"
 "\n"
-"    The 'f' variants are Fast, the 's' variants are Small.\n"
+"    The 'f' variants is Fast, the 's' variants is Small.\n"
 "\n"
 "    Defaults:\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
 "        --strategy full\n"
-"        --variant 2e30f\n"
+"        --variant 2e15f\n"
 "        --detached-state detached.state\n"
 "        --num-sigs 1\n"
 "\n"
@@ -76,8 +76,8 @@ static iqr_retval showcase_hss_detach(const iqr_Context *ctx, const iqr_HSSVaria
     size_t detached_state_raw_size = 0;
     uint8_t *detached_state_raw = NULL;
 
-    uint64_t remaining_sigs = 0;
-    uint64_t detached_remaining_sigs = 0;
+    uint32_t remaining_sigs = 0;
+    uint32_t detached_remaining_sigs = 0;
 
     iqr_retval ret = iqr_HSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
@@ -131,8 +131,8 @@ static iqr_retval showcase_hss_detach(const iqr_Context *ctx, const iqr_HSSVaria
         goto end;
     }
 
-    printf("Original state has %" PRIu64 " signatures remaining.\n", remaining_sigs);
-    printf("Detached state has %" PRIu64 " signatures remaining.\n", detached_remaining_sigs);
+    printf("Original state has %" PRIu32 " signatures remaining.\n", remaining_sigs);
+    printf("Detached state has %" PRIu32 " signatures remaining.\n", detached_remaining_sigs);
 
     /* Export the updated original state. */
     ret = iqr_HSSExportState(state, state_raw, state_raw_size);
@@ -235,28 +235,12 @@ static void preamble(const char *cmd, const char *priv, const char *state, const
     fprintf(stdout, "    private key file: %s\n", priv);
     fprintf(stdout, "    private key state file: %s\n", state);
     fprintf(stdout, "    private key detached state file: %s\n", detached_state);
-    fprintf(stdout, "    detaching %u signatures\n", num_sigs);
+    fprintf(stdout, "    detaching %" PRIu32 " signatures\n", num_sigs);
 
     if (variant == &IQR_HSS_2E15_FAST) {
         fprintf(stdout, "    Variant: IQR_HSS_2E15_FAST\n");
     } else if (variant == &IQR_HSS_2E15_SMALL) {
         fprintf(stdout, "    Variant: IQR_HSS_2E15_SMALL\n");
-    } else if (variant == &IQR_HSS_2E20_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E20_FAST\n");
-    } else if (variant == &IQR_HSS_2E20_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E20_SMALL\n");
-    } else if (variant == &IQR_HSS_2E30_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_FAST\n");
-    } else if (variant == &IQR_HSS_2E30_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_SMALL\n");
-    } else if (variant == &IQR_HSS_2E45_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_FAST\n");
-    } else if (variant == &IQR_HSS_2E45_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_SMALL\n");
-    } else if (variant == &IQR_HSS_2E65_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_FAST\n");
-    } else if (variant == &IQR_HSS_2E65_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_SMALL\n");
     } else {
         fprintf(stdout, "    Variant: INVALID\n");
     }
@@ -265,8 +249,6 @@ static void preamble(const char *cmd, const char *priv, const char *state, const
         fprintf(stdout, "    strategy: Full Tree\n");
     } else if (strategy == &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY) {
         fprintf(stdout, "    strategy: Memory Constrained\n");
-    } else if (strategy == &IQR_HSS_CPU_CONSTRAINED_STRATEGY) {
-        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
@@ -302,32 +284,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
                 *variant = &IQR_HSS_2E15_FAST;
             } else if (paramcmp(argv[i], "2e15s") == 0) {
                 *variant = &IQR_HSS_2E15_SMALL;
-            } else if (paramcmp(argv[i], "2e20f") == 0) {
-                *variant = &IQR_HSS_2E20_FAST;
-            } else if (paramcmp(argv[i], "2e20s") == 0) {
-                *variant = &IQR_HSS_2E20_SMALL;
-            } else if (paramcmp(argv[i], "2e30f") == 0) {
-                *variant = &IQR_HSS_2E30_FAST;
-            } else if (paramcmp(argv[i], "2e30s") == 0) {
-                *variant = &IQR_HSS_2E30_SMALL;
-            } else if (paramcmp(argv[i], "2e45f") == 0) {
-                *variant = &IQR_HSS_2E45_FAST;
-            } else if (paramcmp(argv[i], "2e45s") == 0) {
-                *variant = &IQR_HSS_2E45_SMALL;
-            } else if (paramcmp(argv[i], "2e65f") == 0) {
-                *variant = &IQR_HSS_2E65_FAST;
-            } else if (paramcmp(argv[i], "2e65s") == 0) {
-                *variant = &IQR_HSS_2E65_SMALL;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy cpu|memory|full] */
+            /* [--strategy memory|full] */
             i++;
-            if (paramcmp(argv[i], "cpu") == 0) {
-                *strategy = &IQR_HSS_CPU_CONSTRAINED_STRATEGY;
-            } else if (paramcmp(argv[i], "memory") == 0) {
+            if (paramcmp(argv[i], "memory") == 0) {
                 *strategy = &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
                 *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
@@ -340,12 +304,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pr
             i++;
 
             char *end = NULL;
-            const uint64_t val = strtoull(argv[i], &end, 10);
-            if (end == argv[i] || *end != '\0' || (val == ULLONG_MAX && errno == ERANGE)) {
+            const uint32_t val = strtoul(argv[i], &end, 10);
+            if (end == argv[i] || *end != '\0' || (val == UINT_MAX && errno == ERANGE)) {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
-            *num_signatures = (uint32_t)val;
+            *num_signatures = val;
         }
         i++;
     }
@@ -365,7 +329,7 @@ int main(int argc, const char **argv)
     const char *state = "priv.state";
     const char *detached_state = "detached.state";
     const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
-    const iqr_HSSVariant *variant = &IQR_HSS_2E30_FAST;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E15_FAST;
     uint32_t num_sigs = 1;
 
     iqr_Context *ctx = NULL;

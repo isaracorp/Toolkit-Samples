@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.1 RNG /dev/urandom Sample
+# ISARA Radiate™ Quantum-Safe Library 3.0 RNG /dev/urandom Sample
 
 ## Introduction to Random Number Generation
 
@@ -74,8 +74,7 @@ Execute the samples with no arguments to use the default parameters, or use
 ## Further Reading
 
 * See `iqr_rng.h` in the toolkit's `include` directory.
-* http://dx.doi.org/10.6028/NIST.SP.800-90Ar1[NIST Special Publication 800-90A
-  Revision 1]
+* [NIST Special Publication 800-90A Revision 1](http://dx.doi.org/10.6028/NIST.SP.800-90Ar1)
 * [Linux `/dev/urandom` manpage](https://linux.die.net/man/4/urandom); please
   refer to your specific operating system's manual for details about your
   `/dev/urandom` behaviour.
@@ -84,7 +83,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2020, ISARA Corporation
+> Copyright © 2016-2021, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

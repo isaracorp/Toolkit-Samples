@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.1 SPHINCS+ Samples
+# ISARA Radiate™ Quantum-Safe Library 3.0 SPHINCS+ Samples
 
 ## Introduction to Signature Schemes
 
@@ -64,7 +64,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2019-2020, ISARA Corporation
+> Copyright © 2019-2021, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

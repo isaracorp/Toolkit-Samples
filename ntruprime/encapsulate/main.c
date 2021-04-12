@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's NTRUPrime key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2017-2020, ISARA Corporation
+ * @copyright Copyright (C) 2017-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,8 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"ntruprime_encapsulate [--variant 653|761|857] [--pub <filename>] [--ciphertext <filename>]\n"
-"  [--shared <filename>]\n"
+"ntruprime_encapsulate [--variant 653|761|857|953|1013|1277] [--pub <filename>]\n"
+"  [--shared <filename>] [--ciphertext <filename>]\n"
 "\n"
 "    Defaults:\n"
 "        --variant 761\n"
@@ -132,7 +132,7 @@ static iqr_retval showcase_ntruprime_params_creation(const iqr_Context *ctx, con
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Initialize the toolkit by creating a context, registering hash
-// algorithm, and creating a RNG object.
+// algorithm, and creating an RNG object.
 //
 // For NTRUPrime IQR_HASHALGO_SHA2_512 must be registered.
 // ---------------------------------------------------------------------------------------------------------------------------------
@@ -201,8 +201,14 @@ static void preamble(const char *cmd, const iqr_NTRUPrimeVariant *variant, const
         fprintf(stdout, "    variant: IQR_SNTRUP_653\n");
     } else if (variant == &IQR_SNTRUP_761) {
         fprintf(stdout, "    variant: IQR_SNTRUP_761\n");
-    } else {
+    } else if (variant == &IQR_SNTRUP_857) {
         fprintf(stdout, "    variant: IQR_SNTRUP_857\n");
+    } else if (variant == &IQR_SNTRUP_953) {
+        fprintf(stdout, "    variant: IQR_SNTRUP_953\n");
+    } else if (variant == &IQR_SNTRUP_1013) {
+        fprintf(stdout, "    variant: IQR_SNTRUP_1013\n");
+    } else {
+        fprintf(stdout, "    variant: IQR_SNTRUP_1277\n");
     }
 }
 
@@ -225,7 +231,7 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_NTRUP
             i++;
             *sharedkey_file = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant 653|761|857] */
+            /* [--variant 653|761|857|953|1013|1277] */
             i++;
             if (paramcmp(argv[i], "653") == 0) {
                 *variant = &IQR_SNTRUP_653;
@@ -233,6 +239,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_NTRUP
                 *variant = &IQR_SNTRUP_761;
             } else if (paramcmp(argv[i], "857") == 0) {
                 *variant = &IQR_SNTRUP_857;
+            } else if (paramcmp(argv[i], "953") == 0) {
+                *variant = &IQR_SNTRUP_953;
+            } else if (paramcmp(argv[i], "1013") == 0) {
+                *variant = &IQR_SNTRUP_1013;
+            } else if (paramcmp(argv[i], "1277") == 0) {
+                *variant = &IQR_SNTRUP_1277;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;

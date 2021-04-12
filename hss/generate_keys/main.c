@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's HSS signature scheme.
  *
- * @copyright Copyright (C) 2016-2020, ISARA Corporation
+ * @copyright Copyright (C) 2016-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,17 +37,17 @@
 
 static const char *usage_msg =
 "hss_generate_keys [--pub <filename>] [--priv <filename>]\n"
-"  [--variant 2e15f|2e20f|2e30f|2e45f|2e65f|2e15s|2e20s|2e30s|2e45s|2e65s]\n"
-"  [--strategy cpu|memory|full]\n"
+"  [--variant 2e15f|2e15s]\n"
+"  [--strategy memory|full]\n"
 "\n"
-"    The 'f' variants are Fast, the 's' variants are Small.\n"
+"    The 'f' variants is Fast, the 's' variants is Small.\n"
 "\n"
 "    Defaults:\n"
 "        --pub pub.key\n"
 "        --priv priv.key\n"
 "        --state priv.state\n"
 "        --strategy full\n"
-"        --variant 2e30f\n";
+"        --variant 2e15f\n";
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // This function showcases the generation of HSS public and private keys for
@@ -279,22 +279,6 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
         fprintf(stdout, "    Variant: IQR_HSS_2E15_FAST\n");
     } else if (variant == &IQR_HSS_2E15_SMALL) {
         fprintf(stdout, "    Variant: IQR_HSS_2E15_SMALL\n");
-    } else if (variant == &IQR_HSS_2E20_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E20_FAST\n");
-    } else if (variant == &IQR_HSS_2E20_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E20_SMALL\n");
-    } else if (variant == &IQR_HSS_2E30_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_FAST\n");
-    } else if (variant == &IQR_HSS_2E30_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E30_SMALL\n");
-    } else if (variant == &IQR_HSS_2E45_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_FAST\n");
-    } else if (variant == &IQR_HSS_2E45_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E45_SMALL\n");
-    } else if (variant == &IQR_HSS_2E65_FAST) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_FAST\n");
-    } else if (variant == &IQR_HSS_2E65_SMALL) {
-        fprintf(stdout, "    Variant: IQR_HSS_2E65_SMALL\n");
     } else {
         fprintf(stdout, "    Variant: INVALID\n");
     }
@@ -303,8 +287,6 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
         fprintf(stdout, "    strategy: Full Tree\n");
     } else if (strategy == &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY) {
         fprintf(stdout, "    strategy: Memory Constrained\n");
-    } else if (strategy == &IQR_HSS_CPU_CONSTRAINED_STRATEGY) {
-        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
@@ -340,32 +322,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
                 *variant = &IQR_HSS_2E15_FAST;
             } else if (paramcmp(argv[i], "2e15s") == 0) {
                 *variant = &IQR_HSS_2E15_SMALL;
-            } else if (paramcmp(argv[i], "2e20f") == 0) {
-                *variant = &IQR_HSS_2E20_FAST;
-            } else if (paramcmp(argv[i], "2e20s") == 0) {
-                *variant = &IQR_HSS_2E20_SMALL;
-            } else if (paramcmp(argv[i], "2e30f") == 0) {
-                *variant = &IQR_HSS_2E30_FAST;
-            } else if (paramcmp(argv[i], "2e30s") == 0) {
-                *variant = &IQR_HSS_2E30_SMALL;
-            } else if (paramcmp(argv[i], "2e45f") == 0) {
-                *variant = &IQR_HSS_2E45_FAST;
-            } else if (paramcmp(argv[i], "2e45s") == 0) {
-                *variant = &IQR_HSS_2E45_SMALL;
-            } else if (paramcmp(argv[i], "2e65f") == 0) {
-                *variant = &IQR_HSS_2E65_FAST;
-            } else if (paramcmp(argv[i], "2e65s") == 0) {
-                *variant = &IQR_HSS_2E65_SMALL;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy cpu|memory|full] */
+            /* [--strategy memory|full] */
             i++;
-            if (paramcmp(argv[i], "cpu") == 0) {
-                *strategy = &IQR_HSS_CPU_CONSTRAINED_STRATEGY;
-            } else if (paramcmp(argv[i], "memory") == 0) {
+            if (paramcmp(argv[i], "memory") == 0) {
                 *strategy = &IQR_HSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
                 *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
@@ -392,7 +356,7 @@ int main(int argc, const char **argv)
     const char *priv = "priv.key";
     const char *state = "priv.state";
     const iqr_HSSTreeStrategy *strategy = &IQR_HSS_FULL_TREE_STRATEGY;
-    const iqr_HSSVariant *variant = &IQR_HSS_2E30_FAST;
+    const iqr_HSSVariant *variant = &IQR_HSS_2E15_FAST;
 
     iqr_Context *ctx = NULL;
     iqr_RNG *rng = NULL;

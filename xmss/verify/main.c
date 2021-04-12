@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's XMSS signature scheme.
  *
- * @copyright Copyright (C) 2017-2020, ISARA Corporation
+ * @copyright Copyright (C) 2017-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"xmss_verify [--sig <filename>] [--pub <filename>] [--variant 10|16|20]\n"
+"xmss_verify [--sig <filename>] [--pub <filename>] [--variant 10|16]\n"
 "  [--message <filename>]\n"
 "\n"
 "    Defaults:\n"
@@ -215,8 +215,6 @@ static void preamble(const char *cmd, const char *sig, const char *pub, const iq
         fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
     } else if (&IQR_XMSS_2E16 == variant) {
         fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
-    } else if (&IQR_XMSS_2E20 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
         fprintf(stdout, "    variant: INVALID\n");
     }
@@ -244,14 +242,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             i++;
             *pub = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant 10|16|20] */
+            /* [--variant 10|16] */
             i++;
             if (paramcmp(argv[i], "10") == 0) {
                 *variant = &IQR_XMSS_2E10;
             } else if (paramcmp(argv[i], "16") == 0) {
                 *variant = &IQR_XMSS_2E16;
-            } else if (paramcmp(argv[i], "20") == 0) {
-                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;

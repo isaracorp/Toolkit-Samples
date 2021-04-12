@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.1 Classic McEliece Samples
+# ISARA Radiate™ Quantum-Safe Library 3.0 ClassicMcEliece Samples
 
 ## Introduction Key Encapsulation Mechanisms (KEM)
 
@@ -52,14 +52,13 @@ Execute the samples with no arguments to use the default parameters, or use
 ## Further Reading
 
 * See `iqr_classicmceliece.h` in the toolkit's `include` directory.
-* <a href="https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions">
-  <em>Classic McEliece</em></a>.
+* [Classic McEliece](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions)
 
 ## License
 
 See the `LICENSE` file for details:
 
-> Copyright © 2018-2020, ISARA Corporation
+> Copyright © 2018-2021, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

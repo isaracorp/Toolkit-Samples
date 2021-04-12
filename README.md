@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.1 Samples
+# ISARA Radiate™ Quantum-Safe Library 3.0 Samples
 
 ## Samples
 
@@ -28,11 +28,8 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
   Kyber.
 * `mac` &mdash; Generate a message authentication code using the specified MAC
   algorithm.
-* `newhopedh` &mdash; Agree on a shared secret using the NewHopeDH scheme.
 * `ntruprime` &mdash; Generate keys, encapsulate and decapsulate data
   using NTRUPrime.
-* `rainbow` &mdash; Generate keys, sign a file's data, and verify a signature
-  using the Rainbow algorithm.
 * `rng` &mdash; Generate pseudorandom bytes using HMAC-DRBG.
 * `saber` &mdash; Generate keys, encapsulate and decapsulate data using
   Saber.
@@ -48,8 +45,6 @@ programs inside demonstrating how to use the toolkit for a specific purpose:
 * `VisualStudio` &mdash; Visual Studio solution and project files.
 * `xmss` &mdash; Generate keys, sign a file's data, detach signatures from a
   private key's state, and verify a signature using the XMSS algorithm.
-* `xmssmt` &mdash; Generate keys, sign a file's data, detach signatures from a
-  private key's state, and verify a signature using the XMSS<sup>MT</sup> algorithm.
 
 The `integration` directory has samples showing how to integrate external
 implementations with the toolkit. These samples may have external dependencies
@@ -142,7 +137,7 @@ You can read the toolkit documentation online at ISARA's website:
 
 See the `LICENSE` file for details:
 
-> Copyright © 2016-2020, ISARA Corporation
+> Copyright © 2016-2021, ISARA Corporation
 >
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

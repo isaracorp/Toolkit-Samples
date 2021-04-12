@@ -2,7 +2,7 @@
  *
  * @brief Perform ChaCha20-Poly1305-AEAD encryption using the toolkit.
  *
- * @copyright Copyright (C) 2016-2020, ISARA Corporation
+ * @copyright Copyright (C) 2016-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -208,9 +208,6 @@ static iqr_retval parse_commandline(int argc, char **argv, const uint8_t **key, 
             if (paramcmp(param2, "string") == 0) {
                 *key = (const uint8_t *)argv[i];
                 *key_file = NULL;
-                if (strnlen((const char *)*key, IQR_POLY1305_KEY_SIZE) < IQR_POLY1305_KEY_SIZE) {
-                    return IQR_EBADVALUE;
-                }
             } else if (paramcmp(param2, "file") == 0) {
                 *key = NULL;
                 *key_file = argv[i];
@@ -274,11 +271,6 @@ int main(int argc, char **argv)
     } else if (key_file != NULL) {
         ret = load_data(key_file, &loaded_key, &key_size);
         if (ret != IQR_OK) {
-            goto cleanup;
-        }
-        if (key_size < IQR_POLY1305_KEY_SIZE) {
-            fprintf(stderr, "Key file must have at least %d bytes.\n", IQR_POLY1305_KEY_SIZE);
-            ret = IQR_EINVBUFSIZE;
             goto cleanup;
         }
         key = loaded_key;

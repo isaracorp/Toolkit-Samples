@@ -2,7 +2,7 @@
  *
  * @brief Sign a message using the toolkit's XMSS signature scheme.
  *
- * @copyright Copyright (C) 2017-2020, ISARA Corporation
+ * @copyright Copyright (C) 2017-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@
 
 static const char *usage_msg =
 "xmss_sign [--sig filename] [--priv <filename>] [--state <filename>]\n"
-"  [--variant 10|16|20] [--strategy cpu|memory|full] [--message <filename>]\n"
+"  [--variant 10|16] [--strategy cpu|memory|full] [--message <filename>]\n"
 "\n"
 "    Defaults:\n"
 "        --sig sig.dat\n"
@@ -54,9 +54,8 @@ static const char *usage_msg =
 // This function showcases signing of a digest using the XMSS signature scheme.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
-static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng, const iqr_XMSSVariant *variant,
-    const iqr_XMSSTreeStrategy *strategy, const uint8_t *digest, const char *priv_file, const char *state_file,
-    const char *sig_file)
+static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_XMSSVariant *variant, const iqr_XMSSTreeStrategy *strategy,
+    const uint8_t *digest, const char *priv_file, const char *state_file, const char *sig_file)
 {
     iqr_XMSSParams *params = NULL;
     iqr_XMSSPrivateKey *priv = NULL;
@@ -71,7 +70,7 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
     size_t state_raw_size = 0;
     uint8_t *state_raw = NULL;
 
-    uint64_t remaining_sigs = 0;
+    uint32_t remaining_sigs = 0;
 
     iqr_retval ret = iqr_XMSSCreateParams(ctx, strategy, variant, &params);
     if (ret != IQR_OK) {
@@ -113,7 +112,7 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
         goto end;
     }
 
-    fprintf(stdout, "Number of remaining signatures for this private key: %" PRIu64 "\n", remaining_sigs);
+    fprintf(stdout, "Number of remaining signatures for this private key: %" PRIu32 "\n", remaining_sigs);
 
     if (remaining_sigs == 0) {
         fprintf(stderr, "The private key cannot sign any more messages.\n");
@@ -137,21 +136,21 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
 
     /*********************** CRITICALLY IMPORTANT STEP *************************
      *
-     * Before signing, the value of state must be written to non-volatile
-     * memory. Failure to do so could result in a SECURITY BREACH as it could
-     * lead to the re-use of a one-time signature.
+     * You must detach a state to use for signing, and write the remaining state
+     * to non-volatile memory, before signing. Failure to do so could result in
+     * a security breach as it could lead to the re-use of a one-time signature.
      *
      * This step has been omitted for brevity.
      *
-     * For more information about this property of the XMSS private key, please
-     * refer to the XMSS specification.
+     * For more information about this property of the XMSS state, please refer
+     * to the XMSS specification.
      *
      **************************************************************************/
 
     /* Create the signature. The signing API requires a minimum digest length of
      * 64 bytes. Hence, SHA2-512 was used to guarantee that length.
      */
-    ret = iqr_XMSSSign(priv, rng, digest, IQR_SHA2_512_DIGEST_SIZE, state, sig, sig_size);
+    ret = iqr_XMSSSign(priv, digest, IQR_SHA2_512_DIGEST_SIZE, state, sig, sig_size);
     if (ret != IQR_OK) {
         fprintf(stderr, "Failed on iqr_XMSSSign(): %s\n", iqr_StrError(ret));
         goto end;
@@ -161,8 +160,12 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
 
     /* IMPORTANT: Save the state to disk prior to saving the signature. This
      * mirrors the real world usage pattern where you must persist the state
-     * prior to using the signature in order to avoid one-time-signature
+     * prior to using the signature in order to avoid one-time signature
      * reuse if something goes wrong.
+     *
+     * If saving the state does fail for any reason, you must wipe the
+     * signature buffer and NOT return a signature. Even if the signature in
+     * the buffer is valid, the next signature will be a security breach.
      */
     ret = iqr_XMSSExportState(state, state_raw, state_raw_size);
     if (ret != IQR_OK) {
@@ -190,7 +193,7 @@ static iqr_retval showcase_xmss_sign(const iqr_Context *ctx, const iqr_RNG *rng,
         goto end;
     }
 
-    fprintf(stdout, "Number of remaining signatures: %" PRIu64 ".\n", remaining_sigs);
+    fprintf(stdout, "Number of remaining signatures: %" PRIu32 ".\n", remaining_sigs);
 
     if (remaining_sigs == 0) {
         fprintf(stderr, "The private key cannot sign any more messages.\n");
@@ -243,7 +246,7 @@ static iqr_retval create_digest(const iqr_Context *ctx, uint8_t *data, size_t da
     return IQR_OK;
 }
 
-static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *message, uint8_t **digest)
+static iqr_retval init_toolkit(iqr_Context **ctx, const char *message, uint8_t **digest)
 {
     uint8_t *message_raw = NULL;
     size_t message_raw_size = 0;
@@ -268,24 +271,6 @@ static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng, const char *mes
     ret = iqr_HashRegisterCallbacks(*ctx, IQR_HASHALGO_SHA2_512, &IQR_HASH_DEFAULT_SHA2_512);
     if (IQR_OK != ret) {
         fprintf(stderr, "Failed on iqr_HashRegisterCallbacks(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-
-    /* This will let us give satisfactory randomness to the algorithm. */
-    ret = iqr_RNGCreateHMACDRBG(*ctx, IQR_HASHALGO_SHA2_256, rng);
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_RNGCreateHMACDRBG(): %s\n", iqr_StrError(ret));
-        return ret;
-    }
-
-    /* The seed should be initialized from a guaranteed entropy source. This is
-     * only an example; DO NOT INITIALIZE THE SEED LIKE THIS.
-     */
-    time_t seed = time(NULL);
-
-    ret = iqr_RNGInitialize(*rng, (uint8_t *)&seed, sizeof(seed));
-    if (ret != IQR_OK) {
-        fprintf(stderr, "Failed on iqr_RNGInitialize(): %s\n", iqr_StrError(ret));
         return ret;
     }
 
@@ -343,8 +328,6 @@ static void preamble(const char *cmd, const char *sig, const char *priv, const c
         fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
     } else if (&IQR_XMSS_2E16 == variant) {
         fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
-    } else if (&IQR_XMSS_2E20 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
         fprintf(stdout, "    variant: INVALID\n");
     }
@@ -353,8 +336,6 @@ static void preamble(const char *cmd, const char *sig, const char *priv, const c
         fprintf(stdout, "    strategy: Full Tree\n");
     } else if (strategy == &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY) {
         fprintf(stdout, "    strategy: Memory Constrained\n");
-    } else if (strategy == &IQR_XMSS_CPU_CONSTRAINED_STRATEGY) {
-        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
@@ -386,14 +367,12 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             i++;
             *state = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant 10|16|20] */
+            /* [--variant 10|16] */
             i++;
             if (paramcmp(argv[i], "10") == 0) {
                 *variant = &IQR_XMSS_2E10;
             } else if (paramcmp(argv[i], "16") == 0) {
                 *variant = &IQR_XMSS_2E16;
-            } else if (paramcmp(argv[i], "20") == 0) {
-                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -403,11 +382,9 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **si
             i++;
             *message = argv[i];
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy cpu|memory|full] */
+            /* [--strategy memory|full] */
             i++;
-            if (paramcmp(argv[i], "cpu") == 0) {
-                *strategy = &IQR_XMSS_CPU_CONSTRAINED_STRATEGY;
-            } else if (paramcmp(argv[i], "memory") == 0) {
+            if (paramcmp(argv[i], "memory") == 0) {
                 *strategy = &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
                 *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
@@ -438,7 +415,6 @@ int main(int argc, const char **argv)
     const iqr_XMSSVariant *variant = &IQR_XMSS_2E10;
 
     iqr_Context *ctx = NULL;
-    iqr_RNG *rng = NULL;
     uint8_t *digest = NULL;
 
     /* If the command line arguments were not sane, this function will return
@@ -453,16 +429,15 @@ int main(int argc, const char **argv)
     preamble(argv[0], sig, priv, state, variant, strategy, message);
 
     /* IQR initialization that is not specific to XMSS. */
-    ret = init_toolkit(&ctx, &rng, message, &digest);
+    ret = init_toolkit(&ctx, message, &digest);
     if (ret != IQR_OK) {
         goto cleanup;
     }
 
     /* This function showcases the usage of XMSS signing. */
-    ret = showcase_xmss_sign(ctx, rng, variant, strategy, digest, priv, state, sig);
+    ret = showcase_xmss_sign(ctx, variant, strategy, digest, priv, state, sig);
 
 cleanup:
-    iqr_RNGDestroy(&rng);
     iqr_DestroyContext(&ctx);
     free(digest);
 

@@ -2,7 +2,7 @@
  *
  * @brief Verify a signature using the toolkit's Dilithium signature scheme.
  *
- * @copyright Copyright (C) 2017-2020, ISARA Corporation
+ * @copyright Copyright (C) 2017-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,11 @@
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static const char *usage_msg =
-"dilithium_verify [--variant 80|128|160] [--sig <filename>] [--pub <filename>]\n"
+"dilithium_verify [--variant 2|3|5] [--sig <filename>] [--pub <filename>]\n"
 "  [--message <filename>]\n"
 "\n"
 "    Defaults:\n"
-"        --variant 128\n"
+"        --variant 3\n"
 "        --sig sig.dat\n"
 "        --pub pub.key\n"
 "        --message message.dat\n"
@@ -151,12 +151,12 @@ static iqr_retval init_toolkit(iqr_Context **ctx)
 static void preamble(const char *cmd, const iqr_DilithiumVariant *variant, const char *sig, const char *pub, const char *message)
 {
     fprintf(stdout, "Running %s with the following parameters...\n", cmd);
-    if (variant == &IQR_DILITHIUM_80) {
-        fprintf(stdout, "    variant: IQR_DILITHIUM_80\n");
-    } else if (variant == &IQR_DILITHIUM_128) {
-        fprintf(stdout, "    variant: IQR_DILITHIUM_128\n");
+    if (variant == &IQR_DILITHIUM_2) {
+        fprintf(stdout, "    variant: IQR_DILITHIUM_2\n");
+    } else if (variant == &IQR_DILITHIUM_3) {
+        fprintf(stdout, "    variant: IQR_DILITHIUM_3\n");
     } else {
-        fprintf(stdout, "    variant: IQR_DILITHIUM_160\n");
+        fprintf(stdout, "    variant: IQR_DILITHIUM_5\n");
     }
     fprintf(stdout, "    signature file: %s\n", sig);
     fprintf(stdout, "    public key file: %s\n", pub);
@@ -171,14 +171,14 @@ static iqr_retval parse_commandline(int argc, const char **argv, const iqr_Dilit
     int i = 1;
     while (i != argc) {
         if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant 80|128|160] */
+            /* [--variant 2|3|5] */
             i++;
-            if (paramcmp(argv[i], "80") == 0) {
-                *variant = &IQR_DILITHIUM_80;
-            } else if (paramcmp(argv[i], "128") == 0) {
-                *variant = &IQR_DILITHIUM_128;
-            } else if (paramcmp(argv[i], "160") == 0) {
-                *variant = &IQR_DILITHIUM_160;
+            if (paramcmp(argv[i], "2") == 0) {
+                *variant = &IQR_DILITHIUM_2;
+            } else if (paramcmp(argv[i], "3") == 0) {
+                *variant = &IQR_DILITHIUM_3;
+            } else if (paramcmp(argv[i], "5") == 0) {
+                *variant = &IQR_DILITHIUM_5;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
@@ -215,7 +215,7 @@ int main(int argc, const char **argv)
     /* Default values. Please adjust the usage message if you make changes
      * here.
      */
-    const iqr_DilithiumVariant *variant = &IQR_DILITHIUM_128;
+    const iqr_DilithiumVariant *variant = &IQR_DILITHIUM_3;
     const char *sig = "sig.dat";
     const char *pub = "pub.key";
     const char *message = "message.dat";

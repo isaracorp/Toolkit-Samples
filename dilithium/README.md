@@ -1,4 +1,4 @@
-# ISARA Radiate™ Quantum-Safe Library 2.1 Dilithium Samples
+# ISARA Radiate™ Quantum-Safe Library 3.0 Dilithium Samples
 
 ## Introduction to Signature Schemes
 
@@ -29,10 +29,10 @@ toolkit's Dilithium implementation:
 The rest of the steps are left up to the underlying system.
 
 As per
-[CRYSTALS - Dilithium](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-2-Submissions),
-the toolkit's Dilithium implementation provides 103 bits, 138 bits, and 176
-bits of classical security with the `IQR_DILITHIUM_80`, `IQR_DILITHIUM_128`,
-and `IQR_DILITHIUM_160` variants.
+[CRYSTALS - Dilithium](https://csrc.nist.gov/Projects/Post-Quantum-Cryptography/Round-3-Submissions),
+the toolkit's Dilithium implementation provides 123 bits, 182 bits, and 252
+bits of classical security with the `IQR_DILITHIUM_2`, `IQR_DILITHIUM_3`,
+and `IQR_DILITHIUM_5` variants.
 
 Here is the simplest way to use the samples:
 
@@ -71,7 +71,7 @@ Execute the samples with no arguments to use the default parameters, or use
 
 See the `LICENSE` file for details:
 
-> Copyright © 2017-2020, ISARA Corporation
+> Copyright © 2017-2021, ISARA Corporation
 > 
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

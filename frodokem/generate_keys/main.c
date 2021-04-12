@@ -2,7 +2,7 @@
  *
  * @brief Demonstrate the toolkit's FrodoKEM key encapsulation mechanism.
  *
- * @copyright Copyright (C) 2018-2020, ISARA Corporation
+ * @copyright Copyright (C) 2018-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -168,7 +168,7 @@ static iqr_retval showcase_frodokem_params_creation(const iqr_Context *ctx, cons
 
 // ---------------------------------------------------------------------------------------------------------------------------------
 // Initialize the toolkit by creating a context, registering hash
-// algorithm, and creating a RNG object.
+// algorithm, and creating an RNG object.
 // ---------------------------------------------------------------------------------------------------------------------------------
 
 static iqr_retval init_toolkit(iqr_Context **ctx, iqr_RNG **rng)

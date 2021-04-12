@@ -2,7 +2,7 @@
  *
  * @brief Generate keys using the toolkit's XMSS signature scheme.
  *
- * @copyright Copyright (C) 2017-2020, ISARA Corporation
+ * @copyright Copyright (C) 2017-2021, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@
 
 static const char *usage_msg =
 "xmss_generate_keys [--pub <filename>] [--priv <filename>] [--state <filename>]\n"
-"  [--variant 10|16|20] [--strategy cpu|memory|full]\n"
+"  [--variant 10|16] [--strategy cpu|memory|full]\n"
 "\n"
 "    Defaults:\n"
 "        --pub pub.key\n"
@@ -275,8 +275,6 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
         fprintf(stdout, "    variant: IQR_XMSS_2E10\n");
     } else if (&IQR_XMSS_2E16 == variant) {
         fprintf(stdout, "    variant: IQR_XMSS_2E16\n");
-    } else if (&IQR_XMSS_2E20 == variant) {
-        fprintf(stdout, "    variant: IQR_XMSS_2E20\n");
     } else {
         fprintf(stdout, "    variant: INVALID\n");
     }
@@ -285,8 +283,6 @@ static void preamble(const char *cmd, const char *pub, const char *priv, const c
         fprintf(stdout, "    strategy: Full Tree\n");
     } else if (strategy == &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY) {
         fprintf(stdout, "    strategy: Memory Constrained\n");
-    } else if (strategy == &IQR_XMSS_CPU_CONSTRAINED_STRATEGY) {
-        fprintf(stdout, "    strategy: CPU Constrained\n");
     } else {
         fprintf(stdout, "    strategy: INVALID\n");
     }
@@ -317,24 +313,20 @@ static iqr_retval parse_commandline(int argc, const char **argv, const char **pu
             i++;
             *state = argv[i];
         } else if (paramcmp(argv[i], "--variant") == 0) {
-            /* [--variant 10|16|20] */
+            /* [--variant 10|16] */
             i++;
             if (paramcmp(argv[i], "10") == 0) {
                 *variant = &IQR_XMSS_2E10;
             } else if (paramcmp(argv[i], "16") == 0) {
                 *variant = &IQR_XMSS_2E16;
-            } else if (paramcmp(argv[i], "20") == 0) {
-                *variant = &IQR_XMSS_2E20;
             } else {
                 fprintf(stdout, "%s", usage_msg);
                 return IQR_EBADVALUE;
             }
         } else if (paramcmp(argv[i], "--strategy") == 0) {
-            /* [--strategy cpu|memory|full] */
+            /* [--strategy memory|full] */
             i++;
-            if (paramcmp(argv[i], "cpu") == 0) {
-                *strategy = &IQR_XMSS_CPU_CONSTRAINED_STRATEGY;
-            } else if (paramcmp(argv[i], "memory") == 0) {
+            if (paramcmp(argv[i], "memory") == 0) {
                 *strategy = &IQR_XMSS_MEMORY_CONSTRAINED_STRATEGY;
             } else if (paramcmp(argv[i], "full") == 0) {
                 *strategy = &IQR_XMSS_FULL_TREE_STRATEGY;
