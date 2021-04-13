@@ -129,9 +129,9 @@ document.
 
 You can read the toolkit documentation online at ISARA's website:
 
-* [Developer's Guide](https://www.isara.com/toolkit/2/doc/guide/guide.html)
-* [Library Reference](https://www.isara.com/toolkit/2/doc/library/index.html)
-* [README](https://www.isara.com/toolkit/2/README.html)
+* [Developer's Guide](https://www.isara.com/toolkit/3/doc/guide/guide.html)
+* [Library Reference](https://www.isara.com/toolkit/3/doc/library/index.html)
+* [README](https://www.isara.com/toolkit/3/README.html)
 
 ## License
 
