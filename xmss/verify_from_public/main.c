@@ -3,7 +3,7 @@
  * @brief Get parameters from a public key, then verify using the toolkit's
  * XMSS signature scheme.
  *
- * @copyright Copyright (C) 2019-2021, ISARA Corporation, All Rights Reserved.
+ * @copyright Copyright (C) 2019-2023, ISARA Corporation, All Rights Reserved.
  *
  * @license Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

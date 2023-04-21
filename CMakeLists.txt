@@ -1,4 +1,4 @@
-# Copyright (C) 2017-2021, ISARA Corporation
+# Copyright (C) 2017-2023, ISARA Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,10 +34,6 @@ set (
     dilithium/generate_keys
     dilithium/sign
     dilithium/verify
-    frododh
-    frodokem/decapsulate
-    frodokem/encapsulate
-    frodokem/generate_keys
     hash
     hss/detach
     hss/generate_keys
@@ -52,18 +48,7 @@ set (
     kyber/generate_keys
     mac/hmac
     mac/poly1305
-    ntruprime/decapsulate
-    ntruprime/encapsulate
-    ntruprime/generate_keys
     rng
-    saber/decapsulate
-    saber/encapsulate
-    saber/generate_keys
-    samwise
-    sidh
-    sike/decapsulate
-    sike/encapsulate
-    sike/generate_keys
     sphincs/generate_keys
     sphincs/sign
     sphincs/verify
